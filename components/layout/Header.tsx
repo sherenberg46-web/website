@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ShoppingCart, Heart, Search, X, Menu, Gamepad2 } from 'lucide-react';
+import { ShoppingCart, Heart, X, Menu, Gamepad2 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useFavouritesStore } from '@/store/favouritesStore';
 import { getTelegramLink } from '@/lib/api';
+import { RegionSwitcher } from './RegionSwitcher';
+import { SearchBox } from './SearchBox';
 import clsx from 'clsx';
 
 const NAV_LINKS = [
@@ -85,13 +87,9 @@ export function Header() {
 
           {/* Right actions */}
           <div className="flex items-center gap-1 ml-auto">
-            <Link
-              href="/games"
-              className="hidden md:flex w-8 h-8 items-center justify-center rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-card transition-colors"
-              title="Поиск"
-            >
-              <Search className="w-4 h-4" />
-            </Link>
+            <SearchBox />
+
+            <RegionSwitcher />
 
             <Link
               href="/favourites"

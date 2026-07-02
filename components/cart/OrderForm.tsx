@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useCartStore } from '@/store/cartStore';
 import { createWebOrder, getTelegramLink } from '@/lib/api';
+import { getClientRegion } from '@/lib/region';
 import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -36,6 +37,7 @@ export function OrderForm() {
         name: name.trim(),
         contact: contact.trim(),
         comment: comment.trim() || undefined,
+        region: getClientRegion(),
       });
       clearCart();
       setStatus('success');

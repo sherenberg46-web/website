@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getProducts } from '@/lib/api';
+import { getRegion } from '@/lib/region-server';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
@@ -8,10 +9,12 @@ export const metadata: Metadata = {
   description: 'Предзаказы игр PlayStation — закажите игру до выхода по специальной цене.',
 };
 
-export const revalidate = 120;
+export const dynamic = 'force-dynamic';
 
 export default async function PreordersPage() {
-  const products = await getProducts({ is_preorder: true, limit: 40 });
+  const region = getRegion();
+  // task_type=preorders — тот же фильтр, что в Mini App (is_preorder ловил лишнее)
+  const products = await getProducts({ task_type: 'preorders', region, limit: 100 });
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">

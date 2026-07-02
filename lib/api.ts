@@ -10,7 +10,7 @@ import type {
   WebOrderPayload,
 } from './types';
 
-const API_BASE =
+export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ||
   'https://tg-shop-production-1b03.up.railway.app/api/v1';
 
@@ -51,8 +51,9 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
   return apiFetch<Product[]>(`/products${qs ? `?${qs}` : ''}`, { revalidate: 60 });
 }
 
-export async function getFeaturedProducts(limit = 10): Promise<Product[]> {
-  return apiFetch<Product[]>(`/products/featured?limit=${limit}`, { revalidate: 120 });
+export async function getFeaturedProducts(limit = 10, region?: string): Promise<Product[]> {
+  const r = region ? `&region=${region}` : '';
+  return apiFetch<Product[]>(`/products/featured?limit=${limit}${r}`, { revalidate: 120 });
 }
 
 export async function getProductById(id: number): Promise<Product> {
@@ -125,25 +126,28 @@ export async function getSaleCollectionByPath(path: string): Promise<SaleCollect
 }
 
 // Recommendations
-export async function getPopularProducts(limit = 10): Promise<Product[]> {
+export async function getPopularProducts(limit = 10, region?: string): Promise<Product[]> {
+  const r = region ? `&region=${region}` : '';
   try {
-    return await apiFetch<Product[]>(`/recommendations/popular?limit=${limit}`, {
+    return await apiFetch<Product[]>(`/recommendations/popular?limit=${limit}${r}`, {
       revalidate: 300,
     });
   } catch {
-    return getFeaturedProducts(limit);
+    return getFeaturedProducts(limit, region);
   }
 }
 
 export async function getSimilarProducts(
   productId: number,
   genre?: string | null,
-  categoryId?: number
+  categoryId?: number,
+  region?: string
 ): Promise<Product[]> {
   try {
     const products = await getProducts({
       genre: genre ?? undefined,
       category_id: categoryId,
+      region,
       limit: 8,
     });
     return products.filter((p) => p.id !== productId).slice(0, 6);

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getProducts, getSaleCollections } from '@/lib/api';
+import { getRegion } from '@/lib/region-server';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Link from 'next/link';
@@ -9,11 +10,14 @@ export const metadata: Metadata = {
   description: 'Лучшие скидки на цифровые игры PlayStation. Успейте купить по выгодным ценам.',
 };
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export default async function SalePage() {
+  const region = getRegion();
   const [products, saleCollections] = await Promise.all([
-    getProducts({ sort: 'discount', limit: 40 }),
+    // task_type=sales — серверный фильтр акций, как в Mini App:
+    // только игры с активной скидкой в выбранном регионе
+    getProducts({ task_type: 'sales', sort: 'discount', region, limit: 40 }),
     getSaleCollections(),
   ]);
 

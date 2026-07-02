@@ -111,6 +111,7 @@ export interface WebOrderPayload {
   name: string;
   contact: string;
   comment?: string;
+  region?: string;
 }
 
 export interface ProductFilters {
@@ -124,4 +125,6 @@ export interface ProductFilters {
   offset?: number;
   is_preorder?: boolean;
   task_type?: string;
+  region?: string;
+  section?: string;
 }

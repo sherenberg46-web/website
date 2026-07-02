@@ -1,92 +1,102 @@
-import { getBanners, getFeaturedProducts, getProducts, getPopularProducts } from '@/lib/api';
+import Link from 'next/link';
+import { getBanners, getProducts, getTelegramLink } from '@/lib/api';
+import { getRegion } from '@/lib/region-server';
+import type { Banner, Product } from '@/lib/types';
 import { HeroSlider } from '@/components/home/HeroSlider';
 import { ProductCarousel } from '@/components/home/ProductCarousel';
+import { SubscriptionsShowcase } from '@/components/home/SubscriptionsShowcase';
 import { Benefits } from '@/components/home/Benefits';
 import { HowToBuy } from '@/components/home/HowToBuy';
 import { FAQ } from '@/components/home/FAQ';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
-import Link from 'next/link';
-import { getTelegramLink } from '@/lib/api';
 
-export const revalidate = 120;
+// Регион берётся из cookie → страница рендерится динамически,
+// данные при этом кэшируются на уровне fetch (revalidate в lib/api).
+export const dynamic = 'force-dynamic';
+
+function val<T>(r: PromiseSettledResult<T>, fallback: T): T {
+  return r.status === 'fulfilled' ? r.value : fallback;
+}
 
 export default async function HomePage() {
-  const [banners, featured, newGames, onSale, preorders, subscriptions, topups] =
+  const region = getRegion();
+  const isTR = region === 'TR';
+
+  const empty: Product[] = [];
+  const [bannersR, newGamesR, preordersR, top10R, onSaleR, topupsR] =
     await Promise.allSettled([
       getBanners(),
-      getFeaturedProducts(12),
-      getProducts({ task_type: 'new_games', limit: 12 }),
-      getProducts({ sort: 'discount', limit: 12 }),
-      getProducts({ is_preorder: true, limit: 12 }),
-      getProducts({ product_type: 'subscription', limit: 8 }),
-      getProducts({ product_type: 'topup', limit: 8 }),
-    ]).then((results) =>
-      results.map((r) => (r.status === 'fulfilled' ? r.value : []))
-    );
+      // new_games всегда отдаёт UA-каталог (несёт цены обоих регионов) — как в Mini App
+      isTR ? Promise.resolve(empty) : getProducts({ task_type: 'new_games', limit: 12 }),
+      isTR ? Promise.resolve(empty) : getProducts({ task_type: 'preorders', region, limit: 12 }),
+      isTR ? Promise.resolve(empty) : getProducts({ section: 'top15', region, limit: 10 }),
+      isTR
+        ? Promise.resolve(empty)
+        : getProducts({ task_type: 'sales', sort: 'discount', region, limit: 12 }),
+      getProducts({ product_type: 'topup', region, limit: 12 }),
+    ]);
+
+  const banners = val<Banner[]>(bannersR, []);
+  const newGames = val(newGamesR, empty);
+  const preorders = val(preordersR, empty);
+  const top10 = val(top10R, empty);
+  const onSale = val(onSaleR, empty);
+  const topups = val(topupsR, empty);
 
   return (
     <>
       {/* Hero */}
-      <HeroSlider banners={banners as Parameters<typeof HeroSlider>[0]['banners']} />
+      <HeroSlider banners={banners} />
 
-      {/* Carousels */}
       <div className="max-w-7xl mx-auto px-4 space-y-16 py-20">
-        {(featured as Awaited<ReturnType<typeof getFeaturedProducts>>).length > 0 && (
-          <ProductCarousel
-            title="Хиты продаж"
-            products={featured as Awaited<ReturnType<typeof getFeaturedProducts>>}
-            viewAllHref="/games?sort=rating"
-            accentTitle
-          />
+        {/* TR: игры из турецкого каталога временно недоступны — как в Mini App */}
+        {isTR && (
+          <ScrollReveal>
+            <div className="bg-bg-card border border-border rounded-3xl p-10 text-center max-w-2xl mx-auto">
+              <div className="text-5xl mb-4">🚧</div>
+              <h2 className="text-2xl font-bold mb-3">Временно недоступно</h2>
+              <p className="text-text-secondary">
+                Покупка игр из турецкого каталога временно приостановлена.
+              </p>
+              <p className="text-text-secondary mt-1">
+                Но вы можете купить подписку PS Plus или пополнить кошелёк 👇
+              </p>
+            </div>
+          </ScrollReveal>
         )}
 
-        {(newGames as Awaited<ReturnType<typeof getProducts>>).length > 0 && (
-          <ProductCarousel
-            title="Новинки"
-            products={newGames as Awaited<ReturnType<typeof getProducts>>}
-            viewAllHref="/new"
-          />
+        {newGames.length > 0 && (
+          <ProductCarousel title="Новинки" products={newGames} viewAllHref="/new" accentTitle />
         )}
 
-        {(onSale as Awaited<ReturnType<typeof getProducts>>).length > 0 && (
-          <ProductCarousel
-            title="Скидки"
-            products={onSale as Awaited<ReturnType<typeof getProducts>>}
-            viewAllHref="/sale"
-          />
+        {preorders.length > 0 && (
+          <ProductCarousel title="Предзаказы" products={preorders} viewAllHref="/preorders" />
         )}
 
-        {(preorders as Awaited<ReturnType<typeof getProducts>>).length > 0 && (
-          <ProductCarousel
-            title="Предзаказы"
-            products={preorders as Awaited<ReturnType<typeof getProducts>>}
-            viewAllHref="/preorders"
-          />
+        {top10.length > 0 && (
+          <ProductCarousel title="Топ 10" products={top10} viewAllHref="/games?sort=rating" />
+        )}
+
+        {onSale.length > 0 && (
+          <ProductCarousel title="Скидки" products={onSale} viewAllHref="/sale" />
         )}
       </div>
 
-      {/* PS Plus & TopUp section */}
-      {((subscriptions as Awaited<ReturnType<typeof getProducts>>).length > 0 ||
-        (topups as Awaited<ReturnType<typeof getProducts>>).length > 0) && (
-        <div className="bg-bg-card/30 border-y border-border">
-          <div className="max-w-7xl mx-auto px-4 py-16 space-y-14">
-            {(subscriptions as Awaited<ReturnType<typeof getProducts>>).length > 0 && (
-              <ProductCarousel
-                title="PS Plus — подписки"
-                products={subscriptions as Awaited<ReturnType<typeof getProducts>>}
-                viewAllHref="/games?product_type=subscription"
-              />
-            )}
-            {(topups as Awaited<ReturnType<typeof getProducts>>).length > 0 && (
-              <ProductCarousel
-                title="Пополнение кошелька PSN"
-                products={topups as Awaited<ReturnType<typeof getProducts>>}
-                viewAllHref="/games?product_type=topup"
-              />
-            )}
-          </div>
+      {/* PS Plus + Пополнение PSN */}
+      <div className="bg-bg-card/30 border-y border-border">
+        <div className="max-w-7xl mx-auto px-4 py-16 space-y-14">
+          <ScrollReveal>
+            <SubscriptionsShowcase region={region} />
+          </ScrollReveal>
+          {topups.length > 0 && (
+            <ProductCarousel
+              title="Пополнение кошелька PSN"
+              products={topups}
+              viewAllHref="/games?product_type=topup"
+            />
+          )}
         </div>
-      )}
+      </div>
 
       {/* Telegram CTA */}
       <ScrollReveal>
@@ -104,7 +114,8 @@ export default async function HomePage() {
                   Удобнее в Telegram
                 </h2>
                 <p className="text-text-secondary mb-8 max-w-sm mx-auto">
-                  Откройте наш бот — быстрые уведомления о скидках, удобный каталог и поддержка прямо в мессенджере.
+                  Откройте наш бот — быстрые уведомления о скидках, удобный каталог и поддержка
+                  прямо в мессенджере.
                 </p>
                 <a
                   href={getTelegramLink()}

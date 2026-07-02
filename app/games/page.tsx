@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getCategories, getProductGenres, getProducts, getProductCount } from '@/lib/api';
+import { getRegion } from '@/lib/region-server';
 import { CatalogFilters } from '@/components/products/CatalogFilters';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { CatalogPagination } from '@/components/products/CatalogPagination';
@@ -13,21 +14,27 @@ export const metadata: Metadata = {
 
 const PAGE_SIZE = 20;
 
+export const dynamic = 'force-dynamic';
+
 interface Props {
   searchParams: Record<string, string | undefined>;
 }
 
 async function CatalogContent({ searchParams }: Props) {
   const offset = Number(searchParams.offset ?? 0);
+  const region = getRegion();
   const filters: ProductFilters = {
     category_id: searchParams.category_id ? Number(searchParams.category_id) : undefined,
     search: searchParams.search || undefined,
-    product_type: searchParams.product_type || undefined,
+    // По умолчанию каталог показывает только игры — как «Все игры» в Mini App.
+    // Регион обязателен, иначе в выдаче дубли из второго каталога.
+    product_type: searchParams.product_type || (searchParams.task_type ? undefined : 'game'),
     sort: searchParams.sort || undefined,
     genre: searchParams.genre || undefined,
     platform: searchParams.platform || undefined,
     is_preorder: searchParams.is_preorder === 'true' ? true : undefined,
     task_type: searchParams.task_type || undefined,
+    region,
     limit: PAGE_SIZE,
     offset,
   };
