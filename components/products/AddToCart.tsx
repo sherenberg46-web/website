@@ -1,46 +1,66 @@
 'use client';
 
 import { useState } from 'react';
-import { ShoppingCart, Check, ExternalLink } from 'lucide-react';
+import { ShoppingCart, Check, Heart, ExternalLink } from 'lucide-react';
+import clsx from 'clsx';
 import { useCartStore } from '@/store/cartStore';
 import { useFavouritesStore } from '@/store/favouritesStore';
-import { getTelegramLink, normalizeImageUrl } from '@/lib/api';
-import type { Product, GameEdition } from '@/lib/types';
+import { normalizeImageUrl, getTelegramLink } from '@/lib/api';
+import type { Product, CatalogEdition } from '@/lib/types';
+import type { Region } from '@/lib/region';
 import { PriceDisplay } from '@/components/ui/PriceDisplay';
-import clsx from 'clsx';
-import { Heart } from 'lucide-react';
 
 interface Props {
   product: Product;
-  editions: GameEdition[];
+  editions: CatalogEdition[];
+  region: Region;
 }
 
-export function AddToCart({ product, editions }: Props) {
-  const defaultEdition = editions.find((e) => e.is_default) ?? editions[0] ?? null;
-  const [selectedEdition, setSelectedEdition] = useState<GameEdition | null>(defaultEdition);
+function editionPrice(ed: CatalogEdition, region: Region): number | null {
+  const p = region === 'TR' ? ed.price_byn_tr : ed.price_byn;
+  return p && p > 0 ? p : null;
+}
+
+export function AddToCart({ product, editions, region }: Props) {
+  // По умолчанию — издание, которое и есть этот товар (как в Mini App),
+  // чтобы цена совпадала с карточкой каталога.
+  const defaultIdx = (() => {
+    const match = editions.findIndex((e) => e.linked_product_id === product.id);
+    return match >= 0 ? match : 0;
+  })();
+  const [idx, setIdx] = useState(defaultIdx);
   const [added, setAdded] = useState(false);
 
   const addItem = useCartStore((s) => s.addItem);
   const { isFavourite, toggleFavourite } = useFavouritesStore();
   const isFav = isFavourite(product.id);
 
-  const price = product.price_byn;
+  const selected = editions[idx] ?? null;
+  const productPrice =
+    region === 'TR' ? product.price_byn_tr ?? product.price_byn : product.price_byn;
+  const price = selected ? editionPrice(selected, region) ?? productPrice : productPrice;
+  const discount = selected?.discount_pct ?? product.discount_pct;
+
+  // Сравнение цен по регионам (обе есть в базе)
+  const uaPrice = product.price_byn;
+  const trPrice = product.price_byn_tr;
+  const showCompare =
+    product.product_type === 'game' && uaPrice != null && trPrice != null && uaPrice !== trPrice;
+  const cheaper: Region = (uaPrice ?? Infinity) <= (trPrice ?? Infinity) ? 'UA' : 'TR';
 
   function handleAdd() {
     if (!price) return;
     addItem({
       product_id: product.id,
-      edition_id: selectedEdition?.id ?? null,
-      edition_name: selectedEdition?.name ?? null,
+      edition_id: selected?.id ?? null,
+      edition_name: selected?.edition_name ?? null,
       qty: 1,
       title: product.title,
       image_url: normalizeImageUrl(product.image_url),
       price_byn: price,
       original_price_byn:
-        product.discount_pct > 0
-          ? Math.round((price * 100) / (100 - product.discount_pct))
-          : null,
-      discount_pct: product.discount_pct,
+        discount > 0 ? Math.round((price * 100) / (100 - discount)) : null,
+      discount_pct: discount,
       product_type: product.product_type,
     });
     setAdded(true);
@@ -54,31 +74,70 @@ export function AddToCart({ product, editions }: Props) {
         <div className="space-y-2">
           <p className="text-sm text-text-secondary font-medium">Издание:</p>
           <div className="grid grid-cols-1 gap-2">
-            {editions.map((ed) => (
-              <button
-                key={ed.id}
-                onClick={() => setSelectedEdition(ed)}
-                className={clsx(
-                  'flex items-center justify-between p-3 rounded-xl border text-sm transition-all',
-                  selectedEdition?.id === ed.id
-                    ? 'border-accent/60 bg-accent/10 text-text-primary'
-                    : 'border-border bg-bg-card text-text-secondary hover:border-border/80 hover:text-text-primary'
-                )}
-              >
-                <span className="font-medium">{ed.name}</span>
-                {ed.price_uah && (
-                  <span className="text-xs text-text-secondary">
-                    {selectedEdition?.id === ed.id ? '' : ''}
+            {editions.map((ed, i) => {
+              const p = editionPrice(ed, region);
+              return (
+                <button
+                  key={ed.id}
+                  onClick={() => setIdx(i)}
+                  className={clsx(
+                    'flex items-center justify-between gap-3 p-3 rounded-xl border text-sm transition-all text-left',
+                    i === idx
+                      ? 'border-accent/60 bg-accent/10 text-text-primary'
+                      : 'border-border bg-bg-card text-text-secondary hover:border-border/80 hover:text-text-primary'
+                  )}
+                >
+                  <span className="font-medium">{ed.edition_name}</span>
+                  <span className="flex items-center gap-2 shrink-0">
+                    {ed.discount_pct > 0 && (
+                      <span className="text-[10px] font-bold text-black bg-accent rounded-full px-1.5 py-0.5">
+                        -{ed.discount_pct}%
+                      </span>
+                    )}
+                    <span className={clsx('font-semibold', i === idx ? 'text-accent' : '')}>
+                      {ed.is_free ? 'Бесплатно' : p != null ? `${p} BYN` : '—'}
+                    </span>
                   </span>
-                )}
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* Price */}
-      <PriceDisplay price={price} discountPct={product.discount_pct} size="lg" />
+      <PriceDisplay price={price} discountPct={discount} size="lg" />
+
+      {/* Region price comparison */}
+      {showCompare && (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span
+            className={clsx(
+              'px-2.5 py-1 rounded-full border',
+              cheaper === 'UA'
+                ? 'border-accent/50 bg-accent/10 text-accent font-semibold'
+                : 'border-border text-text-secondary'
+            )}
+          >
+            🇺🇦 UA: {uaPrice} BYN{cheaper === 'UA' && ' · выгоднее'}
+          </span>
+          <span
+            className={clsx(
+              'px-2.5 py-1 rounded-full border',
+              cheaper === 'TR'
+                ? 'border-accent/50 bg-accent/10 text-accent font-semibold'
+                : 'border-border text-text-secondary'
+            )}
+          >
+            🇹🇷 TR: {trPrice} BYN{cheaper === 'TR' && ' · выгоднее'}
+          </span>
+          {cheaper === 'TR' && (
+            <span className="text-text-secondary w-full">
+              Покупка игр из TR-каталога временно приостановлена — уточните у менеджера.
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex gap-3">

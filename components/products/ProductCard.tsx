@@ -68,7 +68,8 @@ export function ProductCard({ product, priority = false }: Props) {
               src={imageUrl}
               alt={product.title}
               fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+              sizes="(max-width: 640px) 45vw, 208px"
+              quality={85}
               className="object-cover transition-transform duration-500 group-hover:scale-105"
               priority={priority}
               onError={(e) => {
@@ -77,7 +78,7 @@ export function ProductCard({ product, priority = false }: Props) {
             />
 
             {/* Overlay on hover */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300" />
 
             {/* Badges */}
             <div className="absolute top-2 left-2 flex flex-col gap-1">
@@ -99,7 +100,7 @@ export function ProductCard({ product, priority = false }: Props) {
             )}
 
             {/* Actions */}
-            <div className="absolute bottom-3 left-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+            <div className="absolute bottom-3 left-3 right-3 flex gap-2 opacity-100 translate-y-0 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-2 sm:group-hover:translate-y-0 transition-all duration-300">
               <button
                 onClick={handleAddToCart}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-accent text-black text-xs font-semibold rounded-xl hover:bg-accent/90 transition-colors"

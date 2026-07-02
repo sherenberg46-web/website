@@ -16,7 +16,8 @@ const NAV_LINKS = [
   { href: '/sale', label: 'Распродажа' },
   { href: '/new', label: 'Новинки' },
   { href: '/preorders', label: 'Предзаказы' },
-  { href: '/collections/ps-plus-top', label: 'PS Plus' },
+  { href: '/subscriptions', label: 'PS Plus' },
+  { href: '/topup', label: 'Пополнение' },
 ];
 
 export function Header() {

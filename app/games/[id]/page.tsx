@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Star, Calendar, Monitor, Tag } from 'lucide-react';
+import { Star, Calendar, Monitor } from 'lucide-react';
 import {
   getProductById,
   getProductEditions,
@@ -10,12 +10,14 @@ import {
   getProducts,
   normalizeImageUrl,
 } from '@/lib/api';
+import { getRegion } from '@/lib/region-server';
 import { AddToCart } from '@/components/products/AddToCart';
+import { TrackView } from '@/components/products/TrackView';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { Badge } from '@/components/ui/Badge';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: { id: string };
@@ -27,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const imageUrl = normalizeImageUrl(product.image_url);
     const title = product.title;
     const desc =
-      product.description?.slice(0, 160) ||
+      product.description?.replace(/<[^>]+>/g, ' ').slice(0, 160) ||
       `Купить ${title} для ${product.platform} в Беларуси. Цена: ${product.price_byn} BYN.`;
 
     return {
@@ -55,31 +57,40 @@ export default async function GamePage({ params }: Props) {
   const id = Number(params.id);
   if (!id || isNaN(id)) notFound();
 
+  const region = getRegion();
+
   let product, editions, dlc;
   try {
     [product, editions, dlc] = await Promise.all([
       getProductById(id),
-      getProductEditions(id),
+      getProductEditions(id, region),
       getProductDlc(id),
     ]);
   } catch {
     notFound();
   }
 
+  // Похожие: тот же жанр, регион обязателен (иначе дубли), сортировка по рейтингу
+  const mainGenre = product.genre?.split(',')[0]?.trim();
   const similar = await getProducts({
-    genre: product.genre ?? undefined,
-    category_id: product.category_id,
-    limit: 6,
-  }).then((ps) => ps.filter((p) => p.id !== id).slice(0, 5)).catch(() => []);
+    genre: mainGenre || undefined,
+    product_type: 'game',
+    sort: 'rating',
+    region,
+    limit: 12,
+  })
+    .then((ps) => ps.filter((p) => p.id !== id).slice(0, 6))
+    .catch(() => []);
 
   const imageUrl = normalizeImageUrl(product.image_url);
   const platforms = product.platform?.split(',').map((p) => p.trim()) ?? [];
+  const cleanDescription = product.description?.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.title,
-    description: product.description,
+    description: cleanDescription,
     image: imageUrl,
     sku: String(product.id),
     brand: { '@type': 'Brand', name: 'PlayStation' },
@@ -111,6 +122,7 @@ export default async function GamePage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <TrackView product={product} />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Breadcrumb */}
@@ -132,8 +144,9 @@ export default async function GamePage({ params }: Props) {
                 alt={product.title}
                 fill
                 priority
+                quality={95}
                 className="object-cover"
-                sizes="(max-width: 1024px) 90vw, 40vw"
+                sizes="(max-width: 1024px) 90vw, 384px"
               />
               {product.discount_pct > 0 && (
                 <div className="absolute top-4 left-4">
@@ -155,9 +168,7 @@ export default async function GamePage({ params }: Props) {
               {platforms.map((p) => (
                 <Badge key={p} variant={p === 'PS5' ? 'ps5' : 'ps4'}>{p}</Badge>
               ))}
-              {product.genre && (
-                <Badge variant="outline">{product.genre.split(',')[0].trim()}</Badge>
-              )}
+              {mainGenre && <Badge variant="outline">{mainGenre}</Badge>}
             </div>
 
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-text-primary">
@@ -179,23 +190,21 @@ export default async function GamePage({ params }: Props) {
                   <span>{new Date(product.release_date).toLocaleDateString('ru-BY', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                 </div>
               )}
-              {product.region && (
-                <div className="flex items-center gap-1.5">
-                  <Monitor className="w-4 h-4" />
-                  <span>Регион: {product.region}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-1.5">
+                <Monitor className="w-4 h-4" />
+                <span>Каталог: {region === 'TR' ? '🇹🇷 Турция' : '🇺🇦 Украина'}</span>
+              </div>
             </div>
 
             {/* Description */}
-            {product.description && (
-              <p className="text-text-secondary leading-relaxed text-sm line-clamp-5">
-                {product.description}
+            {cleanDescription && (
+              <p className="text-text-secondary leading-relaxed text-sm line-clamp-5 whitespace-pre-line">
+                {cleanDescription}
               </p>
             )}
 
             {/* Add to cart */}
-            <AddToCart product={product} editions={editions} />
+            <AddToCart product={product} editions={editions} region={region} />
           </div>
         </div>
 
@@ -212,8 +221,9 @@ export default async function GamePage({ params }: Props) {
                         src={normalizeImageUrl(item.image_url)}
                         alt={item.title}
                         fill
+                        quality={85}
                         className="object-cover"
-                        sizes="120px"
+                        sizes="160px"
                       />
                     </div>
                   )}

@@ -10,6 +10,25 @@ export interface GameEdition {
   sort_order: number;
 }
 
+// Ответ /products/{id}/editions (GameEditionOut в backend) — НЕ путать
+// с GameEdition (вложенные editions в Product)
+export interface CatalogEdition {
+  id: number;
+  edition_name: string;
+  price_uah: number | null;
+  price_try: number | null;
+  price_byn: number | null;
+  price_byn_tr: number | null;
+  old_price_uah: number | null;
+  old_price_try: number | null;
+  discount_pct: number;
+  platform: string | null;
+  ps_store_url: string | null;
+  region: string;
+  is_free: boolean;
+  linked_product_id: number | null;
+}
+
 export interface DlcItem {
   id: number;
   title: string;

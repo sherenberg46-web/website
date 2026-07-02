@@ -1,10 +1,11 @@
 import Link from 'next/link';
-import { getBanners, getProducts, getTelegramLink } from '@/lib/api';
+import { getBanners, getProducts, getPopularProducts, getTelegramLink } from '@/lib/api';
 import { getRegion } from '@/lib/region-server';
 import type { Banner, Product } from '@/lib/types';
 import { HeroSlider } from '@/components/home/HeroSlider';
 import { ProductCarousel } from '@/components/home/ProductCarousel';
 import { SubscriptionsShowcase } from '@/components/home/SubscriptionsShowcase';
+import { RecentlyViewed } from '@/components/home/RecentlyViewed';
 import { Benefits } from '@/components/home/Benefits';
 import { HowToBuy } from '@/components/home/HowToBuy';
 import { FAQ } from '@/components/home/FAQ';
@@ -23,7 +24,7 @@ export default async function HomePage() {
   const isTR = region === 'TR';
 
   const empty: Product[] = [];
-  const [bannersR, newGamesR, preordersR, top10R, onSaleR, topupsR] =
+  const [bannersR, newGamesR, preordersR, top10R, onSaleR, topupsR, popularR] =
     await Promise.allSettled([
       getBanners(),
       // new_games всегда отдаёт UA-каталог (несёт цены обоих регионов) — как в Mini App
@@ -34,6 +35,7 @@ export default async function HomePage() {
         ? Promise.resolve(empty)
         : getProducts({ task_type: 'sales', sort: 'discount', region, limit: 12 }),
       getProducts({ product_type: 'topup', region, limit: 12 }),
+      isTR ? Promise.resolve(empty) : getPopularProducts(20, region),
     ]);
 
   const banners = val<Banner[]>(bannersR, []);
@@ -42,6 +44,17 @@ export default async function HomePage() {
   const top10 = val(top10R, empty);
   const onSale = val(onSaleR, empty);
   const topups = val(topupsR, empty);
+  // Популярные: эндпоинт отдаёт строки обоих регионов — фильтруем и убираем дубли
+  const seen = new Set<string>();
+  const popular = val(popularR, empty)
+    .filter((p) => p.region === region)
+    .filter((p) => {
+      const key = p.title.trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 12);
 
   return (
     <>
@@ -80,6 +93,17 @@ export default async function HomePage() {
         {onSale.length > 0 && (
           <ProductCarousel title="Скидки" products={onSale} viewAllHref="/sale" />
         )}
+
+        {popular.length > 0 && (
+          <ProductCarousel
+            title="Популярное"
+            eyebrow="Чаще всего смотрят"
+            products={popular}
+            viewAllHref="/sale"
+          />
+        )}
+
+        <RecentlyViewed />
       </div>
 
       {/* PS Plus + Пополнение PSN */}

@@ -5,6 +5,7 @@ import type {
   Collection,
   SaleCollection,
   GameEdition,
+  CatalogEdition,
   DlcItem,
   ProductFilters,
   WebOrderPayload,
@@ -69,8 +70,16 @@ export async function getProductCount(filters: ProductFilters = {}): Promise<num
   return apiFetch<number>(`/products/count${qs ? `?${qs}` : ''}`, { revalidate: 60 });
 }
 
-export async function getProductEditions(id: number): Promise<GameEdition[]> {
-  return apiFetch<GameEdition[]>(`/products/${id}/editions`, { revalidate: 300 });
+export async function getProductEditions(
+  id: number,
+  region?: string
+): Promise<CatalogEdition[]> {
+  const r = region ? `?region=${region}` : '';
+  try {
+    return await apiFetch<CatalogEdition[]>(`/products/${id}/editions${r}`, { revalidate: 300 });
+  } catch {
+    return [];
+  }
 }
 
 export async function getProductDlc(id: number): Promise<DlcItem[]> {
