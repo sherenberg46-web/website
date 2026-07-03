@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Gamepad2 } from 'lucide-react';
+import Image from 'next/image';
 import { getTelegramLink } from '@/lib/api';
 
 const SHOP_LINKS = [
@@ -25,9 +25,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-xl bg-brand-gradient flex items-center justify-center">
-                <Gamepad2 className="w-5 h-5 text-black" />
-              </div>
+              <Image src="/logo.png" alt="GAME STORE" width={32} height={32} className="rounded-xl" />
               <span className="font-bold text-text-primary">GAME STORE</span>
             </Link>
             <p className="text-text-secondary text-sm leading-relaxed">

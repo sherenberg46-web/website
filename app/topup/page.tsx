@@ -52,7 +52,7 @@ export default async function TopupPage() {
         <ScrollReveal>
           <TopupList
             title="Украина"
-            flag="🇺🇦"
+            regionCode="UA"
             note="Пополнение в гривнах — для аккаунтов региона Украина"
             products={ua}
           />
@@ -60,7 +60,7 @@ export default async function TopupPage() {
         <ScrollReveal>
           <TopupList
             title="Турция"
-            flag="🇹🇷"
+            regionCode="TR"
             note="Карты пополнения в лирах — для аккаунтов региона Турция"
             products={tr}
           />

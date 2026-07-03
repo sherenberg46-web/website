@@ -192,7 +192,7 @@ export default async function GamePage({ params }: Props) {
               )}
               <div className="flex items-center gap-1.5">
                 <Monitor className="w-4 h-4" />
-                <span>Каталог: {region === 'TR' ? '🇹🇷 Турция' : '🇺🇦 Украина'}</span>
+                <span>Каталог: {region === 'TR' ? 'Турция (TR)' : 'Украина (UA)'}</span>
               </div>
             </div>
 

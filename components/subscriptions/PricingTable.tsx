@@ -7,6 +7,7 @@ import { ShoppingCart, Check, ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 import { useCartStore } from '@/store/cartStore';
 import { REGIONS, getClientRegion, type Region } from '@/lib/region';
+import { RegionBadge } from '@/components/ui/RegionBadge';
 import {
   SUB_PRICES,
   PS_IDS,
@@ -89,7 +90,10 @@ export function PricingTable() {
                   : 'text-text-secondary hover:text-text-primary'
               )}
             >
-              {r.flag} {r.value === 'UA' ? 'Украина' : 'Турция'}
+              <span className="inline-flex items-center gap-2">
+                <RegionBadge code={r.value} />
+                {r.value === 'UA' ? 'Украина' : 'Турция'}
+              </span>
             </button>
           ))}
         </div>
@@ -127,16 +131,31 @@ export function PricingTable() {
                 highlighted ? 'border-accent/50 shadow-glow-card' : 'border-border'
               )}
             >
-              {/* Image */}
-              <div className="relative aspect-[16/9]">
+              {/* Image backdrop + clean title overlay (исходники портретные — прямой кроп резал текст) */}
+              <div className="relative aspect-[16/7] overflow-hidden">
                 <Image
                   src={TIER_IMAGES[tier.id]}
                   alt={`PS Plus ${tier.label}`}
                   fill
-                  quality={90}
+                  quality={80}
                   sizes="(max-width: 640px) 90vw, 340px"
-                  className="object-cover"
+                  className="object-cover scale-125 blur-[6px] brightness-[.4]"
                 />
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-text-secondary">
+                    PS Plus
+                  </span>
+                  <span
+                    className={clsx(
+                      'text-2xl font-extrabold tracking-tight',
+                      tier.id === 'essential' && 'text-sky-300',
+                      tier.id === 'extra' && 'text-yellow-300',
+                      tier.id === 'deluxe' && 'text-violet-300'
+                    )}
+                  >
+                    {tier.label}
+                  </span>
+                </div>
                 {highlighted && (
                   <span className="absolute top-3 right-3 px-3 py-1 bg-brand-gradient text-black text-[10px] font-bold rounded-full uppercase tracking-wide">
                     Популярный

@@ -10,6 +10,7 @@ import {
   setClientRegion,
   type Region,
 } from '@/lib/region';
+import { RegionBadge } from '@/components/ui/RegionBadge';
 
 /** Переключатель региона каталога (UA/TR) — как в Telegram Mini App. */
 export function RegionSwitcher() {
@@ -46,8 +47,7 @@ export function RegionSwitcher() {
         className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-sm text-text-secondary hover:text-text-primary hover:bg-bg-card transition-colors"
         title="Регион каталога"
       >
-        <span className="text-base leading-none">{current.flag}</span>
-        <span className="hidden lg:inline text-xs font-medium">{current.value}</span>
+        <RegionBadge code={current.value} />
         <ChevronDown className={clsx('w-3 h-3 transition-transform', open && 'rotate-180')} />
       </button>
 
@@ -64,8 +64,8 @@ export function RegionSwitcher() {
                   : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
               )}
             >
-              <span>{r.flag}</span>
-              <span>{r.label}</span>
+              <RegionBadge code={r.value} />
+              <span>{r.value === 'UA' ? 'Украина' : 'Турция'}</span>
             </button>
           ))}
         </div>

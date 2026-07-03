@@ -5,11 +5,13 @@ import Image from 'next/image';
 import { ShoppingCart, Check, Wallet } from 'lucide-react';
 import clsx from 'clsx';
 import type { Product } from '@/lib/types';
+import type { Region } from '@/lib/region';
 import { useCartStore } from '@/store/cartStore';
+import { RegionBadge } from '@/components/ui/RegionBadge';
 
 interface Props {
   title: string;
-  flag: string;
+  regionCode: Region;
   note: string;
   products: Product[];
 }
@@ -59,7 +61,7 @@ function localImage(title: string): string | null {
 }
 
 /** Карты пополнения одного региона: картинка, номинал, цена, в корзину. */
-export function TopupList({ title, flag, note, products }: Props) {
+export function TopupList({ title, regionCode, note, products }: Props) {
   const addItem = useCartStore((s) => s.addItem);
   const [added, setAdded] = useState<number | null>(null);
 
@@ -85,8 +87,8 @@ export function TopupList({ title, flag, note, products }: Props) {
 
   return (
     <section>
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-xl">{flag}</span>
+      <div className="flex items-center gap-2.5 mb-1">
+        <RegionBadge code={regionCode} size="md" />
         <h2 className="text-2xl font-bold">{title}</h2>
       </div>
       <p className="text-text-secondary text-sm mb-5">{note}</p>

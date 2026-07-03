@@ -119,7 +119,7 @@ export function AddToCart({ product, editions, region }: Props) {
                 : 'border-border text-text-secondary'
             )}
           >
-            🇺🇦 UA: {uaPrice} BYN{cheaper === 'UA' && ' · выгоднее'}
+            UA: {uaPrice} BYN{cheaper === 'UA' && ' · выгоднее'}
           </span>
           <span
             className={clsx(
@@ -129,7 +129,7 @@ export function AddToCart({ product, editions, region }: Props) {
                 : 'border-border text-text-secondary'
             )}
           >
-            🇹🇷 TR: {trPrice} BYN{cheaper === 'TR' && ' · выгоднее'}
+            TR: {trPrice} BYN{cheaper === 'TR' && ' · выгоднее'}
           </span>
           {cheaper === 'TR' && (
             <span className="text-text-secondary w-full">

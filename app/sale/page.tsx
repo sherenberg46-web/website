@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { getProducts, getProductCount, getSaleCollections } from '@/lib/api';
+import { getProducts, getProductCount, getProductGenres, getSaleCollections } from '@/lib/api';
 import { getRegion } from '@/lib/region-server';
 import type { ProductFilters } from '@/lib/types';
 import { CatalogFilters } from '@/components/products/CatalogFilters';
@@ -46,10 +46,11 @@ export default async function SalePage({ searchParams }: Props) {
     offset,
   };
 
-  const [products, total, saleCollections] = await Promise.all([
+  const [products, total, saleCollections, genres] = await Promise.all([
     getProducts(filters).catch(() => []),
     getProductCount({ ...filters, sort: undefined, limit: undefined, offset: undefined }),
     getSaleCollections(),
+    getProductGenres(),
   ]);
 
   return (
@@ -91,7 +92,7 @@ export default async function SalePage({ searchParams }: Props) {
 
       {/* Filters */}
       <Suspense>
-        <CatalogFilters basePath="/sale" hideSearch sortOptions={SALE_SORT} />
+        <CatalogFilters basePath="/sale" hideSearch sortOptions={SALE_SORT} genres={genres} />
       </Suspense>
 
       <p className="text-text-secondary text-sm mb-4">

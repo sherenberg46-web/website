@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { getProducts, getProductCount } from '@/lib/api';
+import { getProducts, getProductCount, getProductGenres } from '@/lib/api';
 import { getRegion } from '@/lib/region-server';
 import type { ProductFilters } from '@/lib/types';
 import { CatalogFilters } from '@/components/products/CatalogFilters';
@@ -44,9 +44,10 @@ export default async function PreordersPage({ searchParams }: Props) {
     offset,
   };
 
-  const [productsRaw, total] = await Promise.all([
+  const [productsRaw, total, genres] = await Promise.all([
     getProducts(filters).catch(() => []),
     getProductCount({ ...filters, sort: undefined, limit: undefined, offset: undefined }),
+    getProductGenres(),
   ]);
 
   // Бэкенд сортирует предзаказы по дате — цену сортируем здесь
@@ -69,7 +70,7 @@ export default async function PreordersPage({ searchParams }: Props) {
       </ScrollReveal>
 
       <Suspense>
-        <CatalogFilters basePath="/preorders" hideSearch hideDiscount sortOptions={PRE_SORT} />
+        <CatalogFilters basePath="/preorders" hideSearch hideDiscount sortOptions={PRE_SORT} genres={genres} />
       </Suspense>
 
       <p className="text-text-secondary text-sm mb-4">

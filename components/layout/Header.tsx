@@ -81,10 +81,10 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 className={clsx(
-                  'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                  'px-3.5 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all',
                   pathname === link.href || pathname.startsWith(link.href + '/')
-                    ? 'text-text-primary bg-bg-card'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'text-black btn-gradient shadow-glow-card'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
                 )}
               >
                 {link.label}
