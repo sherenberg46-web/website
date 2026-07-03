@@ -18,6 +18,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+// Переопределение названий подборок для сайта
+const TITLE_OVERRIDES: Record<string, string> = {
+  'ps-plus-top': 'Топ игр по подписке PS Plus',
+};
+
 export default async function CollectionPage({ params }: Props) {
   let collection;
   try {
@@ -25,16 +30,17 @@ export default async function CollectionPage({ params }: Props) {
   } catch {
     notFound();
   }
+  const title = TITLE_OVERRIDES[params.slug] ?? collection.title;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <nav className="flex items-center gap-2 text-sm text-text-secondary mb-8">
         <Link href="/" className="hover:text-text-primary">Главная</Link>
         <span>/</span>
-        <span className="text-text-primary">{collection.title}</span>
+        <span className="text-text-primary">{title}</span>
       </nav>
       <ScrollReveal>
-        <h1 className="text-4xl font-bold mb-4">{collection.title}</h1>
+        <h1 className="text-4xl font-bold mb-4">{title}</h1>
         {collection.description && (
           <p className="text-text-secondary mb-8 max-w-2xl">{collection.description}</p>
         )}

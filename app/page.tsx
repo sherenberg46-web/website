@@ -116,7 +116,7 @@ export default async function HomePage() {
             <ProductCarousel
               title="Пополнение кошелька PSN"
               products={topups}
-              viewAllHref="/games?product_type=topup"
+              viewAllHref="/topup"
             />
           )}
         </div>

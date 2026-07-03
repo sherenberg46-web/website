@@ -23,6 +23,12 @@ export function normalizeImageUrl(url: string | null | undefined): string {
   return `${STATIC_BASE}${url}`;
 }
 
+/** Личный контакт менеджера (не бот) — для кнопок «Написать менеджеру» */
+export function getManagerLink(text?: string): string {
+  const base = process.env.NEXT_PUBLIC_TG_MANAGER || 'https://t.me/gamestore_by';
+  return text ? `${base}?text=${encodeURIComponent(text)}` : base;
+}
+
 export function getTelegramLink(productId?: number): string {
   const bot = process.env.NEXT_PUBLIC_TG_BOT || 'https://t.me/GameDigitalShop_bot';
   if (productId) return `${bot}?startapp=product_${productId}`;
@@ -67,7 +73,15 @@ export async function getProductCount(filters: ProductFilters = {}): Promise<num
     if (v !== undefined && v !== null && v !== '') params.set(k, String(v));
   });
   const qs = params.toString();
-  return apiFetch<number>(`/products/count${qs ? `?${qs}` : ''}`, { revalidate: 60 });
+  // Эндпоинт возвращает {count: N} — разворачиваем (раньше объект рендерился в JSX и ронял каталог)
+  try {
+    const res = await apiFetch<{ count: number }>(`/products/count${qs ? `?${qs}` : ''}`, {
+      revalidate: 60,
+    });
+    return typeof res === 'number' ? res : res?.count ?? 0;
+  } catch {
+    return 0;
+  }
 }
 
 export async function getProductEditions(

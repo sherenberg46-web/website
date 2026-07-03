@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { MessageCircle, Clock, Mail } from 'lucide-react';
-import { getTelegramLink } from '@/lib/api';
+import { getTelegramLink, getManagerLink } from '@/lib/api';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
 export const metadata: Metadata = {
@@ -18,7 +18,25 @@ export default function ContactsPage() {
         </p>
       </ScrollReveal>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+        <ScrollReveal>
+          <a
+            href={getManagerLink()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block bg-bg-card border border-border hover:border-accent/40 rounded-2xl p-6 transition-colors group"
+          >
+            <MessageCircle className="w-8 h-8 text-accent mb-3" />
+            <h3 className="font-semibold text-text-primary mb-1 group-hover:text-accent transition-colors">
+              Менеджер
+            </h3>
+            <p className="text-text-secondary text-sm">@gamestore_by</p>
+            <p className="text-text-secondary text-xs mt-2">
+              Вопросы по заказам и оплате — пишите напрямую
+            </p>
+          </a>
+        </ScrollReveal>
+
         <ScrollReveal>
           <a
             href={getTelegramLink()}
@@ -55,13 +73,13 @@ export default function ContactsPage() {
             Не нашли ответ на свой вопрос? Напишите нам напрямую — ответим в ближайшее время.
           </p>
           <a
-            href={getTelegramLink()}
+            href={getManagerLink()}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-gradient text-black font-semibold px-8 py-3.5 rounded-full inline-flex items-center gap-2"
           >
             <MessageCircle className="w-4 h-4" />
-            Написать в Telegram
+            Написать менеджеру
           </a>
         </div>
       </ScrollReveal>

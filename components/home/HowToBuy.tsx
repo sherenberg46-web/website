@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Search, ShoppingCart, MessageCircle } from 'lucide-react';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
-import { getTelegramLink } from '@/lib/api';
+import { getTelegramLink, getManagerLink } from '@/lib/api';
 
 const STEPS = [
   {
@@ -70,7 +70,7 @@ export function HowToBuy() {
               Перейти в каталог
             </Link>
             <a
-              href={getTelegramLink()}
+              href={getManagerLink()}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-8 py-3.5 rounded-full border border-border text-text-secondary hover:text-text-primary hover:border-accent/40 transition-colors"

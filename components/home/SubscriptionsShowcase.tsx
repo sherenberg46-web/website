@@ -19,6 +19,12 @@ import {
 
 const MONTHS: Months[] = [1, 3, 12];
 
+const TIER_IMAGES: Record<Tier, string> = {
+  essential: '/images/ps-essential.jpg',
+  extra: '/images/ps-extra.jpg',
+  deluxe: '/images/ps-deluxe.jpg',
+};
+
 export function SubscriptionsShowcase({ region }: { region: Region }) {
   const [months, setMonths] = useState<Months>(12);
   const [added, setAdded] = useState<number | null>(null);
@@ -33,7 +39,7 @@ export function SubscriptionsShowcase({ region }: { region: Region }) {
       edition_name: null,
       qty: 1,
       title: `PS Plus ${TIERS.find((t) => t.id === tier)!.label} — ${monthsLabel(months)} (${region})`,
-      image_url: '/placeholder.png',
+      image_url: TIER_IMAGES[tier],
       price_byn: price,
       original_price_byn: null,
       discount_pct: 0,
@@ -125,7 +131,7 @@ export function SubscriptionsShowcase({ region }: { region: Region }) {
                   )}
                 </button>
                 <Link
-                  href={`/games/${id}`}
+                  href="/subscriptions"
                   className="px-3 py-2.5 rounded-full text-sm text-text-secondary border border-border hover:text-text-primary hover:border-accent/40 transition-colors"
                 >
                   Ещё

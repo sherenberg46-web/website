@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useCartStore } from '@/store/cartStore';
-import { createWebOrder, getTelegramLink } from '@/lib/api';
+import { createWebOrder, getManagerLink } from '@/lib/api';
 import { getClientRegion } from '@/lib/region';
 import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
@@ -62,12 +62,12 @@ export function OrderForm() {
           Менеджер свяжется с вами в ближайшее время для подтверждения заказа и оплаты.
         </p>
         <a
-          href={getTelegramLink()}
+          href={getManagerLink()}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 btn-gradient text-black font-semibold px-8 py-3.5 rounded-full"
         >
-          Написать в Telegram
+          Написать менеджеру
           <ExternalLink className="w-4 h-4" />
         </a>
       </div>
@@ -78,10 +78,9 @@ export function OrderForm() {
     const orderSummary = items
       .map((i) => `${i.title}${i.edition_name ? ` (${i.edition_name})` : ''} × ${i.qty}`)
       .join('\n');
-    const tgText = encodeURIComponent(
+    const tgLink = getManagerLink(
       `Заказ:\n${orderSummary}\n\nИмя: ${name}\nКонтакт: ${contact}${comment ? `\nКомментарий: ${comment}` : ''}`
     );
-    const tgLink = `https://t.me/GameDigitalShop_bot?text=${tgText}`;
 
     return (
       <div className="text-center py-10">
@@ -100,7 +99,7 @@ export function OrderForm() {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 btn-gradient text-black font-semibold px-8 py-3.5 rounded-full"
         >
-          Отправить заказ в Telegram
+          Отправить заказ менеджеру
           <ExternalLink className="w-4 h-4" />
         </a>
       </div>

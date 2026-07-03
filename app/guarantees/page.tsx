@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Shield, CheckCircle, RefreshCw, Clock } from 'lucide-react';
-import { getTelegramLink } from '@/lib/api';
+import { getManagerLink } from '@/lib/api';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
 export const metadata: Metadata = {
@@ -78,12 +78,12 @@ export default function GuaranteesPage() {
 
       <ScrollReveal className="text-center mt-10">
         <a
-          href={getTelegramLink()}
+          href={getManagerLink()}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-gradient text-black font-semibold px-8 py-3.5 rounded-full inline-block"
         >
-          Написать в поддержку
+          Написать менеджеру
         </a>
       </ScrollReveal>
     </div>

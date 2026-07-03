@@ -8,9 +8,10 @@ interface Props {
   total: number;
   pageSize: number;
   offset: number;
+  basePath?: string;
 }
 
-export function CatalogPagination({ total, pageSize, offset }: Props) {
+export function CatalogPagination({ total, pageSize, offset, basePath = '/games' }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -24,7 +25,7 @@ export function CatalogPagination({ total, pageSize, offset }: Props) {
     const newOffset = (page - 1) * pageSize;
     if (newOffset === 0) params.delete('offset');
     else params.set('offset', String(newOffset));
-    router.push(`/games?${params.toString()}`);
+    router.push(`${basePath}?${params.toString()}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 

@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ShoppingCart, Heart, X, Menu, Gamepad2 } from 'lucide-react';
+import Image from 'next/image';
+import { ShoppingCart, Heart, X, Menu } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useFavouritesStore } from '@/store/favouritesStore';
 import { getTelegramLink } from '@/lib/api';
@@ -60,9 +61,14 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 h-full flex items-center gap-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0 group">
-            <div className="w-7 h-7 rounded-lg bg-brand-gradient flex items-center justify-center">
-              <Gamepad2 className="w-4 h-4 text-black" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="GAME STORE"
+              width={30}
+              height={30}
+              className="rounded-lg"
+              priority
+            />
             <span className="font-bold text-sm tracking-tight text-text-primary group-hover:text-gradient transition-all">
               GAME STORE
             </span>

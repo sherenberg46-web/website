@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
-import { getProducts, getSaleCollections } from '@/lib/api';
+import { Suspense } from 'react';
+import { getProducts, getProductCount, getSaleCollections } from '@/lib/api';
 import { getRegion } from '@/lib/region-server';
+import type { ProductFilters } from '@/lib/types';
+import { CatalogFilters } from '@/components/products/CatalogFilters';
+import { CatalogPagination } from '@/components/products/CatalogPagination';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Link from 'next/link';
@@ -12,36 +16,61 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-export default async function SalePage() {
+const PAGE_SIZE = 24;
+
+const SALE_SORT = [
+  { value: '', label: 'По скидке' },
+  { value: 'price_asc', label: 'Цена ↑' },
+  { value: 'price_desc', label: 'Цена ↓' },
+];
+
+interface Props {
+  searchParams: Record<string, string | undefined>;
+}
+
+export default async function SalePage({ searchParams }: Props) {
   const region = getRegion();
-  const [products, saleCollections] = await Promise.all([
-    // task_type=sales — серверный фильтр акций, как в Mini App:
-    // только игры с активной скидкой в выбранном регионе
-    getProducts({ task_type: 'sales', sort: 'discount', region, limit: 40 }),
+  const offset = Number(searchParams.offset ?? 0);
+
+  // task_type=sales — серверный фильтр акций, как в Mini App
+  const filters: ProductFilters = {
+    task_type: 'sales',
+    region,
+    sort: searchParams.sort || 'discount',
+    platform: searchParams.platform || undefined,
+    genre: searchParams.genre || undefined,
+    price_min: searchParams.price_min ? Number(searchParams.price_min) : undefined,
+    price_max: searchParams.price_max ? Number(searchParams.price_max) : undefined,
+    discount_min: searchParams.discount_min ? Number(searchParams.discount_min) : undefined,
+    limit: PAGE_SIZE,
+    offset,
+  };
+
+  const [products, total, saleCollections] = await Promise.all([
+    getProducts(filters).catch(() => []),
+    getProductCount({ ...filters, sort: undefined, limit: undefined, offset: undefined }),
     getSaleCollections(),
   ]);
-
-  const withDiscount = products.filter((p) => p.discount_pct > 0);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <ScrollReveal>
-        <div className="text-center mb-12">
+        <div className="text-center mb-10">
           <p className="text-accent text-sm font-semibold uppercase tracking-widest mb-3">
             Специальные предложения
           </p>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">Распродажа</h1>
           <p className="text-text-secondary max-w-md mx-auto">
-            Скидки до 90% на лучшие игры PlayStation. Предложения ограничены по времени.
+            Скидки до 95% на игры PlayStation. Предложения ограничены по времени.
           </p>
         </div>
       </ScrollReveal>
 
       {/* Sale collections */}
-      {saleCollections.length > 0 && (
-        <ScrollReveal className="mb-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      {saleCollections.length > 0 && offset === 0 && (
+        <ScrollReveal className="mb-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {saleCollections.map((sc) => (
               <Link
                 key={sc.id}
@@ -60,14 +89,19 @@ export default async function SalePage() {
         </ScrollReveal>
       )}
 
-      {/* Products */}
-      <ScrollReveal>
-        {withDiscount.length > 0 ? (
-          <ProductGrid products={withDiscount} />
-        ) : (
-          <ProductGrid products={products} />
-        )}
-      </ScrollReveal>
+      {/* Filters */}
+      <Suspense>
+        <CatalogFilters basePath="/sale" hideSearch sortOptions={SALE_SORT} />
+      </Suspense>
+
+      <p className="text-text-secondary text-sm mb-4">
+        Со скидкой: <span className="text-text-primary font-medium">{total}</span> игр
+      </p>
+
+      <ProductGrid products={products} />
+      <Suspense>
+        <CatalogPagination total={total} pageSize={PAGE_SIZE} offset={offset} basePath="/sale" />
+      </Suspense>
     </div>
   );
 }

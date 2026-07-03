@@ -146,4 +146,7 @@ export interface ProductFilters {
   task_type?: string;
   region?: string;
   section?: string;
+  price_min?: number;
+  price_max?: number;
+  discount_min?: number;
 }

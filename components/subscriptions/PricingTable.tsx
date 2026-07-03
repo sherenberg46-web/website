@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { ShoppingCart, Check } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { ShoppingCart, Check, ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 import { useCartStore } from '@/store/cartStore';
-import { REGIONS, type Region } from '@/lib/region';
+import { REGIONS, getClientRegion, type Region } from '@/lib/region';
 import {
   SUB_PRICES,
   PS_IDS,
@@ -17,23 +19,34 @@ import {
 
 const MONTHS: Months[] = [1, 3, 12];
 
-/** Прайс-таблица подписок: оба региона рядом, добавление в корзину в один клик. */
+const TIER_IMAGES: Record<Tier, string> = {
+  essential: '/images/ps-essential.jpg',
+  extra: '/images/ps-extra.jpg',
+  deluxe: '/images/ps-deluxe.jpg',
+};
+
+/** Подписки: вкладки региона и срока, карточки тарифов с картинками. */
 export function PricingTable() {
   const addItem = useCartStore((s) => s.addItem);
+  const [region, setRegion] = useState<Region>('UA');
+  const [months, setMonths] = useState<Months>(12);
   const [added, setAdded] = useState<string | null>(null);
 
-  function buy(region: Region, tier: Tier, months: Months) {
+  // Стартуем с региона из шапки
+  useEffect(() => {
+    setRegion(getClientRegion());
+  }, []);
+
+  function buy(tier: Tier) {
     const key = `${region}-${tier}-${months}`;
-    const id = PS_IDS[region][tier][months];
-    const price = SUB_PRICES[region].psplus[months][tier];
     addItem({
-      product_id: id,
+      product_id: PS_IDS[region][tier][months],
       edition_id: null,
       edition_name: null,
       qty: 1,
       title: `PS Plus ${TIER_INFO.find((t) => t.id === tier)!.label} — ${monthsLabel(months)} (${region})`,
-      image_url: '/placeholder.png',
-      price_byn: price,
+      image_url: TIER_IMAGES[tier],
+      price_byn: SUB_PRICES[region].psplus[months][tier],
       original_price_byn: null,
       discount_pct: 0,
       product_type: 'subscription',
@@ -42,16 +55,16 @@ export function PricingTable() {
     setTimeout(() => setAdded(null), 1500);
   }
 
-  function buyEa(region: Region, months: 1 | 12) {
-    const key = `ea-${region}-${months}`;
+  function buyEa(m: 1 | 12) {
+    const key = `ea-${region}-${m}`;
     addItem({
-      product_id: EA_IDS[region][months],
+      product_id: EA_IDS[region][m],
       edition_id: null,
       edition_name: null,
       qty: 1,
-      title: `EA Play — ${monthsLabel(months)} (${region})`,
-      image_url: '/placeholder.png',
-      price_byn: SUB_PRICES[region].eaplay[months],
+      title: `EA Play — ${monthsLabel(m)} (${region})`,
+      image_url: '/images/ea-play.jpg',
+      price_byn: SUB_PRICES[region].eaplay[m],
       original_price_byn: null,
       discount_pct: 0,
       product_type: 'subscription',
@@ -61,151 +74,179 @@ export function PricingTable() {
   }
 
   return (
-    <div className="space-y-12">
-      {TIER_INFO.map((tier) => (
-        <section key={tier.id}>
-          <div className="mb-4">
-            <h2 className="text-2xl font-bold">PS Plus {tier.label}</h2>
-            <p className="text-text-secondary text-sm mt-1">{tier.features.join(' · ')}</p>
-          </div>
+    <div>
+      {/* Region + months tabs */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+        <div className="flex gap-1 bg-bg-card border border-border rounded-full p-1">
+          {REGIONS.map((r) => (
+            <button
+              key={r.value}
+              onClick={() => setRegion(r.value)}
+              className={clsx(
+                'px-5 py-2 rounded-full text-sm font-medium transition-colors',
+                region === r.value
+                  ? 'bg-brand-gradient text-black'
+                  : 'text-text-secondary hover:text-text-primary'
+              )}
+            >
+              {r.flag} {r.value === 'UA' ? 'Украина' : 'Турция'}
+            </button>
+          ))}
+        </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] border-separate border-spacing-0">
-              <thead>
-                <tr>
-                  <th className="text-left text-text-secondary text-xs font-medium uppercase tracking-wider pb-3">
-                    Срок
-                  </th>
-                  {REGIONS.map((r) => (
-                    <th
-                      key={r.value}
-                      className="text-left text-text-secondary text-xs font-medium uppercase tracking-wider pb-3"
-                    >
-                      {r.flag} {r.label}
-                    </th>
+        <div className="flex gap-1 bg-bg-card border border-border rounded-full p-1">
+          {MONTHS.map((m) => (
+            <button
+              key={m}
+              onClick={() => setMonths(m)}
+              className={clsx(
+                'px-5 py-2 rounded-full text-sm font-medium transition-colors',
+                months === m
+                  ? 'bg-brand-gradient text-black'
+                  : 'text-text-secondary hover:text-text-primary'
+              )}
+            >
+              {monthsLabel(m)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tier cards */}
+      <div className="grid sm:grid-cols-3 gap-4">
+        {TIER_INFO.map((tier) => {
+          const price = SUB_PRICES[region].psplus[months][tier.id];
+          const perMonth = Math.round(price / months);
+          const key = `${region}-${tier.id}-${months}`;
+          const highlighted = tier.id === 'extra';
+          return (
+            <div
+              key={tier.id}
+              className={clsx(
+                'relative bg-bg-card rounded-3xl border overflow-hidden flex flex-col transition-colors',
+                highlighted ? 'border-accent/50 shadow-glow-card' : 'border-border'
+              )}
+            >
+              {/* Image */}
+              <div className="relative aspect-[16/9]">
+                <Image
+                  src={TIER_IMAGES[tier.id]}
+                  alt={`PS Plus ${tier.label}`}
+                  fill
+                  quality={90}
+                  sizes="(max-width: 640px) 90vw, 340px"
+                  className="object-cover"
+                />
+                {highlighted && (
+                  <span className="absolute top-3 right-3 px-3 py-1 bg-brand-gradient text-black text-[10px] font-bold rounded-full uppercase tracking-wide">
+                    Популярный
+                  </span>
+                )}
+              </div>
+
+              <div className="p-6 flex flex-col flex-1">
+                <h3 className="font-bold text-lg">{tier.label}</h3>
+                <p className="mt-2">
+                  <span className="text-3xl font-bold">{price}</span>
+                  <span className="text-sm font-medium text-text-secondary ml-1.5">BYN</span>
+                  {months > 1 && (
+                    <span className="text-xs text-text-secondary ml-2">≈{perMonth} BYN/мес</span>
+                  )}
+                </p>
+                <ul className="space-y-2 my-5 flex-1">
+                  {tier.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm text-text-secondary">
+                      <Check className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
+                      {f}
+                    </li>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {MONTHS.map((m) => (
-                  <tr key={m}>
-                    <td className="py-3 pr-4 border-t border-border text-sm font-medium text-text-primary">
-                      {monthsLabel(m)}
-                    </td>
-                    {REGIONS.map((r) => {
-                      const price = SUB_PRICES[r.value].psplus[m][tier.id];
-                      const key = `${r.value}-${tier.id}-${m}`;
-                      const perMonth = Math.round(price / m);
-                      return (
-                        <td key={r.value} className="py-3 pr-4 border-t border-border">
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <div>
-                              <span className="text-lg font-bold text-text-primary">
-                                {price} BYN
-                              </span>
-                              {m > 1 && (
-                                <span className="text-xs text-text-secondary ml-1.5">
-                                  ≈{perMonth}/мес
-                                </span>
-                              )}
-                            </div>
-                            <button
-                              onClick={() => buy(r.value, tier.id, m)}
-                              className={clsx(
-                                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors',
-                                added === key
-                                  ? 'bg-accent/20 text-accent'
-                                  : 'btn-gradient text-black'
-                              )}
-                            >
-                              {added === key ? (
-                                <>
-                                  <Check className="w-3.5 h-3.5" /> В корзине
-                                </>
-                              ) : (
-                                <>
-                                  <ShoppingCart className="w-3.5 h-3.5" /> Купить
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      ))}
+                </ul>
+                <button
+                  onClick={() => buy(tier.id)}
+                  className={clsx(
+                    'w-full flex items-center justify-center gap-2 py-3 rounded-full text-sm font-semibold transition-colors',
+                    added === key
+                      ? 'bg-accent/20 text-accent'
+                      : highlighted
+                        ? 'btn-gradient text-black'
+                        : 'bg-white/10 text-text-primary hover:bg-white/15'
+                  )}
+                >
+                  {added === key ? (
+                    <>
+                      <Check className="w-4 h-4" /> В корзине
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-4 h-4" /> В корзину
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       {/* EA Play */}
-      <section>
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold">EA Play</h2>
-          <p className="text-text-secondary text-sm mt-1">
-            Каталог игр EA · пробные версии новинок · скидки 10%
+      <div className="mt-6 bg-bg-card rounded-3xl border border-border overflow-hidden flex flex-col sm:flex-row">
+        <div className="relative sm:w-64 aspect-[16/9] sm:aspect-auto shrink-0">
+          <Image
+            src="/images/ea-play.jpg"
+            alt="EA Play"
+            fill
+            quality={90}
+            sizes="256px"
+            className="object-cover"
+          />
+        </div>
+        <div className="p-6 flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
+          <div className="flex-1">
+            <h3 className="font-bold text-lg">EA Play</h3>
+            <p className="text-sm text-text-secondary mt-1">
+              Каталог игр EA · пробные версии новинок · скидки 10%
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            {([1, 12] as const).map((m) => {
+              const key = `ea-${region}-${m}`;
+              return (
+                <button
+                  key={m}
+                  onClick={() => buyEa(m)}
+                  className={clsx(
+                    'flex items-center justify-between gap-4 px-4 py-2.5 rounded-full text-sm font-medium transition-colors',
+                    added === key
+                      ? 'bg-accent/20 text-accent'
+                      : 'bg-white/10 text-text-primary hover:bg-white/15'
+                  )}
+                >
+                  <span>{monthsLabel(m)}</span>
+                  <span className="font-bold">
+                    {added === key ? <Check className="w-4 h-4 inline" /> : `${SUB_PRICES[region].eaplay[m]} BYN`}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Топ игр по подписке */}
+      <Link
+        href="/collections/ps-plus-top"
+        className="mt-6 flex items-center justify-between bg-bg-card border border-border hover:border-accent/40 rounded-3xl p-6 transition-colors group"
+      >
+        <div>
+          <h3 className="font-bold text-lg group-hover:text-accent transition-colors">
+            Топ игр по подписке PS Plus
+          </h3>
+          <p className="text-sm text-text-secondary mt-1">
+            Лучшие игры, доступные в каталоге Extra и Deluxe
           </p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px] border-separate border-spacing-0">
-            <thead>
-              <tr>
-                <th className="text-left text-text-secondary text-xs font-medium uppercase tracking-wider pb-3">
-                  Срок
-                </th>
-                {REGIONS.map((r) => (
-                  <th
-                    key={r.value}
-                    className="text-left text-text-secondary text-xs font-medium uppercase tracking-wider pb-3"
-                  >
-                    {r.flag} {r.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {([1, 12] as const).map((m) => (
-                <tr key={m}>
-                  <td className="py-3 pr-4 border-t border-border text-sm font-medium text-text-primary">
-                    {monthsLabel(m)}
-                  </td>
-                  {REGIONS.map((r) => {
-                    const key = `ea-${r.value}-${m}`;
-                    return (
-                      <td key={r.value} className="py-3 pr-4 border-t border-border">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <span className="text-lg font-bold text-text-primary">
-                            {SUB_PRICES[r.value].eaplay[m]} BYN
-                          </span>
-                          <button
-                            onClick={() => buyEa(r.value, m)}
-                            className={clsx(
-                              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors',
-                              added === key ? 'bg-accent/20 text-accent' : 'btn-gradient text-black'
-                            )}
-                          >
-                            {added === key ? (
-                              <>
-                                <Check className="w-3.5 h-3.5" /> В корзине
-                              </>
-                            ) : (
-                              <>
-                                <ShoppingCart className="w-3.5 h-3.5" /> Купить
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+        <ArrowRight className="w-5 h-5 text-accent shrink-0" />
+      </Link>
     </div>
   );
 }

@@ -11,14 +11,25 @@ export const metadata: Metadata = {
 
 export const revalidate = 300;
 
-export default async function TopupPage() {
-  const [ua, tr] = await Promise.all([
-    getProducts({ product_type: 'topup', region: 'UA', limit: 50 }).catch(() => []),
-    getProducts({ product_type: 'topup', region: 'TR', limit: 50 }).catch(() => []),
-  ]);
+function isUA(title: string): boolean {
+  const t = title.toLowerCase();
+  return t.includes('гривен') || t.includes('грн') || t.includes('store ua');
+}
 
-  const sortByPrice = (a: { price_byn: number | null }, b: { price_byn: number | null }) =>
+function isTR(title: string): boolean {
+  const t = title.toLowerCase();
+  return t.includes('store tl') || t.includes('лир');
+}
+
+export default async function TopupPage() {
+  // Все карты пополнения; регионы различаем по валюте в названии
+  // (в базе у всех топапов region=UA)
+  const all = await getProducts({ product_type: 'topup', limit: 100 }).catch(() => []);
+  const byPrice = (a: { price_byn: number | null }, b: { price_byn: number | null }) =>
     (a.price_byn ?? 0) - (b.price_byn ?? 0);
+
+  const ua = all.filter((p) => isUA(p.title)).sort(byPrice);
+  const tr = all.filter((p) => isTR(p.title)).sort(byPrice);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -37,13 +48,13 @@ export default async function TopupPage() {
         </div>
       </ScrollReveal>
 
-      <div className="space-y-12">
+      <div className="space-y-14">
         <ScrollReveal>
           <TopupList
             title="Украина"
             flag="🇺🇦"
             note="Пополнение в гривнах — для аккаунтов региона Украина"
-            products={[...ua].sort(sortByPrice)}
+            products={ua}
           />
         </ScrollReveal>
         <ScrollReveal>
@@ -51,7 +62,7 @@ export default async function TopupPage() {
             title="Турция"
             flag="🇹🇷"
             note="Карты пополнения в лирах — для аккаунтов региона Турция"
-            products={[...tr].sort(sortByPrice)}
+            products={tr}
           />
         </ScrollReveal>
       </div>

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getTelegramLink } from '@/lib/api';
+import { getManagerLink } from '@/lib/api';
 import { HowToBuy } from '@/components/home/HowToBuy';
 
 export const metadata: Metadata = {
@@ -41,12 +41,12 @@ export default function HowToBuyPage() {
 
       <div className="mt-10 text-center">
         <a
-          href={getTelegramLink()}
+          href={getManagerLink()}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-gradient text-black font-semibold px-8 py-3.5 rounded-full inline-block"
         >
-          Задать вопрос в Telegram
+          Написать менеджеру
         </a>
       </div>
     </div>
