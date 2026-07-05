@@ -5,11 +5,12 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ShoppingCart, Heart, X, Menu } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '@/store/cartStore';
 import { useFavouritesStore } from '@/store/favouritesStore';
 import { getTelegramLink } from '@/lib/api';
 import { RegionSwitcher } from './RegionSwitcher';
-import { SearchBox } from './SearchBox';
+import { SearchBox, MobileSearch } from './SearchBox';
 import clsx from 'clsx';
 
 const NAV_LINKS = [
@@ -43,6 +44,14 @@ export function Header() {
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+
+  // Блокировка прокрутки фона, пока открыто мобильное меню
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [menuOpen]);
 
   const cartCount = mounted ? cartItems.reduce((s, i) => s + i.qty, 0) : 0;
   const favCount = mounted ? favProducts.length : 0;
@@ -95,6 +104,7 @@ export function Header() {
           {/* Right actions */}
           <div className="flex items-center gap-1 ml-auto">
             <SearchBox />
+            <MobileSearch />
 
             <RegionSwitcher />
 
@@ -139,6 +149,8 @@ export function Header() {
             {/* Mobile menu button */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
+              aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
+              aria-expanded={menuOpen}
               className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-card transition-colors"
             >
               {menuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -148,22 +160,35 @@ export function Header() {
       </header>
 
       {/* Mobile menu */}
+      <AnimatePresence>
       {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-bg-page/95 backdrop-blur-xl pt-[52px]">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-40 bg-bg-page/95 backdrop-blur-xl pt-[52px] overflow-y-auto"
+        >
           <nav className="flex flex-col p-4 gap-1">
-            {NAV_LINKS.map((link) => (
-              <Link
+            {NAV_LINKS.map((link, i) => (
+              <motion.div
                 key={link.href}
-                href={link.href}
-                className={clsx(
-                  'px-4 py-3 rounded-xl text-base font-medium transition-colors',
-                  pathname === link.href
-                    ? 'text-text-primary bg-bg-card'
-                    : 'text-text-secondary hover:text-text-primary'
-                )}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.25, delay: 0.03 * i }}
               >
-                {link.label}
-              </Link>
+                <Link
+                  href={link.href}
+                  className={clsx(
+                    'block px-4 py-3 rounded-xl text-base font-medium transition-colors',
+                    pathname === link.href
+                      ? 'text-text-primary bg-bg-card'
+                      : 'text-text-secondary hover:text-text-primary'
+                  )}
+                >
+                  {link.label}
+                </Link>
+              </motion.div>
             ))}
             <Link href="/favourites" className="px-4 py-3 rounded-xl text-base font-medium text-text-secondary">
               Избранное {favCount > 0 && <span className="text-accent">({favCount})</span>}
@@ -180,8 +205,9 @@ export function Header() {
               Открыть в Telegram
             </a>
           </nav>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Spacer */}
       <div style={{ height: '52px' }} />

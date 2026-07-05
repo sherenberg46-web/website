@@ -66,8 +66,11 @@ export default async function GamePage({ params }: Props) {
       getProductEditions(id, region),
       getProductDlc(id),
     ]);
-  } catch {
-    notFound();
+  } catch (err) {
+    // Настоящее «не найдено» — только при 404 от API.
+    // Прочие сбои отдаём в error.tsx, а не маскируем под 404.
+    if ((err as { status?: number }).status === 404) notFound();
+    throw err;
   }
 
   // Похожие: тот же жанр, регион обязателен (иначе дубли), сортировка по рейтингу

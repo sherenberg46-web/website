@@ -55,6 +55,7 @@ export function ProductCard({ product, priority = false }: Props) {
   return (
     <motion.article
       whileHover={{ scale: 1.02, y: -4 }}
+      whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
       className="group relative"
     >

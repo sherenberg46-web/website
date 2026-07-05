@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { getProducts } from '@/lib/api';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
+import { DataError } from '@/components/ui/DataError';
 
 export const metadata: Metadata = {
   title: 'Новинки',
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 export const revalidate = 120;
 
 export default async function NewPage() {
-  const products = await getProducts({ task_type: 'new_games', limit: 40 });
+  const products = await getProducts({ task_type: 'new_games', limit: 40 }).catch(() => null);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -26,7 +27,11 @@ export default async function NewPage() {
           </p>
         </div>
       </ScrollReveal>
-      <ProductGrid products={products} priority />
+      {products === null ? (
+        <DataError title="Новинки временно недоступны" />
+      ) : (
+        <ProductGrid products={products} priority />
+      )}
     </div>
   );
 }

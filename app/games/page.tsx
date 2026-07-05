@@ -5,6 +5,7 @@ import { getRegion } from '@/lib/region-server';
 import { CatalogFilters } from '@/components/products/CatalogFilters';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { CatalogPagination } from '@/components/products/CatalogPagination';
+import { DataError } from '@/components/ui/DataError';
 import type { ProductFilters } from '@/lib/types';
 
 export const metadata: Metadata = {
@@ -42,10 +43,15 @@ async function CatalogContent({ searchParams }: Props) {
     offset,
   };
 
-  const [products, total] = await Promise.all([
-    getProducts(filters),
-    getProductCount({ ...filters, limit: undefined, offset: undefined }),
-  ]);
+  let products, total;
+  try {
+    [products, total] = await Promise.all([
+      getProducts(filters),
+      getProductCount({ ...filters, limit: undefined, offset: undefined }),
+    ]);
+  } catch {
+    return <DataError title="Каталог временно недоступен" />;
+  }
 
   return (
     <>
@@ -62,7 +68,7 @@ async function CatalogContent({ searchParams }: Props) {
 
 async function FiltersSection() {
   const [categories, genres] = await Promise.all([
-    getCategories(),
+    getCategories().catch(() => []),
     getProductGenres(),
   ]);
   return (

@@ -44,7 +44,8 @@ async function apiFetch<T>(
     ...rest,
     next: { revalidate },
   });
-  if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
+  if (!res.ok)
+    throw Object.assign(new Error(`API ${res.status}: ${path}`), { status: res.status });
   return res.json() as Promise<T>;
 }
 
@@ -204,6 +205,6 @@ export function getOriginalPrice(price: number, discountPct: number): number {
 }
 
 export function formatPrice(price: number | null | undefined): string {
-  if (price == null) return '—';
+  if (price == null) return '\u2014';
   return `${price.toLocaleString('ru-BY')} BYN`;
 }
