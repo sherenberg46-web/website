@@ -5,15 +5,12 @@ import Image from 'next/image';
 import { ShoppingCart, Check, Wallet } from 'lucide-react';
 import clsx from 'clsx';
 import type { Product } from '@/lib/types';
-import type { Region } from '@/lib/region';
 import { useCartStore } from '@/store/cartStore';
-import { RegionBadge } from '@/components/ui/RegionBadge';
 
 interface Props {
-  title: string;
-  regionCode: Region;
-  note: string;
   products: Product[];
+  /** Подпись валюты для карточек без картинки, напр. «злотых» */
+  currency?: string;
 }
 
 /** Первое отдельное число в названии — номинал карты */
@@ -61,7 +58,7 @@ function localImage(title: string): string | null {
 }
 
 /** Карты пополнения одного региона: картинка, номинал, цена, в корзину. */
-export function TopupList({ title, regionCode, note, products }: Props) {
+export function TopupList({ products, currency }: Props) {
   const addItem = useCartStore((s) => s.addItem);
   const [added, setAdded] = useState<number | null>(null);
 
@@ -86,64 +83,68 @@ export function TopupList({ title, regionCode, note, products }: Props) {
   }
 
   return (
-    <section>
-      <div className="flex items-center gap-2.5 mb-1">
-        <RegionBadge code={regionCode} size="md" />
-        <h2 className="text-2xl font-bold">{title}</h2>
-      </div>
-      <p className="text-text-secondary text-sm mb-5">{note}</p>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {products.map((p) => {
-          const img = localImage(p.title);
-          return (
-            <div
-              key={p.id}
-              className="bg-bg-card border border-border rounded-2xl overflow-hidden hover:border-accent/30 transition-colors flex flex-col"
-            >
-              <div className="relative aspect-[16/9] bg-bg-card-hover">
-                {img ? (
-                  <Image
-                    src={img}
-                    alt={p.title}
-                    fill
-                    quality={90}
-                    sizes="(max-width: 768px) 45vw, 300px"
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Wallet className="w-8 h-8 text-accent/60" />
-                  </div>
-                )}
-              </div>
-              <div className="p-3.5 flex flex-col gap-2 flex-1">
-                <p className="text-xs text-text-secondary line-clamp-2 flex-1">{p.title}</p>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-base font-bold text-text-primary">{p.price_byn} BYN</span>
-                  <button
-                    onClick={() => buy(p)}
-                    className={clsx(
-                      'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-colors',
-                      added === p.id ? 'bg-accent/20 text-accent' : 'btn-gradient text-black'
-                    )}
-                  >
-                    {added === p.id ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" /> Готово
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="w-3.5 h-3.5" /> Купить
-                      </>
-                    )}
-                  </button>
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      {products.map((p) => {
+        const img = localImage(p.title);
+        const amount = extractAmount(p.title);
+        return (
+          <div
+            key={p.id}
+            className="bg-bg-card border border-border rounded-2xl overflow-hidden hover:border-accent/30 transition-colors flex flex-col"
+          >
+            <div className="relative aspect-[16/9] bg-bg-card-hover">
+              {img ? (
+                <Image
+                  src={img}
+                  alt={p.title}
+                  fill
+                  quality={90}
+                  sizes="(max-width: 768px) 45vw, 300px"
+                  className="object-cover"
+                />
+              ) : (
+                /* Нет картинки — аккуратная карточка с номиналом */
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/15 via-bg-card-hover to-accent-blue/15 flex flex-col items-center justify-center gap-1">
+                  <Wallet className="w-6 h-6 text-accent/70" />
+                  {amount !== null && (
+                    <p className="font-extrabold text-xl text-text-primary leading-none">
+                      {amount.toLocaleString('ru-BY')}
+                      {currency && (
+                        <span className="text-xs font-semibold text-text-secondary ml-1">
+                          {currency}
+                        </span>
+                      )}
+                    </p>
+                  )}
                 </div>
+              )}
+            </div>
+            <div className="p-3.5 flex flex-col gap-2 flex-1">
+              <p className="text-xs text-text-secondary line-clamp-2 flex-1">{p.title}</p>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-base font-bold text-text-primary">{p.price_byn} BYN</span>
+                <button
+                  onClick={() => buy(p)}
+                  className={clsx(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-colors',
+                    added === p.id ? 'bg-accent/20 text-accent' : 'btn-gradient text-black'
+                  )}
+                >
+                  {added === p.id ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" /> Готово
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-3.5 h-3.5" /> Купить
+                    </>
+                  )}
+                </button>
               </div>
             </div>
-          );
-        })}
-      </div>
-    </section>
+          </div>
+        );
+      })}
+    </div>
   );
 }
