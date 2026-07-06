@@ -64,12 +64,12 @@ export function ProductCard({ product, priority = false }: Props) {
           className="bg-bg-card rounded-2xl overflow-hidden border border-border transition-all duration-300 group-hover:border-accent/30 group-hover:shadow-glow-card-hover"
         >
           {/* Cover image */}
-          <div className="relative aspect-[3/4] overflow-hidden bg-bg-card-hover">
+          <div className="relative aspect-square overflow-hidden bg-bg-card-hover">
             <Image
               src={imageUrl}
               alt={product.title}
               fill
-              sizes="(max-width: 640px) 45vw, 208px"
+              sizes="(max-width: 640px) 45vw, 288px"
               quality={85}
               className="object-cover transition-transform duration-500 group-hover:scale-105"
               priority={priority}

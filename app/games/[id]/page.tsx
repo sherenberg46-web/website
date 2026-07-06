@@ -141,7 +141,7 @@ export default async function GamePage({ params }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16">
           {/* Cover */}
           <div className="relative">
-            <div className="relative aspect-[3/4] max-w-sm mx-auto lg:mx-0 rounded-3xl overflow-hidden shadow-glow-card">
+            <div className="relative aspect-square max-w-lg mx-auto lg:mx-0 rounded-3xl overflow-hidden shadow-glow-card">
               <Image
                 src={imageUrl}
                 alt={product.title}
@@ -149,7 +149,7 @@ export default async function GamePage({ params }: Props) {
                 priority
                 quality={95}
                 className="object-cover"
-                sizes="(max-width: 1024px) 90vw, 384px"
+                sizes="(max-width: 1024px) 90vw, 512px"
               />
               {product.discount_pct > 0 && (
                 <div className="absolute top-4 left-4">

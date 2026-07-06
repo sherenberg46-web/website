@@ -25,14 +25,14 @@ export function RecentlyViewed() {
             <Link
               key={item.id}
               href={`/games/${item.id}`}
-              className="shrink-0 w-32 sm:w-36 snap-start group"
+              className="shrink-0 w-40 sm:w-48 snap-start group"
             >
-              <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-bg-card border border-border group-hover:border-accent/40 transition-colors">
+              <div className="relative aspect-square rounded-xl overflow-hidden bg-bg-card border border-border group-hover:border-accent/40 transition-colors">
                 <Image
                   src={item.image_url}
                   alt={item.title}
                   fill
-                  sizes="144px"
+                  sizes="192px"
                   quality={85}
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />

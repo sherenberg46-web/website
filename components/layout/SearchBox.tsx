@@ -73,12 +73,12 @@ function ResultRow({ p, onNavigate }: { p: Product; onNavigate: () => void }) {
       className="flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors"
       onClick={onNavigate}
     >
-      <div className="relative w-9 h-12 rounded-md overflow-hidden bg-bg-card-hover shrink-0">
+      <div className="relative w-11 h-11 rounded-md overflow-hidden bg-bg-card-hover shrink-0">
         <Image
           src={normalizeImageUrl(p.image_url)}
           alt={p.title}
           fill
-          sizes="36px"
+          sizes="44px"
           className="object-cover"
         />
       </div>

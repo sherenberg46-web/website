@@ -117,7 +117,7 @@ export function ProductCarousel({ title, products, viewAllHref, accentTitle, eye
           className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none"
         >
           {products.map((product, i) => (
-            <div key={product.id} className="shrink-0 w-40 sm:w-48 md:w-52 snap-start">
+            <div key={product.id} className="shrink-0 w-52 sm:w-64 md:w-72 snap-start">
               <ProductCard product={product} priority={i < 3} />
             </div>
           ))}
