@@ -54,6 +54,14 @@ function localImage(title: string): string | null {
     };
     return TR[n] ?? null;
   }
+  if (t.includes('злот')) {
+    const PL = [50, 100, 200, 300, 350, 500, 650, 900, 1100];
+    return PL.includes(n) ? `/images/topup${n}-zl.jpg` : null;
+  }
+  if (t.includes('рупи')) {
+    const IN = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
+    return IN.includes(n) ? `/images/topup${n}-inr.jpg` : null;
+  }
   return null;
 }
 

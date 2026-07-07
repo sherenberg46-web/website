@@ -20,6 +20,8 @@ const STATIC_BASE = 'https://tg-shop-production-1b03.up.railway.app';
 export function normalizeImageUrl(url: string | null | undefined): string {
   if (!url) return '/placeholder.png';
   if (url.startsWith('http')) return url;
+  // Локальные картинки из public/ — карты пополнения, баннеры
+  if (url.startsWith('/images/')) return url;
   return `${STATIC_BASE}${url}`;
 }
 
