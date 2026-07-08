@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // Кэш оптимизированных картинок — сутки (меньше повторной работы оптимизатора)
+    minimumCacheTTL: 86400,
     remotePatterns: [
       // PlayStation CDN — все поддомены
       {

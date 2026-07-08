@@ -13,6 +13,23 @@ export function PriceDisplay({ price, discountPct = 0, className, size = 'md' }:
     return <span className={clsx('text-text-secondary', className)}>Цена по запросу</span>;
   }
 
+  // Бесплатные игры (например, free-to-play): цена 0 — это «Бесплатно», а не «0 BYN»
+  if (price === 0) {
+    return (
+      <span
+        className={clsx(
+          'font-bold text-accent',
+          size === 'sm' && 'text-sm',
+          size === 'md' && 'text-lg',
+          size === 'lg' && 'text-3xl',
+          className
+        )}
+      >
+        Бесплатно
+      </span>
+    );
+  }
+
   const originalPrice = discountPct > 0 ? getOriginalPrice(price, discountPct) : null;
 
   const priceClass = clsx(
