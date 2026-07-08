@@ -131,31 +131,25 @@ export function PricingTable() {
                 highlighted ? 'border-accent/50 shadow-glow-card' : 'border-border'
               )}
             >
-              {/* Image backdrop + clean title overlay (исходники портретные — прямой кроп резал текст) */}
-              <div className="relative aspect-[16/7] overflow-hidden">
+              {/* Постер тарифа целиком поверх размытого фона (исходники портретные) */}
+              <div className="relative aspect-[16/9] overflow-hidden">
+                <Image
+                  src={TIER_IMAGES[tier.id]}
+                  alt=""
+                  aria-hidden
+                  fill
+                  quality={40}
+                  sizes="340px"
+                  className="object-cover scale-150 blur-xl brightness-[.45]"
+                />
                 <Image
                   src={TIER_IMAGES[tier.id]}
                   alt={`PS Plus ${tier.label}`}
                   fill
-                  quality={80}
+                  quality={85}
                   sizes="(max-width: 640px) 90vw, 340px"
-                  className="object-cover scale-125 blur-[6px] brightness-[.4]"
+                  className="object-contain p-2"
                 />
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-text-secondary">
-                    PS Plus
-                  </span>
-                  <span
-                    className={clsx(
-                      'text-2xl font-extrabold tracking-tight',
-                      tier.id === 'essential' && 'text-sky-300',
-                      tier.id === 'extra' && 'text-yellow-300',
-                      tier.id === 'deluxe' && 'text-violet-300'
-                    )}
-                  >
-                    {tier.label}
-                  </span>
-                </div>
                 {highlighted && (
                   <span className="absolute top-3 right-3 px-3 py-1 bg-brand-gradient text-black text-[10px] font-bold rounded-full uppercase tracking-wide">
                     Популярный

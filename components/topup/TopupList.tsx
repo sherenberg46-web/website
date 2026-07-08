@@ -100,16 +100,27 @@ export function TopupList({ products, currency }: Props) {
             key={p.id}
             className="bg-bg-card border border-border rounded-2xl overflow-hidden hover:border-accent/30 transition-colors flex flex-col"
           >
-            <div className="relative aspect-[16/9] bg-bg-card-hover">
+            <div className="relative aspect-[16/9] overflow-hidden bg-bg-card-hover">
               {img ? (
-                <Image
-                  src={img}
-                  alt={p.title}
-                  fill
-                  quality={90}
-                  sizes="(max-width: 768px) 45vw, 300px"
-                  className="object-cover"
-                />
+                <>
+                  <Image
+                    src={img}
+                    alt=""
+                    aria-hidden
+                    fill
+                    quality={30}
+                    sizes="300px"
+                    className="object-cover scale-150 blur-xl brightness-[.45]"
+                  />
+                  <Image
+                    src={img}
+                    alt={p.title}
+                    fill
+                    quality={90}
+                    sizes="(max-width: 768px) 45vw, 300px"
+                    className="object-contain p-2"
+                  />
+                </>
               ) : (
                 /* Нет картинки — аккуратная карточка с номиналом */
                 <div className="absolute inset-0 bg-gradient-to-br from-accent/15 via-bg-card-hover to-accent-blue/15 flex flex-col items-center justify-center gap-1">
