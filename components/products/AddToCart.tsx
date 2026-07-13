@@ -90,7 +90,7 @@ export function AddToCart({ product, editions, region }: Props) {
                   <span className="font-medium">{ed.edition_name}</span>
                   <span className="flex items-center gap-2 shrink-0">
                     {ed.discount_pct > 0 && (
-                      <span className="text-[10px] font-bold text-black bg-accent rounded-full px-1.5 py-0.5">
+                      <span className="text-[10px] font-bold text-white bg-accent rounded-full px-1.5 py-0.5">
                         -{ed.discount_pct}%
                       </span>
                     )}
@@ -149,7 +149,7 @@ export function AddToCart({ product, editions, region }: Props) {
             added
               ? 'bg-green-500/20 border border-green-500/40 text-green-400'
               : price
-              ? 'btn-gradient text-black hover:opacity-90'
+              ? 'bg-accent hover:bg-accent-hover text-white hover:opacity-90'
               : 'bg-bg-card border border-border text-text-secondary cursor-not-allowed'
           )}
         >

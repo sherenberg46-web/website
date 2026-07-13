@@ -33,7 +33,7 @@ export default function CartPage() {
         <p className="text-text-secondary mb-8">Добавьте игры из каталога</p>
         <Link
           href="/games"
-          className="btn-gradient text-black font-semibold px-8 py-3.5 rounded-full inline-block"
+          className="bg-accent hover:bg-accent-hover text-white font-bold px-8 py-3.5 rounded-md transition-colors inline-block"
         >
           Перейти в каталог
         </Link>

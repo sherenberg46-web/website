@@ -134,7 +134,7 @@ export function CatalogFilters({
           <SlidersHorizontal className="w-4 h-4" />
           <span>Фильтры</span>
           {activeCount > 0 && (
-            <span className="w-5 h-5 bg-accent text-black text-[10px] font-bold rounded-full flex items-center justify-center">
+            <span className="w-5 h-5 bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center">
               {activeCount}
             </span>
           )}
@@ -161,7 +161,7 @@ export function CatalogFilters({
 
       {/* Filter panel */}
       {panelOpen && (
-        <div className="mt-4 p-4 bg-bg-card border border-border rounded-2xl space-y-5">
+        <div className="mt-4 p-4 bg-bg-card border border-border rounded-xl space-y-5">
           {/* Price range */}
           <div>
             <p className="text-xs uppercase tracking-wider text-text-secondary mb-2 font-medium">
@@ -191,7 +191,7 @@ export function CatalogFilters({
               />
               <button
                 onClick={applyPrice}
-                className="px-4 py-2 rounded-xl text-xs font-semibold btn-gradient text-black"
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-accent hover:bg-accent-hover text-white"
               >
                 ОК
               </button>

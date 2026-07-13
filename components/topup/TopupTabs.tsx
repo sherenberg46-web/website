@@ -62,7 +62,7 @@ export function TopupTabs({ sections }: Props) {
               className={clsx(
                 'relative flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors',
                 isActive
-                  ? 'text-black'
+                  ? 'text-white'
                   : 'text-text-secondary hover:text-text-primary bg-bg-card border border-border'
               )}
             >

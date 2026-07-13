@@ -65,7 +65,7 @@ export function HowToBuy() {
           <div className="flex flex-wrap gap-4 justify-center">
             <Link
               href="/games"
-              className="btn-gradient text-black font-semibold px-8 py-3.5 rounded-full"
+              className="bg-accent hover:bg-accent-hover text-white font-bold px-8 py-3.5 rounded-md transition-colors"
             >
               Перейти в каталог
             </Link>

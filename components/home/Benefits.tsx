@@ -42,7 +42,7 @@ export function Benefits() {
             <ScrollReveal key={b.title} delay={i * 0.1}>
               <div className="bg-bg-card border border-border rounded-2xl p-6 h-full hover:border-accent/30 transition-colors group">
                 <div className="w-12 h-12 rounded-xl bg-brand-gradient flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <b.icon className="w-6 h-6 text-black" />
+                  <b.icon className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-text-primary font-semibold mb-2">{b.title}</h3>
                 <p className="text-text-secondary text-sm leading-relaxed">{b.desc}</p>

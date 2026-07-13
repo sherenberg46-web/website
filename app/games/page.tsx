@@ -83,7 +83,7 @@ export default async function GamesPage({ searchParams }: Props) {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold tracking-tight mb-6">Каталог игр</h1>
       <FiltersSection />
-      <Suspense fallback={<div className="animate-pulse space-y-4"><div className="h-64 bg-bg-card rounded-2xl" /></div>}>
+      <Suspense fallback={<div className="animate-pulse space-y-4"><div className="h-64 bg-bg-card rounded-xl" /></div>}>
         <CatalogContent searchParams={searchParams} />
       </Suspense>
     </div>

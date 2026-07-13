@@ -17,7 +17,7 @@ export function Badge({ children, variant = 'outline', className }: Props) {
         variant === 'preorder' && 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
         variant === 'ps5' && 'bg-blue-600/20 text-blue-400 border border-blue-600/30',
         variant === 'ps4' && 'bg-purple-600/20 text-purple-400 border border-purple-600/30',
-        variant === 'new' && 'bg-accent/90 text-black border-0',
+        variant === 'new' && 'bg-accent/90 text-white border-0',
         className
       )}
     >

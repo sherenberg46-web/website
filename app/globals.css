@@ -3,14 +3,15 @@
 @tailwind utilities;
 
 :root {
-  --bg-page: #0a0b0e;
-  --bg-card: #14161d;
-  --accent: #00d4aa;
-  --accent-blue: #0088ff;
-  --gradient: linear-gradient(135deg, #00d4aa, #0088ff);
-  --text-primary: #eef0f5;
-  --text-secondary: #8a95a8;
-  --border: #222636;
+  --bg-page: #1a1d24;
+  --bg-card: #22262e;
+  --accent: #ff5400;
+  --accent-hover: #ff6b1a;
+  --accent-blue: #3b82f6;
+  --gradient: linear-gradient(135deg, #ff5400, #ff7a00);
+  --text-primary: #ffffff;
+  --text-secondary: #99a0ae;
+  --border: #2e333e;
 }
 
 * {
@@ -86,14 +87,14 @@ body {
 
 /* Section spacing */
 .section-pad {
-  padding-top: 80px;
-  padding-bottom: 80px;
+  padding-top: 56px;
+  padding-bottom: 56px;
 }
 
 @media (min-width: 1024px) {
   .section-pad {
-    padding-top: 120px;
-    padding-bottom: 120px;
+    padding-top: 80px;
+    padding-bottom: 80px;
   }
 }
 

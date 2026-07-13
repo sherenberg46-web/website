@@ -146,7 +146,7 @@ export function TopupList({ products, currency }: Props) {
                   onClick={() => buy(p)}
                   className={clsx(
                     'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-colors',
-                    added === p.id ? 'bg-accent/20 text-accent' : 'btn-gradient text-black'
+                    added === p.id ? 'bg-accent/20 text-accent' : 'bg-accent hover:bg-accent-hover text-white'
                   )}
                 >
                   {added === p.id ? (

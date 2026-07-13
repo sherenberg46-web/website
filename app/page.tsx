@@ -61,11 +61,11 @@ export default async function HomePage() {
       {/* Hero */}
       <HeroSlider banners={banners} />
 
-      <div className="max-w-7xl mx-auto px-4 space-y-16 py-20">
+      <div className="max-w-7xl mx-auto px-4 space-y-12 py-10">
         {/* TR: игры из турецкого каталога временно недоступны — как в Mini App */}
         {isTR && (
           <ScrollReveal>
-            <div className="bg-bg-card border border-border rounded-3xl p-10 text-center max-w-2xl mx-auto">
+            <div className="bg-bg-card border border-border rounded-xl p-10 text-center max-w-2xl mx-auto">
               <div className="text-5xl mb-4">🚧</div>
               <h2 className="text-2xl font-bold mb-3">Временно недоступно</h2>
               <p className="text-text-secondary">
@@ -126,11 +126,11 @@ export default async function HomePage() {
       <ScrollReveal>
         <section className="section-pad">
           <div className="max-w-3xl mx-auto px-4 text-center">
-            <div className="relative bg-bg-card rounded-3xl border border-border p-10 md:p-16 overflow-hidden">
+            <div className="relative bg-bg-card rounded-xl border border-border p-10 md:p-16 overflow-hidden">
               <div className="absolute inset-0 bg-card-glow" />
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl bg-brand-gradient mx-auto mb-6 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-black" viewBox="0 0 24 24" fill="currentColor">
+                <div className="w-16 h-16 rounded-xl bg-accent mx-auto mb-6 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.196 13.98l-2.948-.924c-.64-.203-.653-.64.136-.954l11.52-4.44c.534-.194 1.003.13.99.559z" />
                   </svg>
                 </div>
@@ -145,7 +145,7 @@ export default async function HomePage() {
                   href={getTelegramLink()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-gradient text-black font-semibold px-10 py-4 rounded-full text-base inline-flex items-center gap-2"
+                  className="bg-accent hover:bg-accent-hover text-white font-bold px-10 py-4 rounded-md text-base inline-flex items-center gap-2 transition-colors"
                 >
                   Открыть бота
                 </a>

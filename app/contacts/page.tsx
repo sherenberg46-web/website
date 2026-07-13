@@ -76,7 +76,7 @@ export default function ContactsPage() {
             href={getManagerLink()}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-gradient text-black font-semibold px-8 py-3.5 rounded-full inline-flex items-center gap-2"
+            className="bg-accent hover:bg-accent-hover text-white font-bold px-8 py-3.5 rounded-md transition-colors inline-flex items-center gap-2"
           >
             <MessageCircle className="w-4 h-4" />
             Написать менеджеру

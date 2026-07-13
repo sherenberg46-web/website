@@ -65,7 +65,7 @@ export function OrderForm() {
           href={getManagerLink()}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 btn-gradient text-black font-semibold px-8 py-3.5 rounded-full"
+          className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white font-bold px-8 py-3.5 rounded-md transition-colors"
         >
           Написать менеджеру
           <ExternalLink className="w-4 h-4" />
@@ -85,7 +85,7 @@ export function OrderForm() {
     return (
       <div className="text-center py-10">
         <div className="w-16 h-16 rounded-2xl bg-brand-gradient mx-auto mb-4 flex items-center justify-center">
-          <svg className="w-8 h-8 text-black" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.196 13.98l-2.948-.924c-.64-.203-.653-.64.136-.954l11.52-4.44c.534-.194 1.003.13.99.559z" />
           </svg>
         </div>
@@ -97,7 +97,7 @@ export function OrderForm() {
           href={tgLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 btn-gradient text-black font-semibold px-8 py-3.5 rounded-full"
+          className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white font-bold px-8 py-3.5 rounded-md transition-colors"
         >
           Отправить заказ менеджеру
           <ExternalLink className="w-4 h-4" />
@@ -173,7 +173,7 @@ export function OrderForm() {
             'w-full flex items-center justify-center gap-2 py-3.5 rounded-full font-semibold text-sm transition-all',
             status === 'loading' || !name.trim() || !contact.trim()
               ? 'bg-bg-card border border-border text-text-secondary cursor-not-allowed'
-              : 'btn-gradient text-black'
+              : 'bg-accent hover:bg-accent-hover text-white'
           )}
         >
           {status === 'loading' ? (

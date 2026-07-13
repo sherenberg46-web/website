@@ -44,7 +44,7 @@ export default function HowToBuyPage() {
           href={getManagerLink()}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-gradient text-black font-semibold px-8 py-3.5 rounded-full inline-block"
+          className="bg-accent hover:bg-accent-hover text-white font-bold px-8 py-3.5 rounded-md transition-colors inline-block"
         >
           Написать менеджеру
         </a>

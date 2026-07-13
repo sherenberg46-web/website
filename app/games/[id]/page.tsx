@@ -141,7 +141,7 @@ export default async function GamePage({ params }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16">
           {/* Cover */}
           <div className="relative">
-            <div className="relative aspect-square max-w-lg mx-auto lg:mx-0 rounded-3xl overflow-hidden shadow-glow-card">
+            <div className="relative aspect-square max-w-lg mx-auto lg:mx-0 rounded-xl overflow-hidden shadow-glow-card">
               <Image
                 src={imageUrl}
                 alt={product.title}

@@ -4,10 +4,10 @@ import clsx from 'clsx';
 export type BadgeRegion = 'UA' | 'TR' | 'PL' | 'IN';
 
 const STYLES: Record<BadgeRegion, string> = {
-  UA: 'bg-gradient-to-b from-sky-500 via-sky-400 to-yellow-400 text-black',
+  UA: 'bg-gradient-to-b from-sky-500 via-sky-400 to-yellow-400 text-white',
   TR: 'bg-gradient-to-b from-red-500 to-red-700 text-white',
-  PL: 'bg-gradient-to-b from-gray-100 via-gray-100 to-red-600 text-black',
-  IN: 'bg-gradient-to-b from-orange-500 via-gray-100 to-green-600 text-black',
+  PL: 'bg-gradient-to-b from-gray-100 via-gray-100 to-red-600 text-white',
+  IN: 'bg-gradient-to-b from-orange-500 via-gray-100 to-green-600 text-white',
 };
 
 /** Цветной бейдж региона — вместо emoji-флагов (Windows их не отображает). */

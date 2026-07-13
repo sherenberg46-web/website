@@ -37,7 +37,7 @@ export function RecentlyViewed() {
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 {item.discount_pct > 0 && (
-                  <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-accent text-black text-[10px] font-bold rounded-md">
+                  <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-accent text-white text-[10px] font-bold rounded-md">
                     -{Math.round(item.discount_pct)}%
                   </span>
                 )}

@@ -37,7 +37,7 @@ export default function GuaranteesPage() {
       <ScrollReveal>
         <div className="text-center mb-14">
           <div className="w-16 h-16 rounded-2xl bg-brand-gradient mx-auto mb-6 flex items-center justify-center">
-            <Shield className="w-8 h-8 text-black" />
+            <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-4xl font-bold mb-4">Наши гарантии</h1>
           <p className="text-text-secondary max-w-lg mx-auto">
@@ -81,7 +81,7 @@ export default function GuaranteesPage() {
           href={getManagerLink()}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-gradient text-black font-semibold px-8 py-3.5 rounded-full inline-block"
+          className="bg-accent hover:bg-accent-hover text-white font-bold px-8 py-3.5 rounded-md transition-colors inline-block"
         >
           Написать менеджеру
         </a>

@@ -19,7 +19,7 @@ export function DataError({
       <p className="text-text-secondary text-sm mb-6">{message}</p>
       <a
         href=""
-        className="btn-gradient text-black font-semibold px-8 py-3 rounded-full text-sm inline-block"
+        className="bg-accent hover:bg-accent-hover text-white font-semibold px-8 py-3 rounded-md text-sm inline-block"
       >
         Обновить страницу
       </a>

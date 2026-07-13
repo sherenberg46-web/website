@@ -54,15 +54,13 @@ export function ProductCard({ product, priority = false }: Props) {
 
   return (
     <motion.article
-      whileHover={{ scale: 1.02, y: -4 }}
+      whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
       className="group relative"
     >
       <Link href={`/games/${product.id}`} className="block">
-        <div
-          className="bg-bg-card rounded-2xl overflow-hidden border border-border transition-all duration-300 group-hover:border-accent/30 group-hover:shadow-glow-card-hover"
-        >
+        <div className="rounded-lg overflow-hidden bg-bg-card transition-all duration-300 group-hover:bg-bg-card-hover group-hover:shadow-glow-card">
           {/* Cover image */}
           <div className="relative aspect-square overflow-hidden bg-bg-card-hover">
             <Image
@@ -71,74 +69,57 @@ export function ProductCard({ product, priority = false }: Props) {
               fill
               sizes="(max-width: 640px) 45vw, 288px"
               quality={85}
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-cover transition-transform duration-500 group-hover:scale-110"
               priority={priority}
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).src = '/placeholder.png';
               }}
             />
 
-            {/* Overlay on hover */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300" />
+            {/* Затемнение при наведении */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
 
-            {/* Badges */}
+            {/* Бейджи статуса */}
             <div className="absolute top-2 left-2 flex flex-col gap-1">
               {product.is_preorder && <Badge variant="preorder">Предзаказ</Badge>}
-              {product.discount_pct > 0 && (
-                <Badge variant="accent">-{Math.round(product.discount_pct)}%</Badge>
-              )}
               {product.task_type === 'new_games' && !product.discount_pct && (
                 <Badge variant="new">Новинка</Badge>
               )}
             </div>
 
-            {/* Platform badges */}
-            {platforms.length > 0 && (
-              <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
-                {platforms.includes('PS5') && <Badge variant="ps5">PS5</Badge>}
-                {platforms.includes('PS4') && <Badge variant="ps4">PS4</Badge>}
-              </div>
-            )}
+            {/* Избранное — появляется при наведении */}
+            <button
+              onClick={handleToggleFav}
+              aria-label="В избранное"
+              className={clsx(
+                'absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-md backdrop-blur transition-all duration-200',
+                isFav
+                  ? 'bg-accent text-white opacity-100'
+                  : 'bg-black/50 text-white/80 hover:text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
+              )}
+            >
+              <Heart className={clsx('w-4 h-4', isFav && 'fill-current')} />
+            </button>
 
-            {/* Actions */}
-            <div className="absolute bottom-3 left-3 right-3 flex gap-2 opacity-100 translate-y-0 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-2 sm:group-hover:translate-y-0 transition-all duration-300">
+            {/* Кнопка корзины — при наведении */}
+            <div className="absolute bottom-2 left-2 right-2 opacity-100 translate-y-0 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-2 sm:group-hover:translate-y-0 transition-all duration-300">
               <button
                 onClick={handleAddToCart}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-accent text-black text-xs font-semibold rounded-xl hover:bg-accent/90 transition-colors"
+                className="w-full flex items-center justify-center gap-1.5 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold rounded-md transition-colors"
               >
                 <ShoppingCart className="w-3.5 h-3.5" />
                 В корзину
-              </button>
-              <button
-                onClick={handleToggleFav}
-                className={clsx(
-                  'w-9 flex-shrink-0 flex items-center justify-center py-2 rounded-xl border transition-colors',
-                  isFav
-                    ? 'bg-accent/20 border-accent/50 text-accent'
-                    : 'bg-black/60 border-border text-text-secondary hover:text-text-primary'
-                )}
-              >
-                <Heart className={clsx('w-3.5 h-3.5', isFav && 'fill-current')} />
               </button>
             </div>
           </div>
 
           {/* Info */}
           <div className="p-3">
-            {product.genre && (
-              <p className="text-text-secondary text-[10px] uppercase tracking-wider mb-1 truncate">
-                {product.genre.split(',')[0].trim()}
+            {/* Платформа + рейтинг */}
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-text-secondary text-[10px] uppercase tracking-wider truncate">
+                {platforms.length > 0 ? platforms.join(' · ') : product.genre?.split(',')[0].trim() ?? 'PlayStation'}
               </p>
-            )}
-            <h3 className="text-text-primary text-sm font-medium leading-tight line-clamp-2 mb-2">
-              {product.title}
-            </h3>
-            <div className="flex items-center justify-between gap-2">
-              <PriceDisplay
-                price={product.price_byn}
-                discountPct={product.discount_pct}
-                size="sm"
-              />
               {product.rating > 0 && (
                 <div className="flex items-center gap-0.5 text-amber-400 shrink-0">
                   <Star className="w-3 h-3 fill-current" />
@@ -148,6 +129,13 @@ export function ProductCard({ product, priority = false }: Props) {
                 </div>
               )}
             </div>
+
+            <h3 className="text-text-primary text-sm font-semibold leading-tight line-clamp-2 mb-2 min-h-[2.25rem]">
+              {product.title}
+            </h3>
+
+            {/* Цена в стиле Instant Gaming */}
+            <PriceDisplay price={product.price_byn} discountPct={product.discount_pct} size="sm" />
           </div>
         </div>
       </Link>

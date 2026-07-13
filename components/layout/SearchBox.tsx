@@ -110,7 +110,7 @@ export function SearchBox() {
   }, [setOpen]);
 
   return (
-    <div ref={boxRef} className="relative hidden md:block w-56 lg:w-64">
+    <div ref={boxRef} className="relative hidden md:block w-full max-w-xl">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -130,13 +130,13 @@ export function SearchBox() {
             onFocus={() => results.length > 0 && setOpen(true)}
             placeholder="Поиск игр…"
             aria-label="Поиск игр"
-            className="w-full bg-bg-card border border-border rounded-full pl-9 pr-3 py-1.5 text-sm text-text-primary placeholder:text-text-secondary/60 outline-none focus:border-accent/50 transition-colors"
+            className="w-full bg-bg-card border border-border rounded-md pl-9 pr-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/60 outline-none focus:border-accent transition-colors"
           />
         </div>
       </form>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full mt-2 bg-bg-card border border-border rounded-2xl shadow-2xl overflow-hidden z-50">
+        <div className="absolute left-0 right-0 top-full mt-2 bg-bg-card border border-border rounded-lg shadow-2xl overflow-hidden z-50">
           {results.length === 0 ? (
             <p className="px-4 py-3 text-sm text-text-secondary">Ничего не найдено</p>
           ) : (
@@ -184,7 +184,7 @@ export function MobileSearch() {
       </button>
 
       {panelOpen && (
-        <div className="fixed left-0 right-0 top-[52px] z-50 glass border-b border-border p-3">
+        <div className="fixed left-0 right-0 top-14 z-50 glass border-b border-border p-3">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -204,13 +204,13 @@ export function MobileSearch() {
                 onChange={(e) => handleChange(e.target.value)}
                 placeholder="Поиск игр…"
                 aria-label="Поиск игр"
-                className="w-full bg-bg-page border border-border rounded-full pl-9 pr-3 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/60 outline-none focus:border-accent/50 transition-colors"
+                className="w-full bg-bg-page border border-border rounded-md pl-9 pr-3 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/60 outline-none focus:border-accent transition-colors"
               />
             </div>
           </form>
 
           {open && (
-            <div className="mt-2 bg-bg-card border border-border rounded-2xl overflow-hidden max-h-[60vh] overflow-y-auto">
+            <div className="mt-2 bg-bg-card border border-border rounded-lg overflow-hidden max-h-[60vh] overflow-y-auto">
               {results.length === 0 ? (
                 <p className="px-4 py-3 text-sm text-text-secondary">Ничего не найдено</p>
               ) : (
