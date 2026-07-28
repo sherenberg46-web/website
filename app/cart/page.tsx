@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { OrderForm } from '@/components/cart/OrderForm';
+import { CartPromoBanner } from '@/components/cart/CartPromoBanner';
 import { getTelegramLink } from '@/lib/api';
 
 export default function CartPage() {
@@ -44,6 +45,8 @@ export default function CartPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Корзина</h1>
+
+      <CartPromoBanner />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Items */}

@@ -9,6 +9,7 @@ import type {
   DlcItem,
   ProductFilters,
   WebOrderPayload,
+  CartPromo,
 } from './types';
 
 export const API_BASE =
@@ -183,9 +184,24 @@ export async function getSimilarProducts(
 }
 
 // Web Orders (new endpoint — falls back gracefully)
+/**
+ * Просит у сервера промокод 5 % за брошенную корзину.
+ *
+ * В Mini App это делает планировщик и присылает код ботом. На сайте так нельзя:
+ * корзина живёт в localStorage, а канала для сообщения нет — почты мы не
+ * собираем, а бот не может написать первым тому, кто его не запускал. Поэтому
+ * предложение показывает сам сайт, а сервер лишь выдаёт настоящий код, который
+ * потом примет форма заказа.
+ */
+export async function issueCartPromo(): Promise<CartPromo> {
+  const res = await fetch(`${API_BASE}/web-orders/cart-promo`, { method: 'POST' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 export async function createWebOrder(
   payload: WebOrderPayload
-): Promise<{ order_id?: number; message: string }> {
+): Promise<{ order_id?: number; message: string; total_byn?: number; promo_percent?: number }> {
   const res = await fetch(`${API_BASE}/web-orders`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useCartStore } from '@/store/cartStore';
 import { createWebOrder, getManagerLink } from '@/lib/api';
 import { getClientRegion } from '@/lib/region';
+import { clearPromo, loadPromo } from '@/lib/cart-promo';
 import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -17,12 +18,31 @@ export function OrderForm() {
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [comment, setComment] = useState('');
+  // Те же поля, что спрашивает Mini App: без них менеджер не сможет выдать игру.
+  const [hasAccount, setHasAccount] = useState<boolean | null>(null);
+  const [psEmail, setPsEmail] = useState('');
+  const [psPassword, setPsPassword] = useState('');
+  const [promo, setPromo] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
 
+  // Скидку показываем только для кода, который сервер выдал этому браузеру, —
+  // так в сумме не появится процент, которого на самом деле нет.
+  const issued = loadPromo();
+  const promoOk =
+    !!issued && promo.trim().toUpperCase() === issued.code.toUpperCase();
+  const discount = promoOk ? Math.round(totalPrice * issued.percent) / 100 : 0;
+  const finalPrice = Math.round((totalPrice - discount) * 100) / 100;
+
+  const canSubmit =
+    !!name.trim() &&
+    !!contact.trim() &&
+    hasAccount !== null &&
+    (hasAccount === false || !!psEmail.trim());
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !contact.trim()) return;
+    if (!canSubmit) return;
 
     setStatus('loading');
     setError('');
@@ -38,8 +58,13 @@ export function OrderForm() {
         contact: contact.trim(),
         comment: comment.trim() || undefined,
         region: getClientRegion(),
+        account_type: hasAccount ? 'my_account' : 'no_account',
+        ps_email: hasAccount ? psEmail.trim() : undefined,
+        ps_password: hasAccount ? psPassword : undefined,
+        promo_code: promo.trim() || undefined,
       });
       clearCart();
+      clearPromo();
       setStatus('success');
     } catch (err: unknown) {
       const status = (err as { status?: number }).status;
@@ -141,6 +166,94 @@ export function OrderForm() {
         </p>
       </div>
 
+
+      <div>
+        <label className="block text-sm font-medium text-text-secondary mb-1.5">
+          Аккаунт PlayStation <span className="text-accent">*</span>
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { value: true, label: 'У меня есть' },
+            { value: false, label: 'Нужен новый' },
+          ].map((o) => (
+            <button
+              key={String(o.value)}
+              type="button"
+              onClick={() => setHasAccount(o.value)}
+              className={clsx(
+                'py-3 rounded-xl text-sm font-medium border transition-colors',
+                hasAccount === o.value
+                  ? 'border-accent bg-accent/10 text-text-primary'
+                  : 'border-border bg-bg-page text-text-secondary hover:text-text-primary'
+              )}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {hasAccount === true && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Email от аккаунта PS <span className="text-accent">*</span>
+            </label>
+            <input
+              type="email"
+              value={psEmail}
+              onChange={(e) => setPsEmail(e.target.value)}
+              required
+              placeholder="you@example.com"
+              className="w-full px-4 py-3 bg-bg-page border border-border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Пароль от аккаунта PS
+            </label>
+            <input
+              type="password"
+              value={psPassword}
+              onChange={(e) => setPsPassword(e.target.value)}
+              placeholder="Можно передать менеджеру лично"
+              className="w-full px-4 py-3 bg-bg-page border border-border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
+            />
+            <p className="text-text-secondary text-xs mt-1">
+              Нужен, чтобы зайти в аккаунт и купить игру. Если не хотите вводить
+              здесь — оставьте поле пустым, менеджер запросит его в переписке.
+            </p>
+          </div>
+        </>
+      )}
+
+      {hasAccount === false && (
+        <p className="text-text-secondary text-xs bg-bg-page border border-border rounded-xl px-4 py-3">
+          Создадим для вас новый аккаунт и передадим данные вместе с игрой.
+        </p>
+      )}
+
+      <div>
+        <label className="block text-sm font-medium text-text-secondary mb-1.5">
+          Промокод
+        </label>
+        <input
+          type="text"
+          value={promo}
+          onChange={(e) => setPromo(e.target.value.toUpperCase())}
+          placeholder="Если есть"
+          className="w-full px-4 py-3 bg-bg-page border border-border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
+        />
+        {promo.trim() && (
+          <p className={clsx('text-xs mt-1', promoOk ? 'text-accent' : 'text-text-secondary')}>
+            {promoOk
+              ? `Скидка ${issued!.percent} % применена`
+              : 'Код не найден — проверьте или оставьте поле пустым'}
+          </p>
+        )}
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-text-secondary mb-1.5">
           Комментарий (необязательно)
@@ -161,17 +274,23 @@ export function OrderForm() {
       )}
 
       <div className="pt-2">
+        {discount > 0 && (
+          <div className="flex justify-between text-sm mb-1.5">
+            <span className="text-text-secondary">Скидка по промокоду:</span>
+            <span className="text-accent font-medium">−{discount} BYN</span>
+          </div>
+        )}
         <div className="flex justify-between text-sm mb-4">
           <span className="text-text-secondary">Итого:</span>
-          <span className="text-text-primary font-bold text-lg">{totalPrice} BYN</span>
+          <span className="text-text-primary font-bold text-lg">{finalPrice} BYN</span>
         </div>
 
         <button
           type="submit"
-          disabled={status === 'loading' || !name.trim() || !contact.trim()}
+          disabled={status === 'loading' || !canSubmit}
           className={clsx(
             'w-full flex items-center justify-center gap-2 py-3.5 rounded-full font-semibold text-sm transition-all',
-            status === 'loading' || !name.trim() || !contact.trim()
+            status === 'loading' || !canSubmit
               ? 'bg-bg-card border border-border text-text-secondary cursor-not-allowed'
               : 'bg-accent hover:bg-accent-hover text-white'
           )}

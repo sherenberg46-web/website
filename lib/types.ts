@@ -128,9 +128,24 @@ export interface WebOrderPayload {
     qty: number;
   }>;
   name: string;
+  /** Ник в Telegram или телефон — единственный способ связаться с покупателем
+   *  с сайта: в отличие от Mini App тут нет ни telegram_id, ни чата с ботом. */
   contact: string;
   comment?: string;
   region?: string;
+  /** Ниже — то же, что спрашивает Mini App при оформлении. */
+  account_type?: 'my_account' | 'no_account';
+  ps_email?: string;
+  ps_password?: string;
+  promo_code?: string;
+}
+
+/** Промокод за брошенную корзину, выданный сервером сайту. */
+export interface CartPromo {
+  code: string;
+  percent: number;
+  expires_at: string;
+  minutes: number;
 }
 
 export interface ProductFilters {
