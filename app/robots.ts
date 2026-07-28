@@ -1,6 +1,11 @@
 import type { MetadataRoute } from 'next';
+import { getSiteUrl } from '@/lib/site-url';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+// Считаем в момент запроса: RAILWAY_PUBLIC_DOMAIN живёт в окружении
+// контейнера, а при статической генерации на этапе сборки его нет.
+export const dynamic = 'force-dynamic';
+
+const SITE_URL = getSiteUrl();
 
 export default function robots(): MetadataRoute.Robots {
   return {
