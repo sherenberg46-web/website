@@ -22,12 +22,19 @@ function editionPrice(ed: CatalogEdition, region: Region): number | null {
 }
 
 export function AddToCart({ product, editions, region }: Props) {
-  // По умолчанию — издание, которое и есть этот товар (как в Mini App),
-  // чтобы цена совпадала с карточкой каталога.
-  const defaultIdx = (() => {
-    const match = editions.findIndex((e) => e.linked_product_id === product.id);
-    return match >= 0 ? match : 0;
-  })();
+  // По умолчанию выбираем издание, которое и есть этот товар. Если такой связи
+  // нет — не выбираем НИЧЕГО и показываем цену самого товара.
+  //
+  // Раньше в этом случае подставлялось первое издание, и страница показывала
+  // его цену. Но цены изданий протухают: скидка применяется к товару, а
+  // game_editions остаются с доскидочной ценой (1550 товаров в каталоге, и у
+  // 1535 из них есть скидка). Mortal Kombat 1: товар 36 BYN со скидкой 80 %,
+  // а Standard Edition в базе всё ещё 156. Покупатель видел 156 на странице,
+  // 36 в каталоге и 36 в корзине.
+  //
+  // price_byn товара — то, что показывает каталог и по чему считается заказ,
+  // поэтому по умолчанию доверяем ему.
+  const defaultIdx = editions.findIndex((e) => e.linked_product_id === product.id);
   const [idx, setIdx] = useState(defaultIdx);
   const [added, setAdded] = useState(false);
 
@@ -35,7 +42,8 @@ export function AddToCart({ product, editions, region }: Props) {
   const { isFavourite, toggleFavourite } = useFavouritesStore();
   const isFav = isFavourite(product.id);
 
-  const selected = editions[idx] ?? null;
+  // idx = -1 означает «издание не выбрано» → берём цену самого товара.
+  const selected = idx >= 0 ? editions[idx] ?? null : null;
   const productPrice =
     region === 'TR' ? product.price_byn_tr ?? product.price_byn : product.price_byn;
   const price = selected ? editionPrice(selected, region) ?? productPrice : productPrice;
