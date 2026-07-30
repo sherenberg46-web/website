@@ -8,12 +8,59 @@ import { CatalogPagination } from '@/components/products/CatalogPagination';
 import { DataError } from '@/components/ui/DataError';
 import type { ProductFilters } from '@/lib/types';
 
-export const metadata: Metadata = {
-  title: 'Каталог игр',
-  description: 'Все цифровые игры PlayStation в одном месте. Фильтры по платформе, жанру, цене. Лучшие цены в BYN для Беларуси.',
-};
-
 const PAGE_SIZE = 20;
+
+/** Параметры, которые сужают выдачу, а не листают её */
+const FILTER_PARAMS = [
+  'category_id',
+  'search',
+  'product_type',
+  'sort',
+  'genre',
+  'platform',
+  'is_preorder',
+  'task_type',
+  'price_min',
+  'price_max',
+  'discount_min',
+] as const;
+
+/**
+ * Метаданные каталога зависят от адреса, поэтому считаются, а не заданы разом.
+ *
+ * Каталог отдаёт одни и те же товары под множеством адресов: фильтры по жанру,
+ * платформе, цене, сортировка, поиск. Комбинаций тысячи, содержимое у них —
+ * подмножество той же выдачи. Если пустить робота по всем, он потратит обход
+ * на них вместо карточек товаров, а в индексе окажется куча почти одинаковых
+ * страниц. Поэтому:
+ *
+ *   • отфильтрованные адреса закрываем от индексации, но оставляем `follow` —
+ *     робот пройдёт по ссылкам дальше, к товарам;
+ *   • страницы листания (?offset=) индексируем и даём каждой свой canonical.
+ *     Схлопывать их на первую страницу нельзя: из каталога в 43 тысячи товаров
+ *     робот тогда увидит только первые двадцать.
+ */
+export function generateMetadata({ searchParams }: Props): Metadata {
+  const filtered = FILTER_PARAMS.some((p) => searchParams[p]);
+  const offset = Number(searchParams.offset ?? 0);
+
+  if (filtered) {
+    return {
+      title: 'Каталог игр',
+      description:
+        'Все цифровые игры PlayStation в одном месте. Фильтры по платформе, жанру, цене. Лучшие цены в BYN для Беларуси.',
+      robots: { index: false, follow: true },
+    };
+  }
+
+  const page = Math.floor(offset / PAGE_SIZE) + 1;
+  return {
+    title: page > 1 ? `Каталог игр — страница ${page}` : 'Каталог игр',
+    description:
+      'Все цифровые игры PlayStation в одном месте. Фильтры по платформе, жанру, цене. Лучшие цены в BYN для Беларуси.',
+    alternates: { canonical: offset > 0 ? `/games?offset=${offset}` : '/games' },
+  };
+}
 
 export const dynamic = 'force-dynamic';
 

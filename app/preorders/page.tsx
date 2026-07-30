@@ -11,6 +11,7 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal';
 export const metadata: Metadata = {
   title: 'Предзаказы',
   description: 'Предзаказы игр PlayStation — закажите игру до выхода по специальной цене.',
+  alternates: { canonical: '/preorders' },
 };
 
 export const dynamic = 'force-dynamic';

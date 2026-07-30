@@ -50,6 +50,54 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  // Подтверждение прав в Google Search Console и Яндекс.Вебмастере.
+  // Коды выдают сами панели; кладём их в переменные окружения, а не в код,
+  // чтобы не публиковать в репозитории и чтобы можно было поменять без сборки.
+  // Пока переменных нет — мета-теги просто не выводятся.
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || undefined,
+    yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION || undefined,
+  },
+};
+
+/**
+ * Разметка организации — одна на весь сайт.
+ *
+ * По ней поисковик связывает домен, название магазина и контакты в один
+ * объект и может показать карточку компании в выдаче. Без неё «GAME STORE»
+ * для робота просто слова в заголовке.
+ */
+const organizationLd = {
+  '@context': 'https://schema.org',
+  '@type': 'OnlineStore',
+  name: 'GAME STORE',
+  url: SITE_URL,
+  logo: `${SITE_URL}/logo.png`,
+  description:
+    'Цифровые игры PlayStation, подписки PS Plus и пополнение кошелька PSN для Беларуси.',
+  areaServed: { '@type': 'Country', name: 'Беларусь' },
+  currenciesAccepted: 'BYN',
+  sameAs: [
+    process.env.NEXT_PUBLIC_TG_BOT || 'https://t.me/GameDigitalShop_bot',
+    process.env.NEXT_PUBLIC_TG_MANAGER || 'https://t.me/gamestore_by',
+  ],
+};
+
+/** Поиск по сайту — из этой разметки Google делает строку поиска прямо в выдаче */
+const searchLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'GAME STORE',
+  url: SITE_URL,
+  inLanguage: 'ru-BY',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${SITE_URL}/games?search={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
 };
 
 export const viewport: Viewport = {
@@ -61,6 +109,16 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" className={inter.variable}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(searchLd) }}
+        />
+      </head>
       <body className="bg-bg-page text-text-primary min-h-screen flex flex-col">
         <Header />
         <main className="flex-1">{children}</main>

@@ -62,6 +62,32 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
   return apiFetch<Product[]>(`/products${qs ? `?${qs}` : ''}`, { revalidate: 60 });
 }
 
+/**
+ * Ссылки для карты сайта: только идентификатор и дата правки.
+ *
+ * Отдельный эндпоинт, а не getProducts с большим limit. Обычная выдача
+ * возвращает карточку целиком — описание, издания, пересчитанные цены по
+ * регионам. На сорока трёх тысячах товаров это десятки мегабайт в память
+ * ради списка чисел, а память в этом проекте — основная статья счёта.
+ */
+export interface SitemapEntry {
+  id: number;
+  updated_at: string | null;
+}
+
+export async function getSitemapEntries(limit = 5000, offset = 0): Promise<SitemapEntry[]> {
+  return apiFetch<SitemapEntry[]>(`/products/sitemap?limit=${limit}&offset=${offset}`, {
+    revalidate: 3600,
+  });
+}
+
+export async function getSitemapCount(): Promise<number> {
+  const res = await apiFetch<{ count: number }>('/products/sitemap/count', {
+    revalidate: 3600,
+  });
+  return res?.count ?? 0;
+}
+
 export async function getFeaturedProducts(limit = 10, region?: string): Promise<Product[]> {
   const r = region ? `&region=${region}` : '';
   return apiFetch<Product[]>(`/products/featured?limit=${limit}${r}`, { revalidate: 120 });

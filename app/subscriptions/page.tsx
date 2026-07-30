@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: 'Подписки PS Plus и EA Play — цены в Беларуси',
   description:
     'PS Plus Essential, Extra, Deluxe и EA Play на 1, 3 и 12 месяцев. Регионы Украина и Турция. Лучшие цены в BYN, активация на ваш аккаунт.',
+  alternates: { canonical: '/subscriptions' },
 };
 
 export default function SubscriptionsPage() {

@@ -6,6 +6,7 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal';
 export const metadata: Metadata = {
   title: 'Контакты',
   description: 'Свяжитесь с нами — Telegram, email. Ответим быстро.',
+  alternates: { canonical: '/contacts' },
 };
 
 export default function ContactsPage() {

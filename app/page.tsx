@@ -1,5 +1,7 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getBanners, getProducts, getPopularProducts, getTelegramLink } from '@/lib/api';
+import { faqJsonLd } from '@/lib/faq';
 import { getRegion } from '@/lib/region-server';
 import type { Banner, Product } from '@/lib/types';
 import { HeroSlider } from '@/components/home/HeroSlider';
@@ -14,6 +16,13 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal';
 // Регион берётся из cookie → страница рендерится динамически,
 // данные при этом кэшируются на уровне fetch (revalidate в lib/api).
 export const dynamic = 'force-dynamic';
+
+// Главная — единственная страница без своих метаданных: заголовок и описание
+// берутся из макета. Но каноничный адрес нужен и ей, иначе `/?region=UA`
+// и `/?utm_source=...` для робота выглядят как отдельные главные страницы.
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 function val<T>(r: PromiseSettledResult<T>, fallback: T): T {
   return r.status === 'fulfilled' ? r.value : fallback;
@@ -58,6 +67,13 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* Те же вопросы, что в блоке ниже, но в виде разметки: Google умеет
+          разворачивать их прямо в выдаче под ссылкой на сайт. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd()) }}
+      />
+
       {/* Hero */}
       <HeroSlider banners={banners} />
 

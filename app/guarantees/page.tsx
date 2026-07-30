@@ -6,6 +6,7 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal';
 export const metadata: Metadata = {
   title: 'Гарантии',
   description: 'Гарантии качества и возврата средств в магазине GAME STORE.',
+  alternates: { canonical: '/guarantees' },
 };
 
 const GUARANTEES = [

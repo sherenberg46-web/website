@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: 'Пополнение кошелька PSN — Украина, Турция, Польша, Индия',
   description:
     'Пополнение кошелька PlayStation Store: гривны (UA), лиры (TR), злотые (PL), рупии (IN). Быстро, надёжно, лучшие цены в BYN.',
+  alternates: { canonical: '/topup' },
 };
 
 export const revalidate = 300;

@@ -1,39 +1,79 @@
 import type { MetadataRoute } from 'next';
-import { getProducts } from '@/lib/api';
+import { getSitemapEntries, getSitemapCount } from '@/lib/api';
 import { getSiteUrl } from '@/lib/site-url';
+
+/**
+ * Карта сайта.
+ *
+ * Раньше сюда попадали 500 самых свежих товаров из 43 642. Остальные сорок три
+ * тысячи карточек поисковик мог найти только переходя по внутренним ссылкам —
+ * то есть медленно и далеко не все.
+ *
+ * Теперь карта разбита на части по 5 000 ссылок: Next отдаёт их как
+ * /sitemap/0.xml, /sitemap/1.xml и так далее. Ограничение протокола —
+ * 50 000 ссылок и 50 МБ на файл, так что запас есть даже при удвоении каталога.
+ *
+ * Данные берём из отдельного лёгкого эндпоинта /products/sitemap: обычная
+ * выдача тянет всю карточку с описанием, изданиями и пересчётом цен по
+ * регионам, а здесь нужны только идентификатор и дата правки.
+ */
 
 // Считаем в момент запроса: RAILWAY_PUBLIC_DOMAIN живёт в окружении
 // контейнера, а при статической генерации на этапе сборки его нет.
 export const dynamic = 'force-dynamic';
 
-const SITE_URL = getSiteUrl();
+const CHUNK = 5000;
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticPages: MetadataRoute.Sitemap = [
-    '',
-    '/games',
-    '/sale',
-    '/new',
-    '/preorders',
-    '/subscriptions',
-    '/topup',
-    '/how-to-buy',
-    '/guarantees',
-    '/contacts',
-  ].map((path) => ({
-    url: `${SITE_URL}${path}`,
-    changeFrequency: 'daily',
-    priority: path === '' ? 1 : 0.7,
-  }));
+const STATIC_PAGES: {
+  path: string;
+  priority: number;
+  changeFrequency: 'daily' | 'weekly';
+}[] = [
+  { path: '', priority: 1.0, changeFrequency: 'daily' },
+  { path: '/games', priority: 0.9, changeFrequency: 'daily' },
+  { path: '/sale', priority: 0.9, changeFrequency: 'daily' },
+  { path: '/new', priority: 0.8, changeFrequency: 'daily' },
+  { path: '/preorders', priority: 0.8, changeFrequency: 'daily' },
+  { path: '/subscriptions', priority: 0.8, changeFrequency: 'weekly' },
+  { path: '/topup', priority: 0.8, changeFrequency: 'weekly' },
+  { path: '/how-to-buy', priority: 0.5, changeFrequency: 'weekly' },
+  { path: '/guarantees', priority: 0.5, changeFrequency: 'weekly' },
+  { path: '/contacts', priority: 0.5, changeFrequency: 'weekly' },
+];
 
-  // Товары — до 500 самых свежих, чтобы sitemap не разрастался
-  const products = await getProducts({ product_type: 'game', region: 'UA', limit: 500 }).catch(
-    () => []
-  );
-  const productPages: MetadataRoute.Sitemap = products.map((p) => ({
-    url: `${SITE_URL}/games/${p.id}`,
+/**
+ * На сколько частей резать карту.
+ *
+ * Next вызывает эту функцию до генерации и по длине её ответа понимает,
+ * сколько файлов существует. Если API недоступен — отдаём одну часть: карта
+ * без товаров лучше, чем упавший запрос, поисковик просто зайдёт позже.
+ */
+export async function generateSitemaps() {
+  const total = await getSitemapCount().catch(() => 0);
+  const chunks = Math.max(1, Math.ceil(total / CHUNK));
+  return Array.from({ length: chunks }, (_, id) => ({ id }));
+}
+
+export default async function sitemap({ id }: { id: number }): Promise<MetadataRoute.Sitemap> {
+  const siteUrl = getSiteUrl();
+
+  const entries = await getSitemapEntries(CHUNK, id * CHUNK).catch(() => []);
+  const productPages: MetadataRoute.Sitemap = entries.map((e) => ({
+    url: `${siteUrl}/games/${e.id}`,
+    // Дата правки подсказывает роботу, что перечитать, а что пропустить.
+    // Цены и скидки меняет парсер, он же двигает updated_at.
+    lastModified: e.updated_at ? new Date(e.updated_at) : undefined,
     changeFrequency: 'weekly',
     priority: 0.6,
+  }));
+
+  // Разделы кладём только в первую часть, иначе они продублируются во всех.
+  if (id !== 0) return productPages;
+
+  const staticPages: MetadataRoute.Sitemap = STATIC_PAGES.map((p) => ({
+    url: `${siteUrl}${p.path}`,
+    changeFrequency: p.changeFrequency,
+    priority: p.priority,
   }));
 
   return [...staticPages, ...productPages];

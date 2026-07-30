@@ -7,6 +7,7 @@ import { DataError } from '@/components/ui/DataError';
 export const metadata: Metadata = {
   title: 'Новинки',
   description: 'Новые игры PlayStation — самые свежие релизы в нашем каталоге.',
+  alternates: { canonical: '/new' },
 };
 
 export const revalidate = 120;

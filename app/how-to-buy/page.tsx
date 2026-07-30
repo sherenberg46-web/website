@@ -6,6 +6,7 @@ import { HowToBuy } from '@/components/home/HowToBuy';
 export const metadata: Metadata = {
   title: 'Как купить',
   description: 'Инструкция по покупке цифровых игр PlayStation в нашем магазине.',
+  alternates: { canonical: '/how-to-buy' },
 };
 
 export default function HowToBuyPage() {

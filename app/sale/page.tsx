@@ -12,6 +12,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Распродажа',
   description: 'Лучшие скидки на цифровые игры PlayStation. Успейте купить по выгодным ценам.',
+  alternates: { canonical: '/sale' },
 };
 
 export const dynamic = 'force-dynamic';

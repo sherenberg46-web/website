@@ -10,6 +10,7 @@ import {
   normalizeImageUrl,
 } from '@/lib/api';
 import { getRegion } from '@/lib/region-server';
+import { getSiteUrl } from '@/lib/site-url';
 import { AddToCart } from '@/components/products/AddToCart';
 import { TrackView } from '@/components/products/TrackView';
 import { ProductGrid } from '@/components/products/ProductGrid';
@@ -35,7 +36,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title,
       description: desc,
+      // Каноничный адрес карточки. Без него товар, открытый из каталога с
+      // фильтром или из поиска, выглядит для робота как отдельная страница
+      // с тем же содержимым, и вес размазывается по дублям.
+      alternates: { canonical: `/games/${params.id}` },
       openGraph: {
+        url: `/games/${params.id}`,
         title: `${title} | GAME STORE`,
         description: desc,
         images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
@@ -89,6 +95,20 @@ export default async function GamePage({ params }: Props) {
   const platforms = product.platform?.split(',').map((p) => p.trim()) ?? [];
   const cleanDescription = product.description?.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
 
+  // Считаем на запрос, а не на импорт: RAILWAY_PUBLIC_DOMAIN живёт в
+  // окружении контейнера, на этапе сборки его ещё нет (см. lib/site-url.ts).
+  const siteUrl = getSiteUrl();
+  const canonical = `${siteUrl}/games/${product.id}`;
+
+  // Разметка товара для поисковиков.
+  //
+  // Блока aggregateRating здесь намеренно нет. Раньше он был, но с
+  // `reviewCount: 10` — числом, взятым из головы: своих отзывов мы не
+  // собираем, а рейтинг приходит из PS Store. Придуманные отзывы в
+  // структурированных данных — прямое нарушение правил Google для
+  // расширенных сниппетов, и наказывают за него не одну карточку, а весь
+  // сайт. Вернуть блок можно будет тогда, когда появятся настоящие отзывы
+  // с настоящим счётчиком.
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -96,9 +116,12 @@ export default async function GamePage({ params }: Props) {
     description: cleanDescription,
     image: imageUrl,
     sku: String(product.id),
+    url: canonical,
     brand: { '@type': 'Brand', name: 'PlayStation' },
+    ...(platforms.length ? { gamePlatform: platforms } : {}),
     offers: {
       '@type': 'Offer',
+      url: canonical,
       price: product.price_byn,
       priceCurrency: 'BYN',
       availability: product.is_preorder
@@ -106,17 +129,19 @@ export default async function GamePage({ params }: Props) {
         : 'https://schema.org/InStock',
       seller: { '@type': 'Organization', name: 'GAME STORE' },
     },
-    ...(product.rating
-      ? {
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: product.rating,
-            bestRating: 5,
-            worstRating: 1,
-            reviewCount: 10,
-          },
-        }
-      : {}),
+  };
+
+  // Хлебные крошки: на странице они есть, но поисковик видит только разметку.
+  // Из неё Google строит путь «gamesstore.by › Каталог › Игра» в выдаче
+  // вместо голого адреса.
+  const breadcrumbsLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Главная', item: siteUrl },
+      { '@type': 'ListItem', position: 2, name: 'Каталог', item: `${siteUrl}/games` },
+      { '@type': 'ListItem', position: 3, name: product.title, item: canonical },
+    ],
   };
 
   return (
@@ -124,6 +149,10 @@ export default async function GamePage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsLd) }}
       />
       <TrackView product={product} />
 
