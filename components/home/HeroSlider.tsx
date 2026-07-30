@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Banner } from '@/lib/types';
+import { FitImage } from '@/components/ui/FitImage';
 import { normalizeImageUrl, getTelegramLink } from '@/lib/api';
 
 interface Props {
@@ -48,8 +48,13 @@ export function HeroSlider({ banners }: Props) {
 
   return (
     <section className="max-w-7xl mx-auto px-4 pt-4">
+      {/* Пропорции вместо фиксированных высот.
+          Раньше стояло h-300/360/440px: баннер 2:1 при ширине телефона в 360 px
+          попадал в рамку 1,2:1 и терял 40 % ширины — логотип игры уезжал за край.
+          Теперь рамка на каждом экране близка к форме исходника, а остаток
+          добирает размытая подложка внутри FitImage. */}
       <div
-        className="relative w-full overflow-hidden rounded-xl bg-bg-card h-[300px] sm:h-[360px] lg:h-[440px]"
+        className="relative w-full overflow-hidden rounded-xl bg-bg-card aspect-[4/3] sm:aspect-[2/1] lg:aspect-[12/5]"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
@@ -68,12 +73,11 @@ export function HeroSlider({ banners }: Props) {
                 <div className="absolute inset-0 bg-gradient-to-br from-accent/25 via-bg-card to-bg-page" />
               </div>
             ) : (
-              <Image
+              <FitImage
                 src={imageUrl}
                 alt={banner.title}
-                fill
                 priority
-                className="object-cover"
+                className="absolute inset-0"
                 sizes="(max-width: 1280px) 100vw, 1280px"
                 onError={() =>
                   setFailed((s) => {
@@ -174,7 +178,7 @@ function DefaultHero() {
   const reduceMotion = useReducedMotion();
   return (
     <section className="max-w-7xl mx-auto px-4 pt-4">
-      <div className="relative w-full overflow-hidden rounded-xl bg-bg-card h-[300px] sm:h-[360px] lg:h-[440px] flex items-center">
+      <div className="relative w-full overflow-hidden rounded-xl bg-bg-card aspect-[4/3] sm:aspect-[2/1] lg:aspect-[12/5] flex items-center">
         {/* Фоновый градиент */}
         <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-bg-card to-bg-page" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,84,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,84,0,0.04)_1px,transparent_1px)] bg-[size:60px_60px]" />

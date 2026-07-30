@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Loader2, X } from 'lucide-react';
 import type { Product } from '@/lib/types';
+import { FitImage } from '@/components/ui/FitImage';
 import { API_BASE, normalizeImageUrl, formatPrice } from '@/lib/api';
 import { getClientRegion } from '@/lib/region';
 
@@ -73,15 +73,13 @@ function ResultRow({ p, onNavigate }: { p: Product; onNavigate: () => void }) {
       className="flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors"
       onClick={onNavigate}
     >
-      <div className="relative w-11 h-11 rounded-md overflow-hidden bg-bg-card-hover shrink-0">
-        <Image
-          src={normalizeImageUrl(p.image_url)}
-          alt={p.title}
-          fill
-          sizes="44px"
-          className="object-cover"
-        />
-      </div>
+      <FitImage
+        src={normalizeImageUrl(p.image_url)}
+        alt={p.title}
+        sizes="44px"
+        backdrop={false}
+        className="relative w-9 aspect-[3/4] rounded-md shrink-0"
+      />
       <div className="min-w-0 flex-1">
         <p className="text-sm text-text-primary truncate">{p.title}</p>
         <p className="text-xs text-text-secondary">

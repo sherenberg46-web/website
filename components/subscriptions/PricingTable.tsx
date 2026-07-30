@@ -7,6 +7,7 @@ import { ShoppingCart, Check, ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 import { useCartStore } from '@/store/cartStore';
 import { REGIONS, getClientRegion, type Region } from '@/lib/region';
+import { FitImage } from '@/components/ui/FitImage';
 import { RegionBadge } from '@/components/ui/RegionBadge';
 import {
   SUB_PRICES,
@@ -203,16 +204,14 @@ export function PricingTable() {
 
       {/* EA Play */}
       <div className="mt-6 bg-bg-card rounded-3xl border border-border overflow-hidden flex flex-col sm:flex-row">
-        <div className="relative sm:w-64 aspect-[16/9] sm:aspect-auto shrink-0">
-          <Image
-            src="/images/ea-play.jpg"
-            alt="EA Play"
-            fill
-            quality={90}
-            sizes="256px"
-            className="object-cover"
-          />
-        </div>
+        {/* Обложка EA Play квадратная (1254×1254). В полосе 16:9 от неё
+            оставалось меньше половины — вписываем целиком поверх размытой копии. */}
+        <FitImage
+          src="/images/ea-play.jpg"
+          alt="EA Play"
+          sizes="256px"
+          className="relative sm:w-64 aspect-[16/9] sm:aspect-auto shrink-0"
+        />
         <div className="p-6 flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
           <div className="flex-1">
             <h3 className="font-bold text-lg">EA Play</h3>

@@ -1,11 +1,11 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Heart, ShoppingCart, Star } from 'lucide-react';
 import clsx from 'clsx';
 import type { Product } from '@/lib/types';
+import { FitImage } from '@/components/ui/FitImage';
 import { PriceDisplay } from '@/components/ui/PriceDisplay';
 import { Badge } from '@/components/ui/Badge';
 import { useCartStore } from '@/store/cartStore';
@@ -61,19 +61,17 @@ export function ProductCard({ product, priority = false }: Props) {
     >
       <Link href={`/games/${product.id}`} className="block">
         <div className="rounded-lg overflow-hidden bg-bg-card transition-all duration-300 group-hover:bg-bg-card-hover group-hover:shadow-glow-card">
-          {/* Cover image */}
-          <div className="relative aspect-square overflow-hidden bg-bg-card-hover">
-            <Image
+          {/* Cover image.
+              Рамка 3:4, а не квадрат: обложки PS Store вертикальные 2:3,
+              в квадрате у них срезало треть высоты вместе с логотипом. */}
+          <div className="relative aspect-[3/4] overflow-hidden bg-bg-card-hover">
+            <FitImage
               src={imageUrl}
               alt={product.title}
-              fill
               sizes="(max-width: 640px) 45vw, 288px"
-              quality={85}
-              className="object-cover transition-transform duration-500 group-hover:scale-110"
+              className="absolute inset-0"
+              imageClassName="transition-transform duration-500 group-hover:scale-105"
               priority={priority}
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src = '/placeholder.png';
-              }}
             />
 
             {/* Затемнение при наведении */}

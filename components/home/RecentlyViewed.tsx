@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { getRecentlyViewed, type RecentItem } from '@/lib/recent';
+import { FitImage } from '@/components/ui/FitImage';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
 /** «Вы смотрели» — история просмотров из браузера. Рендерится только если она есть. */
@@ -27,14 +27,13 @@ export function RecentlyViewed() {
               href={`/games/${item.id}`}
               className="shrink-0 w-40 sm:w-48 snap-start group"
             >
-              <div className="relative aspect-square rounded-xl overflow-hidden bg-bg-card border border-border group-hover:border-accent/40 transition-colors">
-                <Image
+              <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-bg-card border border-border group-hover:border-accent/40 transition-colors">
+                <FitImage
                   src={item.image_url}
                   alt={item.title}
-                  fill
                   sizes="192px"
-                  quality={85}
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="absolute inset-0"
+                  imageClassName="transition-transform duration-300 group-hover:scale-105"
                 />
                 {item.discount_pct > 0 && (
                   <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-accent text-white text-[10px] font-bold rounded-md">

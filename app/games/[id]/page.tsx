@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Star, Calendar, Monitor } from 'lucide-react';
@@ -15,6 +14,7 @@ import { AddToCart } from '@/components/products/AddToCart';
 import { TrackView } from '@/components/products/TrackView';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { Badge } from '@/components/ui/Badge';
+import { FitImage } from '@/components/ui/FitImage';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
 export const dynamic = 'force-dynamic';
@@ -141,15 +141,15 @@ export default async function GamePage({ params }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16">
           {/* Cover */}
           <div className="relative">
-            <div className="relative aspect-square max-w-lg mx-auto lg:mx-0 rounded-xl overflow-hidden shadow-glow-card">
-              <Image
+            {/* 3:4 под вертикальные обложки PS Store. В квадрате у постера
+                срезало верх с логотипом и низ с возрастным рейтингом. */}
+            <div className="relative aspect-[3/4] max-w-sm mx-auto lg:mx-0 rounded-xl overflow-hidden shadow-glow-card">
+              <FitImage
                 src={imageUrl}
                 alt={product.title}
-                fill
                 priority
-                quality={95}
-                className="object-cover"
-                sizes="(max-width: 1024px) 90vw, 512px"
+                className="absolute inset-0"
+                sizes="(max-width: 1024px) 90vw, 384px"
               />
               {product.discount_pct > 0 && (
                 <div className="absolute top-4 left-4">
@@ -219,16 +219,12 @@ export default async function GamePage({ params }: Props) {
               {dlc.slice(0, 12).map((item) => (
                 <div key={item.id} className="bg-bg-card border border-border rounded-xl p-3">
                   {item.image_url && (
-                    <div className="relative aspect-square rounded-lg overflow-hidden mb-2">
-                      <Image
-                        src={normalizeImageUrl(item.image_url)}
-                        alt={item.title}
-                        fill
-                        quality={85}
-                        className="object-cover"
-                        sizes="160px"
-                      />
-                    </div>
+                    <FitImage
+                      src={normalizeImageUrl(item.image_url)}
+                      alt={item.title}
+                      sizes="160px"
+                      className="relative aspect-[3/4] rounded-lg mb-2"
+                    />
                   )}
                   <p className="text-text-secondary text-xs line-clamp-2 mb-1">{item.title}</p>
                   {item.price_byn && (

@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
+import { FitImage } from '@/components/ui/FitImage';
 import { useCartStore } from '@/store/cartStore';
 import { OrderForm } from '@/components/cart/OrderForm';
 import { CartPromoBanner } from '@/components/cart/CartPromoBanner';
@@ -56,15 +56,13 @@ export default function CartPage() {
               key={`${item.product_id}-${item.edition_id}`}
               className="flex gap-4 bg-bg-card border border-border rounded-2xl p-4"
             >
-              <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-bg-card-hover">
-                <Image
-                  src={item.image_url}
-                  alt={item.title}
-                  fill
-                  className="object-cover"
-                  sizes="80px"
-                />
-              </div>
+              <FitImage
+                src={item.image_url}
+                alt={item.title}
+                sizes="80px"
+                backdrop={false}
+                className="relative w-16 aspect-[3/4] rounded-xl shrink-0"
+              />
 
               <div className="flex-1 min-w-0">
                 <Link
