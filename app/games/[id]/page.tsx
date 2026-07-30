@@ -33,15 +33,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       product.description?.replace(/<[^>]+>/g, ' ').slice(0, 160) ||
       `Купить ${title} для ${product.platform} в Беларуси. Цена: ${product.price_byn} BYN.`;
 
+    // Каноничный адрес карточки. Без него товар, открытый из каталога с
+    // фильтром или из поиска, выглядит для робота как отдельная страница
+    // с тем же содержимым, и вес размазывается по дублям.
+    //
+    // Отдельный случай — версии одной игры для разных регионов. Турецкая и
+    // украинская карточки различаются только ценой, но лежат по разным
+    // адресам; таких пар в каталоге почти двадцать тысяч. canonical_id
+    // приходит с сервера и указывает на украинскую — основную.
+    const canonicalPath = `/games/${product.canonical_id ?? params.id}`;
+
     return {
       title,
       description: desc,
-      // Каноничный адрес карточки. Без него товар, открытый из каталога с
-      // фильтром или из поиска, выглядит для робота как отдельная страница
-      // с тем же содержимым, и вес размазывается по дублям.
-      alternates: { canonical: `/games/${params.id}` },
+      alternates: { canonical: canonicalPath },
       openGraph: {
-        url: `/games/${params.id}`,
+        url: canonicalPath,
         title: `${title} | GAME STORE`,
         description: desc,
         images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
@@ -98,7 +105,10 @@ export default async function GamePage({ params }: Props) {
   // Считаем на запрос, а не на импорт: RAILWAY_PUBLIC_DOMAIN живёт в
   // окружении контейнера, на этапе сборки его ещё нет (см. lib/site-url.ts).
   const siteUrl = getSiteUrl();
-  const canonical = `${siteUrl}/games/${product.id}`;
+  // Для версии другого региона ссылаемся на основную карточку — см. пояснение
+  // в generateMetadata. Разметка и <link rel=canonical> должны совпадать,
+  // иначе поисковик получает два противоречащих указания.
+  const canonical = `${siteUrl}/games/${product.canonical_id ?? product.id}`;
 
   // Разметка товара для поисковиков.
   //

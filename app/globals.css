@@ -112,6 +112,13 @@ body {
   margin-top: 2rem;
   margin-bottom: 1rem;
 }
+.prose-dark h3 {
+  color: var(--text-primary);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
 .prose-dark p {
   color: var(--text-secondary);
   line-height: 1.75;
