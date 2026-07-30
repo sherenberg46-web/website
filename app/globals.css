@@ -123,6 +123,32 @@ body {
   padding-left: 1.5rem;
   margin-bottom: 1rem;
 }
+/* Нумерованные списки: Tailwind сбрасывает маркеры в preflight, без этого
+   правила пошаговые инструкции выглядят просто абзацами без номеров */
+.prose-dark ol {
+  color: var(--text-secondary);
+  list-style: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
 .prose-dark li {
   margin-bottom: 0.5rem;
+  line-height: 1.7;
+}
+.prose-dark strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.prose-dark a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-dark a:hover {
+  color: var(--accent-hover);
+}
+
+/* Стрелка у <details> в блоке вопросов рисуется своим значком */
+details > summary::-webkit-details-marker {
+  display: none;
 }
