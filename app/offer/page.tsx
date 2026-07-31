@@ -39,9 +39,9 @@ export default function OfferPage() {
 
       <div className="prose-dark">
         <p>
-          Настоящий документ является публичной офертой {COMPANY.legalForm.toLowerCase()}{' '}
-          {COMPANY.fullName} (УНП {COMPANY.unp}), далее — «Продавец», и содержит все
-          существенные условия договора розничной купли-продажи цифровых товаров
+          Настоящий документ является публичной офертой {COMPANY.legalFormGenitive}{' '}
+          {COMPANY.fullNameGenitive} (УНП {COMPANY.unp}), далее — «Продавец», и содержит
+          все существенные условия договора розничной купли-продажи цифровых товаров
           дистанционным способом.
         </p>
         <p>

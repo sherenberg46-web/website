@@ -37,8 +37,8 @@ export default function PrivacyPage() {
 
       <div className="prose-dark">
         <p>
-          Оператор персональных данных — {COMPANY.legalForm.toLowerCase()}{' '}
-          {COMPANY.fullName}, УНП {COMPANY.unp}, {COMPANY.city}. Далее — «мы».
+          Оператор персональных данных — {COMPANY.legalForm.toLowerCase()} {COMPANY.fullName},
+          УНП {COMPANY.unp}, {COMPANY.city}. Далее — «мы».
         </p>
         <p>
           Документ описывает, какие данные мы собираем на сайте gamesstore.by и в
