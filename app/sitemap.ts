@@ -39,6 +39,11 @@ const STATIC_PAGES: {
   { path: '/how-to-buy', priority: 0.5, changeFrequency: 'weekly' },
   { path: '/guarantees', priority: 0.5, changeFrequency: 'weekly' },
   { path: '/contacts', priority: 0.5, changeFrequency: 'weekly' },
+  // Правовые документы. Приоритет низкий — по ним не ищут, но в индексе они
+  // нужны: поисковики считают их признаком настоящего магазина, а не витрины.
+  { path: '/offer', priority: 0.3, changeFrequency: 'weekly' },
+  { path: '/privacy', priority: 0.3, changeFrequency: 'weekly' },
+  { path: '/refund', priority: 0.3, changeFrequency: 'weekly' },
 ];
 
 /**

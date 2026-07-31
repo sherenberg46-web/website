@@ -4,6 +4,7 @@ import './globals.css';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { getSiteUrl } from '@/lib/site-url';
+import { COMPANY } from '@/lib/company';
 
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
@@ -70,16 +71,28 @@ export const metadata: Metadata = {
 const organizationLd = {
   '@context': 'https://schema.org',
   '@type': 'OnlineStore',
-  name: 'GAME STORE',
+  name: COMPANY.brand,
+  legalName: `${COMPANY.legalForm} ${COMPANY.fullName}`,
+  // taxID — тот самый УНП. Поисковики сопоставляют его с реестрами и по нему
+  // отличают настоящий бизнес от анонимной витрины.
+  taxID: COMPANY.unp,
   url: SITE_URL,
   logo: `${SITE_URL}/logo.png`,
   description:
     'Цифровые игры PlayStation, подписки PS Plus и пополнение кошелька PSN для Беларуси.',
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: COMPANY.city,
+    addressCountry: 'BY',
+  },
+  telephone: COMPANY.phone,
+  email: COMPANY.email,
   areaServed: { '@type': 'Country', name: 'Беларусь' },
   currenciesAccepted: 'BYN',
+  openingHours: 'Mo-Su 10:00-22:00',
   sameAs: [
     process.env.NEXT_PUBLIC_TG_BOT || 'https://t.me/GameDigitalShop_bot',
-    process.env.NEXT_PUBLIC_TG_MANAGER || 'https://t.me/gamestore_by',
+    COMPANY.telegram,
   ],
 };
 

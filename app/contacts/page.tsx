@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
-import { MessageCircle, Clock, Mail } from 'lucide-react';
+import Link from 'next/link';
+import { MessageCircle, Clock, Phone } from 'lucide-react';
 import { getTelegramLink, getManagerLink } from '@/lib/api';
+import { COMPANY } from '@/lib/company';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
 export const metadata: Metadata = {
@@ -67,6 +69,65 @@ export default function ContactsPage() {
           </div>
         </ScrollReveal>
       </div>
+
+      {/* Телефон и Viber — один и тот же номер. Для части покупателей это
+          единственный привычный способ связи, а для доверия к магазину живой
+          номер важнее любого текста «мы надёжные». */}
+      <ScrollReveal>
+        <div className="bg-bg-card border border-border rounded-2xl p-6 mb-12">
+          <div className="flex items-start gap-4">
+            <Phone className="w-8 h-8 text-accent shrink-0" />
+            <div>
+              <h3 className="font-semibold text-text-primary mb-1">Телефон и Viber</h3>
+              <a
+                href={`tel:${COMPANY.phone}`}
+                className="text-text-primary text-lg font-medium hover:text-accent transition-colors"
+              >
+                {COMPANY.phoneDisplay}
+              </a>
+              <p className="text-text-secondary text-xs mt-2">
+                Viber работает по этому же номеру
+              </p>
+            </div>
+          </div>
+        </div>
+      </ScrollReveal>
+
+      {/* Реквизиты продавца. Покупатель должен видеть, с кем имеет дело, —
+          и до оплаты, а не после. */}
+      <ScrollReveal>
+        <div className="bg-bg-card border border-border rounded-2xl p-6 mb-12">
+          <h2 className="font-semibold text-text-primary mb-4">Реквизиты продавца</h2>
+          <address className="not-italic text-text-secondary text-sm leading-relaxed space-y-1">
+            <p>
+              {COMPANY.legalForm} {COMPANY.fullName}
+            </p>
+            <p>УНП {COMPANY.unp}</p>
+            <p>
+              {COMPANY.city}, {COMPANY.country}
+            </p>
+            <p>
+              <a
+                href={`mailto:${COMPANY.email}`}
+                className="hover:text-text-primary transition-colors"
+              >
+                {COMPANY.email}
+              </a>
+            </p>
+          </address>
+          <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            <Link href="/offer" className="text-accent hover:underline">
+              Публичная оферта
+            </Link>
+            <Link href="/privacy" className="text-accent hover:underline">
+              Политика конфиденциальности
+            </Link>
+            <Link href="/refund" className="text-accent hover:underline">
+              Условия возврата
+            </Link>
+          </div>
+        </div>
+      </ScrollReveal>
 
       <ScrollReveal>
         <div className="bg-bg-card border border-border rounded-2xl p-8 text-center">

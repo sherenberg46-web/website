@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { getTelegramLink } from '@/lib/api';
+import { COMPANY } from '@/lib/company';
 
 const SHOP_LINKS = [
   { href: '/games', label: 'Каталог игр' },
@@ -15,6 +16,18 @@ const INFO_LINKS = [
   { href: '/how-to-buy', label: 'Как купить' },
   { href: '/guarantees', label: 'Гарантии' },
   { href: '/contacts', label: 'Контакты' },
+];
+
+/**
+ * Правовые документы.
+ *
+ * Отдельным блоком, а не вперемешку с «Как купить»: покупатель ищет их
+ * осознанно — обычно перед оплатой, когда решает, можно ли доверять магазину.
+ */
+const LEGAL_LINKS = [
+  { href: '/offer', label: 'Публичная оферта' },
+  { href: '/privacy', label: 'Политика конфиденциальности' },
+  { href: '/refund', label: 'Условия возврата' },
 ];
 
 export function Footer() {
@@ -101,9 +114,59 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Реквизиты и правовые документы */}
+        <div className="mt-10 pt-8 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-text-primary font-semibold text-sm mb-3">Реквизиты</h3>
+            <address className="not-italic text-text-secondary text-xs leading-relaxed space-y-1">
+              <p>
+                {COMPANY.legalForm} {COMPANY.fullName}
+              </p>
+              <p>УНП {COMPANY.unp}</p>
+              <p>
+                {COMPANY.city}, {COMPANY.country}
+              </p>
+              <p>
+                <a
+                  href={`tel:${COMPANY.phone}`}
+                  className="hover:text-text-primary transition-colors"
+                >
+                  {COMPANY.phoneDisplay}
+                </a>
+                <span className="text-text-secondary/60"> — телефон и Viber</span>
+              </p>
+              <p>
+                <a
+                  href={`mailto:${COMPANY.email}`}
+                  className="hover:text-text-primary transition-colors"
+                >
+                  {COMPANY.email}
+                </a>
+              </p>
+              <p>{COMPANY.workHours}</p>
+            </address>
+          </div>
+
+          <div>
+            <h3 className="text-text-primary font-semibold text-sm mb-3">Документы</h3>
+            <ul className="space-y-2">
+              {LEGAL_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-text-secondary text-xs hover:text-text-primary transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-text-secondary text-xs">
-            © {new Date().getFullYear()} GAME STORE. Все права защищены.
+            © {new Date().getFullYear()} {COMPANY.brand}. Все права защищены.
           </p>
           <p className="text-text-secondary text-xs">
             Цены указаны в белорусских рублях (BYN)

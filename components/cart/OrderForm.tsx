@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
 import { createWebOrder, getManagerLink } from '@/lib/api';
 import { getClientRegion } from '@/lib/region';
@@ -307,6 +308,20 @@ export function OrderForm() {
 
         <p className="text-center text-text-secondary text-xs mt-3">
           Оплата — после подтверждения заказа менеджером
+        </p>
+
+        {/* Момент принятия оферты. Именно здесь покупатель передаёт нам свои
+            данные и заключает договор, поэтому предупреждение должно стоять
+            у кнопки, а не теряться в подвале. */}
+        <p className="text-center text-text-secondary text-xs mt-3 leading-relaxed">
+          Оформляя заказ, вы принимаете{' '}
+          <Link href="/offer" className="text-accent hover:underline">
+            публичную оферту
+          </Link>{' '}
+          и соглашаетесь с{' '}
+          <Link href="/privacy" className="text-accent hover:underline">
+            политикой конфиденциальности
+          </Link>
         </p>
       </div>
     </form>
