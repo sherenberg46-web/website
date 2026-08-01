@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { getSitemapEntries, getSitemapCount } from '@/lib/api';
 import { getSiteUrl } from '@/lib/site-url';
+import { gamePath } from '@/lib/product-url';
 
 /**
  * Карта сайта.
@@ -31,6 +32,9 @@ const STATIC_PAGES: {
 }[] = [
   { path: '', priority: 1.0, changeFrequency: 'daily' },
   { path: '/games', priority: 0.9, changeFrequency: 'daily' },
+  // Посадочная под платформу. Пока каталог целиком PlayStation, платформа
+  // одна; с добавлением Xbox/Steam здесь появятся /games/xbox и /games/steam.
+  { path: '/games/ps', priority: 0.9, changeFrequency: 'daily' },
   { path: '/sale', priority: 0.9, changeFrequency: 'daily' },
   { path: '/new', priority: 0.8, changeFrequency: 'daily' },
   { path: '/preorders', priority: 0.8, changeFrequency: 'daily' },
@@ -64,7 +68,11 @@ export default async function sitemap({ id }: { id: number }): Promise<MetadataR
 
   const entries = await getSitemapEntries(CHUNK, id * CHUNK).catch(() => []);
   const productPages: MetadataRoute.Sitemap = entries.map((e) => ({
-    url: `${siteUrl}/games/${e.id}`,
+    // Облегчённый эндпоинт отдаёт только id и дату правки, без платформы.
+    // Весь каталог сейчас PlayStation, поэтому сегмент 'ps' (по умолчанию
+    // в gamePath). Адрес совпадает с canonical карточки — sitemap и
+    // <link rel=canonical> не должны расходиться.
+    url: `${siteUrl}${gamePath(e.id)}`,
     // Дата правки подсказывает роботу, что перечитать, а что пропустить.
     // Цены и скидки меняет парсер, он же двигает updated_at.
     lastModified: e.updated_at ? new Date(e.updated_at) : undefined,

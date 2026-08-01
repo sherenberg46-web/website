@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getRecentlyViewed, type RecentItem } from '@/lib/recent';
+import { gamePath } from '@/lib/product-url';
 import { FitImage } from '@/components/ui/FitImage';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
@@ -24,7 +25,7 @@ export function RecentlyViewed() {
           {items.map((item) => (
             <Link
               key={item.id}
-              href={`/games/${item.id}`}
+              href={gamePath(item.id, item.platform)}
               className="shrink-0 w-40 sm:w-48 snap-start group"
             >
               <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-bg-card border border-border group-hover:border-accent/40 transition-colors">

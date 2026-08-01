@@ -8,6 +8,7 @@ import { useCartStore } from '@/store/cartStore';
 import { OrderForm } from '@/components/cart/OrderForm';
 import { CartPromoBanner } from '@/components/cart/CartPromoBanner';
 import { getTelegramLink } from '@/lib/api';
+import { gamePath } from '@/lib/product-url';
 
 export default function CartPage() {
   const [mounted, setMounted] = useState(false);
@@ -66,7 +67,7 @@ export default function CartPage() {
 
               <div className="flex-1 min-w-0">
                 <Link
-                  href={`/games/${item.product_id}`}
+                  href={gamePath(item.product_id)}
                   className="font-medium text-text-primary text-sm hover:text-accent transition-colors line-clamp-2"
                 >
                   {item.title}

@@ -8,6 +8,7 @@ import type { Product } from '@/lib/types';
 import { FitImage } from '@/components/ui/FitImage';
 import { API_BASE, normalizeImageUrl, formatPrice } from '@/lib/api';
 import { getClientRegion } from '@/lib/region';
+import { gamePath } from '@/lib/product-url';
 
 /** Общая логика живого поиска — для десктопной и мобильной версий. */
 function useLiveSearch() {
@@ -69,7 +70,7 @@ function useLiveSearch() {
 function ResultRow({ p, onNavigate }: { p: Product; onNavigate: () => void }) {
   return (
     <Link
-      href={`/games/${p.id}`}
+      href={gamePath(p.id, p.platform)}
       className="flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors"
       onClick={onNavigate}
     >

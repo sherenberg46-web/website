@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/Badge';
 import { useCartStore } from '@/store/cartStore';
 import { useFavouritesStore } from '@/store/favouritesStore';
 import { normalizeImageUrl, getTelegramLink } from '@/lib/api';
+import { gamePath } from '@/lib/product-url';
 
 interface Props {
   product: Product;
@@ -59,7 +60,7 @@ export function ProductCard({ product, priority = false }: Props) {
       transition={{ duration: 0.2, ease: 'easeOut' }}
       className="group relative"
     >
-      <Link href={`/games/${product.id}`} className="block">
+      <Link href={gamePath(product.id, product.platform)} className="block">
         <div className="rounded-lg overflow-hidden bg-bg-card transition-all duration-300 group-hover:bg-bg-card-hover group-hover:shadow-glow-card">
           {/* Cover image.
               Рамка 3:4, а не квадрат: обложки PS Store вертикальные 2:3,

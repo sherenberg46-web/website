@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Banner } from '@/lib/types';
 import { FitImage } from '@/components/ui/FitImage';
 import { normalizeImageUrl, getTelegramLink } from '@/lib/api';
+import { gamePath } from '@/lib/product-url';
 
 interface Props {
   banners: Banner[];
@@ -38,7 +39,7 @@ export function HeroSlider({ banners }: Props) {
   const imageFailed = failed.has(banner.id);
   const linkHref = banner.link_ua
     ? banner.link_ua.startsWith('/product/')
-      ? `/games/${banner.link_ua.replace('/product/', '')}`
+      ? gamePath(banner.link_ua.replace('/product/', ''))
       : banner.link_ua.startsWith('/collection/')
       ? `/collections/${banner.link_ua.replace('/collection/', '')}`
       : banner.link_ua.startsWith('/sale')

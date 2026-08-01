@@ -11,6 +11,7 @@ import {
 } from '@/lib/api';
 import { getRegion } from '@/lib/region-server';
 import { getSiteUrl } from '@/lib/site-url';
+import { gamePath, platformSlug, isPlatformSegment } from '@/lib/product-url';
 import { AddToCart } from '@/components/products/AddToCart';
 import { TrackView } from '@/components/products/TrackView';
 import { ProductGrid } from '@/components/products/ProductGrid';
@@ -21,8 +22,14 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal';
 export const dynamic = 'force-dynamic';
 
 interface Props {
-  params: { id: string };
+  params: { platform: string; id: string };
 }
+
+const PLATFORM_LABEL: Record<string, string> = {
+  ps: 'PlayStation',
+  xbox: 'Xbox',
+  steam: 'Steam',
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
@@ -41,7 +48,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // украинская карточки различаются только ценой, но лежат по разным
     // адресам; таких пар в каталоге почти двадцать тысяч. canonical_id
     // приходит с сервера и указывает на украинскую — основную.
-    const canonicalPath = `/games/${product.canonical_id ?? params.id}`;
+    //
+    // Платформу в адрес берём из самого товара, а не из сегмента адреса:
+    // так canonical не зависит от того, по какому платформенному пути
+    // карточку открыли.
+    const canonicalPath = gamePath(product.canonical_id ?? Number(params.id), product.platform);
 
     return {
       title,
@@ -67,6 +78,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function GamePage({ params }: Props) {
+  // Платформа в адресе должна быть из известного списка. Прочее — 404,
+  // иначе один товар доступен под бесконечным числом платформенных путей.
+  if (!isPlatformSegment(params.platform)) notFound();
+
   const id = Number(params.id);
   if (!id || isNaN(id)) notFound();
 
@@ -108,7 +123,11 @@ export default async function GamePage({ params }: Props) {
   // Для версии другого региона ссылаемся на основную карточку — см. пояснение
   // в generateMetadata. Разметка и <link rel=canonical> должны совпадать,
   // иначе поисковик получает два противоречащих указания.
-  const canonical = `${siteUrl}/games/${product.canonical_id ?? product.id}`;
+  const canonical = `${siteUrl}${gamePath(product.canonical_id ?? product.id, product.platform)}`;
+
+  const platformSeg = platformSlug(product.platform);
+  const platformLabel = PLATFORM_LABEL[platformSeg] ?? 'PlayStation';
+  const platformListPath = `/games/${platformSeg}`;
 
   // Разметка товара для поисковиков.
   //
@@ -142,15 +161,16 @@ export default async function GamePage({ params }: Props) {
   };
 
   // Хлебные крошки: на странице они есть, но поисковик видит только разметку.
-  // Из неё Google строит путь «gamesstore.by › Каталог › Игра» в выдаче
-  // вместо голого адреса.
+  // Из неё Google строит путь «gamesstore.by › Каталог › PlayStation › Игра»
+  // в выдаче вместо голого адреса.
   const breadcrumbsLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Главная', item: siteUrl },
       { '@type': 'ListItem', position: 2, name: 'Каталог', item: `${siteUrl}/games` },
-      { '@type': 'ListItem', position: 3, name: product.title, item: canonical },
+      { '@type': 'ListItem', position: 3, name: platformLabel, item: `${siteUrl}${platformListPath}` },
+      { '@type': 'ListItem', position: 4, name: product.title, item: canonical },
     ],
   };
 
@@ -172,6 +192,8 @@ export default async function GamePage({ params }: Props) {
           <Link href="/" className="hover:text-text-primary">Главная</Link>
           <span>/</span>
           <Link href="/games" className="hover:text-text-primary">Каталог</Link>
+          <span>/</span>
+          <Link href={platformListPath} className="hover:text-text-primary">{platformLabel}</Link>
           <span>/</span>
           <span className="text-text-primary truncate max-w-[200px]">{product.title}</span>
         </nav>

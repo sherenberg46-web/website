@@ -6,6 +6,7 @@ import { ShoppingCart, Check } from 'lucide-react';
 import clsx from 'clsx';
 import type { Region } from '@/lib/region';
 import { useCartStore } from '@/store/cartStore';
+import { gamePath } from '@/lib/product-url';
 
 import {
   SUB_PRICES as PRICES,
@@ -154,7 +155,7 @@ export function SubscriptionsShowcase({ region }: { region: Region }) {
           {([1, 12] as const).map((m) => (
             <Link
               key={m}
-              href={`/games/${EA_IDS_ALL[region][m]}`}
+              href={gamePath(EA_IDS_ALL[region][m])}
               className="px-4 py-2 rounded-full text-sm font-medium bg-white/10 text-text-primary hover:bg-white/15 transition-colors"
             >
               {monthsLabel(m)} · {PRICES[region].eaplay[m]} BYN
