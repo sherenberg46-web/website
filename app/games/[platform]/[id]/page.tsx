@@ -7,6 +7,7 @@ import {
   getProductEditions,
   getProductDlc,
   getProducts,
+  getProductReviews,
   normalizeImageUrl,
 } from '@/lib/api';
 import { getRegion } from '@/lib/region-server';
@@ -101,6 +102,9 @@ export default async function GamePage({ params }: Props) {
     throw err;
   }
 
+  // Отзывы покупателей (только одобренные) — для честной разметки Google.
+  const reviews = await getProductReviews(id);
+
   // Похожие: тот же жанр, регион обязателен (иначе дубли), сортировка по рейтингу
   const mainGenre = product.genre?.split(',')[0]?.trim();
   const similar = await getProducts({
@@ -131,13 +135,37 @@ export default async function GamePage({ params }: Props) {
 
   // Разметка товара для поисковиков.
   //
-  // Блока aggregateRating здесь намеренно нет. Раньше он был, но с
-  // `reviewCount: 10` — числом, взятым из головы: своих отзывов мы не
-  // собираем, а рейтинг приходит из PS Store. Придуманные отзывы в
-  // структурированных данных — прямое нарушение правил Google для
-  // расширенных сниппетов, и наказывают за него не одну карточку, а весь
-  // сайт. Вернуть блок можно будет тогда, когда появятся настоящие отзывы
-  // с настоящим счётчиком.
+  // aggregateRating и review добавляем ТОЛЬКО когда есть настоящие отзывы,
+  // одобренные модератором (их отдаёт бэкенд, поле count). Никаких выдуманных
+  // счётчиков: раньше здесь стоял `reviewCount: 10` из головы, а придуманные
+  // отзывы в структурированных данных — прямое нарушение правил Google, за
+  // которое наказывают весь сайт. Нет отзывов — нет и блока: это законно,
+  // Google считает поля рекомендательными.
+  const ratingLd =
+    reviews.count > 0
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: reviews.average,
+            reviewCount: reviews.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+          review: reviews.items.slice(0, 20).map((r) => ({
+            '@type': 'Review',
+            author: { '@type': 'Person', name: r.author_name || 'Покупатель' },
+            reviewRating: {
+              '@type': 'Rating',
+              ratingValue: r.rating,
+              bestRating: 5,
+              worstRating: 1,
+            },
+            ...(r.text ? { reviewBody: r.text } : {}),
+            ...(r.created_at ? { datePublished: r.created_at.slice(0, 10) } : {}),
+          })),
+        }
+      : {};
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -148,6 +176,7 @@ export default async function GamePage({ params }: Props) {
     url: canonical,
     brand: { '@type': 'Brand', name: 'PlayStation' },
     ...(platforms.length ? { gamePlatform: platforms } : {}),
+    ...ratingLd,
     offers: {
       '@type': 'Offer',
       url: canonical,
@@ -290,6 +319,42 @@ export default async function GamePage({ params }: Props) {
                   <p className="text-text-secondary text-xs line-clamp-2 mb-1">{item.title}</p>
                   {item.price_byn && (
                     <p className="text-text-primary text-xs font-semibold">{item.price_byn} BYN</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </ScrollReveal>
+        )}
+
+        {/* Отзывы покупателей — видимый блок под ту же разметку, что уходит в Google */}
+        {reviews.count > 0 && (
+          <ScrollReveal className="mt-16">
+            <div className="flex items-center gap-3 mb-6">
+              <h2 className="text-2xl font-bold">Отзывы покупателей</h2>
+              <span className="flex items-center gap-1.5">
+                <Star className="w-5 h-5 text-amber-400 fill-current" />
+                <span className="text-text-primary font-semibold">{reviews.average.toFixed(1)}</span>
+                <span className="text-text-secondary text-sm">· {reviews.count}</span>
+              </span>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {reviews.items.map((r) => (
+                <div key={r.id} className="bg-bg-card border border-border rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-text-primary font-medium">{r.author_name}</span>
+                    <span className="text-amber-400 text-sm tracking-wide">
+                      {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
+                    </span>
+                  </div>
+                  {r.text && (
+                    <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-line">{r.text}</p>
+                  )}
+                  {r.created_at && (
+                    <p className="text-text-secondary/60 text-xs mt-2">
+                      {new Date(r.created_at.replace(' ', 'T') + 'Z').toLocaleDateString('ru-BY', {
+                        year: 'numeric', month: 'long', day: 'numeric',
+                      })}
+                    </p>
                   )}
                 </div>
               ))}

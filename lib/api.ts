@@ -134,6 +134,31 @@ export async function getProductDlc(id: number): Promise<DlcItem[]> {
   }
 }
 
+// Отзывы покупателей: только одобренные модератором. Среднее и количество
+// нужны для aggregateRating, сами отзывы — для review в разметке Google.
+export interface ProductReview {
+  id: number;
+  author_name: string;
+  rating: number;
+  text: string;
+  created_at: string;
+}
+
+export interface ProductReviews {
+  average: number;
+  count: number;
+  items: ProductReview[];
+}
+
+export async function getProductReviews(id: number): Promise<ProductReviews> {
+  try {
+    const r = await apiFetch<ProductReviews>(`/products/${id}/reviews`, { revalidate: 120 });
+    return { average: r?.average ?? 0, count: r?.count ?? 0, items: r?.items ?? [] };
+  } catch {
+    return { average: 0, count: 0, items: [] };
+  }
+}
+
 export async function getProductGenres(): Promise<string[]> {
   try {
     return await apiFetch<string[]>('/products/genres', { revalidate: 3600 });
