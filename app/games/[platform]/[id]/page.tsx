@@ -14,6 +14,7 @@ import { getRegion } from '@/lib/region-server';
 import { getSiteUrl } from '@/lib/site-url';
 import { gamePath, platformSlug, isPlatformSegment } from '@/lib/product-url';
 import { AddToCart } from '@/components/products/AddToCart';
+import { ReviewForm } from '@/components/products/ReviewForm';
 import { TrackView } from '@/components/products/TrackView';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { Badge } from '@/components/ui/Badge';
@@ -326,18 +327,21 @@ export default async function GamePage({ params }: Props) {
           </ScrollReveal>
         )}
 
-        {/* Отзывы покупателей — видимый блок под ту же разметку, что уходит в Google */}
-        {reviews.count > 0 && (
-          <ScrollReveal className="mt-16">
-            <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-2xl font-bold">Отзывы покупателей</h2>
+        {/* Отзывы: видимый блок под ту же разметку, что уходит в Google, + форма */}
+        <ScrollReveal className="mt-16">
+          <div className="flex items-center gap-3 mb-6">
+            <h2 className="text-2xl font-bold">Отзывы об игре</h2>
+            {reviews.count > 0 && (
               <span className="flex items-center gap-1.5">
                 <Star className="w-5 h-5 text-amber-400 fill-current" />
                 <span className="text-text-primary font-semibold">{reviews.average.toFixed(1)}</span>
                 <span className="text-text-secondary text-sm">· {reviews.count}</span>
               </span>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            )}
+          </div>
+
+          {reviews.count > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 mb-6">
               {reviews.items.map((r) => (
                 <div key={r.id} className="bg-bg-card border border-border rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
@@ -359,8 +363,14 @@ export default async function GamePage({ params }: Props) {
                 </div>
               ))}
             </div>
-          </ScrollReveal>
-        )}
+          ) : (
+            <p className="text-text-secondary text-sm mb-6">
+              Пока нет отзывов. Будьте первым, кто поделится мнением об игре.
+            </p>
+          )}
+
+          <ReviewForm productId={product.id} />
+        </ScrollReveal>
 
         {/* Similar */}
         {similar.length > 0 && (
