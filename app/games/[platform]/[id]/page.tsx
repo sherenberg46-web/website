@@ -134,6 +134,15 @@ export default async function GamePage({ params }: Props) {
   const platformLabel = PLATFORM_LABEL[platformSeg] ?? 'PlayStation';
   const platformListPath = `/games/${platformSeg}`;
 
+  // Описание для разметки. Если своего описания у товара нет — подставляем
+  // осмысленный запасной вариант, а не пустоту: Google для «данных о товарах
+  // продавца» требует непустое поле description. Текст правдивый (название,
+  // платформа, суть предложения), никакой накрутки.
+  const ldDescription =
+    cleanDescription && cleanDescription.trim().length > 0
+      ? cleanDescription.trim()
+      : `${product.title} для ${platformLabel} — цифровая игра для PlayStation. Быстрая доставка на аккаунт, оплата в BYN.`;
+
   // Разметка товара для поисковиков.
   //
   // aggregateRating и review добавляем ТОЛЬКО когда есть настоящие отзывы,
@@ -171,7 +180,7 @@ export default async function GamePage({ params }: Props) {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.title,
-    description: cleanDescription,
+    description: ldDescription,
     image: imageUrl,
     sku: String(product.id),
     url: canonical,
