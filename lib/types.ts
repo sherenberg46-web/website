@@ -27,6 +27,24 @@ export interface CatalogEdition {
   region: string;
   is_free: boolean;
   linked_product_id: number | null;
+  /**
+   * Удалось ли сверить цену издания с живым товаром в каталоге.
+   *
+   * false означает, что цена взята из снимка game_editions, который не
+   * обновлялся с первого сканирования. У Mortal Kombat 1 там лежали 36 BYN
+   * с распродажи, закончившейся два года назад: страница предлагала цену,
+   * по которой ничего не продаётся. Такие издания показываем без цены и не
+   * даём выбрать.
+   */
+  price_confirmed?: boolean;
+  /** Короткое имя: «Полное издание» вместо «Mortal Kombat™ 1: Полное издание». */
+  edition_label?: string | null;
+  /** STANDARD / PREMIUM / DELUXE — из PS Store. */
+  edition_type?: string | null;
+  /** Обложка именно этого издания (media.role = EDITION_KEY_ART). */
+  image_url?: string | null;
+  /** Что входит в издание — готовый список от PS Store. */
+  features?: string[];
 }
 
 export interface DlcItem {
@@ -34,10 +52,16 @@ export interface DlcItem {
   title: string;
   image_url: string | null;
   price_byn: number | null;
+  price_byn_tr?: number | null;
   price_uah: number | null;
   price_try: number | null;
+  discount_pct?: number;
   description?: string;
   product_type?: string;
+  top_category?: string | null;
+  /** Карточка этого дополнения в нашем каталоге. Пусто — переходить некуда:
+   *  в PS Store покупателя не уводим, там та же игра стоит других денег. */
+  linked_product_id?: number | null;
 }
 
 export interface Product {

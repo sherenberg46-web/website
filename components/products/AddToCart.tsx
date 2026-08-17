@@ -5,10 +5,12 @@ import { ShoppingCart, Check, Heart, ExternalLink } from 'lucide-react';
 import clsx from 'clsx';
 import { useCartStore } from '@/store/cartStore';
 import { useFavouritesStore } from '@/store/favouritesStore';
+import { useEditionStore } from '@/store/editionStore';
 import { normalizeImageUrl, getTelegramLink } from '@/lib/api';
 import type { Product, CatalogEdition } from '@/lib/types';
 import type { Region } from '@/lib/region';
 import { PriceDisplay } from '@/components/ui/PriceDisplay';
+import { FitImage } from '@/components/ui/FitImage';
 
 interface Props {
   product: Product;
@@ -19,6 +21,22 @@ interface Props {
 function editionPrice(ed: CatalogEdition, region: Region): number | null {
   const p = region === 'TR' ? ed.price_byn_tr : ed.price_byn;
   return p && p > 0 ? p : null;
+}
+
+/**
+ * Можно ли показывать цену издания и давать его выбрать.
+ *
+ * Цена считается годной, только если сервер сумел сверить её с живым товаром
+ * в каталоге либо администратор пометил её проверенной. Иначе это снимок из
+ * game_editions, снятый при первом сканировании и с тех пор не обновлявшийся.
+ * Такие цены годами расходились с действительностью: у Mortal Kombat 1 в
+ * списке стояли 36 BYN с распродажи двухлетней давности.
+ *
+ * Поле необязательное: если бэкенд его не прислал (старая версия), ведём себя
+ * как раньше и цену показываем.
+ */
+function isPriceUsable(ed: CatalogEdition): boolean {
+  return ed.is_free || ed.price_confirmed !== false;
 }
 
 export function AddToCart({ product, editions, region }: Props) {
@@ -41,9 +59,21 @@ export function AddToCart({ product, editions, region }: Props) {
   const addItem = useCartStore((s) => s.addItem);
   const { isFavourite, toggleFavourite } = useFavouritesStore();
   const isFav = isFavourite(product.id);
+  const selectEdition = useEditionStore((s) => s.select);
+
+  // Выбор издания меняет и обложку вверху страницы: у Deluxe и Ultimate в
+  // PS Store своё оформление, и покупатель должен видеть то, что берёт.
+  function pick(i: number, ed: CatalogEdition) {
+    if (!isPriceUsable(ed)) return;
+    setIdx(i);
+    selectEdition(product.id, ed.image_url ?? null);
+  }
 
   // idx = -1 означает «издание не выбрано» → берём цену самого товара.
-  const selected = idx >= 0 ? editions[idx] ?? null : null;
+  // Издание с неподтверждённой ценой выбранным не считается даже случайно:
+  // иначе его цена уйдёт в корзину и в заказ.
+  const picked = idx >= 0 ? editions[idx] ?? null : null;
+  const selected = picked && isPriceUsable(picked) ? picked : null;
   const productPrice =
     region === 'TR' ? product.price_byn_tr ?? product.price_byn : product.price_byn;
   const price = selected ? editionPrice(selected, region) ?? productPrice : productPrice;
@@ -84,26 +114,53 @@ export function AddToCart({ product, editions, region }: Props) {
           <div className="grid grid-cols-1 gap-2">
             {editions.map((ed, i) => {
               const p = editionPrice(ed, region);
+              const usable = isPriceUsable(ed);
+              const active = i === idx && usable;
               return (
                 <button
                   key={ed.id}
-                  onClick={() => setIdx(i)}
+                  onClick={() => pick(i, ed)}
+                  disabled={!usable}
+                  title={usable ? undefined : 'Цена уточняется — издание временно недоступно'}
                   className={clsx(
                     'flex items-center justify-between gap-3 p-3 rounded-xl border text-sm transition-all text-left',
-                    i === idx
-                      ? 'border-accent/60 bg-accent/10 text-text-primary'
-                      : 'border-border bg-bg-card text-text-secondary hover:border-border/80 hover:text-text-primary'
+                    !usable
+                      ? 'border-border bg-bg-card text-text-secondary opacity-60 cursor-default'
+                      : active
+                        ? 'border-accent/60 bg-accent/10 text-text-primary'
+                        : 'border-border bg-bg-card text-text-secondary hover:border-border/80 hover:text-text-primary'
                   )}
                 >
-                  <span className="font-medium">{ed.edition_name}</span>
+                  <span className="flex items-center gap-3 min-w-0">
+                    {/* Миниатюра издания: у Deluxe и Ultimate обложки разные,
+                        по ним выбор считывается быстрее, чем по названию. */}
+                    {ed.image_url && (
+                      <FitImage
+                        src={normalizeImageUrl(ed.image_url)}
+                        alt=""
+                        sizes="56px"
+                        backdrop={false}
+                        className="relative w-14 h-14 rounded-lg shrink-0"
+                      />
+                    )}
+                    {/* Короткое имя читается лучше полного: название игры и так
+                        стоит над списком. */}
+                    <span className="font-medium truncate">
+                      {ed.edition_label || ed.edition_name}
+                    </span>
+                  </span>
                   <span className="flex items-center gap-2 shrink-0">
-                    {ed.discount_pct > 0 && (
+                    {usable && ed.discount_pct > 0 && (
                       <span className="text-[10px] font-bold text-white bg-accent rounded-full px-1.5 py-0.5">
                         -{ed.discount_pct}%
                       </span>
                     )}
-                    <span className={clsx('font-semibold', i === idx ? 'text-accent' : '')}>
-                      {ed.is_free ? 'Бесплатно' : p != null ? `${p} BYN` : '—'}
+                    <span className={clsx('font-semibold', active ? 'text-accent' : '')}>
+                      {!usable
+                        ? <span className="text-xs font-medium">Цена уточняется</span>
+                        : ed.is_free
+                          ? 'Бесплатно'
+                          : p != null ? `${p} BYN` : '—'}
                     </span>
                   </span>
                 </button>

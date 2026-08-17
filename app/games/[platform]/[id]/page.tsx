@@ -19,6 +19,7 @@ import { TrackView } from '@/components/products/TrackView';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { Badge } from '@/components/ui/Badge';
 import { FitImage } from '@/components/ui/FitImage';
+import { GameCover } from '@/components/products/GameCover';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
 export const dynamic = 'force-dynamic';
@@ -244,13 +245,8 @@ export default async function GamePage({ params }: Props) {
             {/* 3:4 под вертикальные обложки PS Store. В квадрате у постера
                 срезало верх с логотипом и низ с возрастным рейтингом. */}
             <div className="relative aspect-[3/4] max-w-sm mx-auto lg:mx-0 rounded-xl overflow-hidden shadow-glow-card">
-              <FitImage
-                src={imageUrl}
-                alt={product.title}
-                priority
-                className="absolute inset-0"
-                sizes="(max-width: 1024px) 90vw, 384px"
-              />
+              {/* Обложка меняется вместе с выбранным изданием — см. GameCover. */}
+              <GameCover productId={product.id} src={imageUrl} alt={product.title} />
               {product.discount_pct > 0 && (
                 <div className="absolute top-4 left-4">
                   <Badge variant="accent">-{Math.round(product.discount_pct)}%</Badge>
@@ -316,22 +312,41 @@ export default async function GamePage({ params }: Props) {
           <ScrollReveal className="mt-16">
             <h2 className="text-2xl font-bold mb-6">Дополнения (DLC)</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {dlc.slice(0, 12).map((item) => (
-                <div key={item.id} className="bg-bg-card border border-border rounded-xl p-3">
-                  {item.image_url && (
-                    <FitImage
-                      src={normalizeImageUrl(item.image_url)}
-                      alt={item.title}
-                      sizes="160px"
-                      className="relative aspect-[3/4] rounded-lg mb-2"
-                    />
-                  )}
-                  <p className="text-text-secondary text-xs line-clamp-2 mb-1">{item.title}</p>
-                  {item.price_byn && (
-                    <p className="text-text-primary text-xs font-semibold">{item.price_byn} BYN</p>
-                  )}
-                </div>
-              ))}
+              {dlc.slice(0, 12).map((item) => {
+                // Клик ведёт только внутрь каталога. В PS Store не уводим
+                // никогда: там та же игра стоит других денег. Дополнение без
+                // своей карточки просто не кликается.
+                const card = (
+                  <>
+                    {item.image_url && (
+                      <FitImage
+                        src={normalizeImageUrl(item.image_url)}
+                        alt={item.title}
+                        sizes="160px"
+                        className="relative aspect-[3/4] rounded-lg mb-2"
+                      />
+                    )}
+                    <p className="text-text-secondary text-xs line-clamp-2 mb-1">{item.title}</p>
+                    {item.price_byn && (
+                      <p className="text-text-primary text-xs font-semibold">{item.price_byn} BYN</p>
+                    )}
+                  </>
+                );
+                const base = 'bg-bg-card border border-border rounded-xl p-3 block';
+                return item.linked_product_id ? (
+                  <Link
+                    key={item.id}
+                    href={gamePath(item.linked_product_id, product.platform)}
+                    className={`${base} transition-colors hover:border-accent/60`}
+                  >
+                    {card}
+                  </Link>
+                ) : (
+                  <div key={item.id} className={base}>
+                    {card}
+                  </div>
+                );
+              })}
             </div>
           </ScrollReveal>
         )}
