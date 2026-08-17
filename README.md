@@ -2,6 +2,9 @@
 
 Публичный веб-сайт магазина цифровых игр PlayStation для Беларуси (BYN).
 
+<!-- redeploy: 2026-08-17 — GitHub webhook delivery was disrupted during a platform incident;
+     this commit forces a fresh push so Railway picks it up. -->
+
 **Стек:** Next.js 14 · TypeScript · Tailwind CSS · Framer Motion · Zustand
 
 ---
