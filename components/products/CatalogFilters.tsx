@@ -30,6 +30,21 @@ const DEFAULT_SORT = [
 
 const PLATFORMS = ['PS5', 'PS4'];
 
+/**
+ * Готовые ценовые диапазоны.
+ *
+ * Поля «от» и «до» никуда не делись, но ими пользуются редко: чтобы отобрать
+ * что-то до полусотни, надо решить, какое число вписать. Четыре кнопки
+ * закрывают почти все запросы одним нажатием. Пустая граница означает
+ * «без ограничения» — до 50 и от 200.
+ */
+const PRICE_RANGES = [
+  { label: 'до 50 BYN', min: '', max: '50' },
+  { label: '50 – 100', min: '50', max: '100' },
+  { label: '100 – 200', min: '100', max: '200' },
+  { label: 'от 200', min: '200', max: '' },
+];
+
 const DISCOUNTS = [
   { value: '30', label: 'от 30%' },
   { value: '50', label: 'от 50%' },
@@ -159,13 +174,64 @@ export function CatalogFilters({
         ))}
       </div>
 
+      {/* Жанры — видимым рядом, а не в спрятанной панели.
+          За кнопкой «Фильтры» их попросту не находили: чтобы отобрать боевики,
+          надо было сначала догадаться открыть панель. */}
+      {genres.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mt-2">
+          <span className="shrink-0 self-center text-xs text-text-secondary pr-1">Жанр:</span>
+          {genres.map((g) => (
+            <button
+              key={g}
+              onClick={() => push({ genre: get('genre') === g ? '' : g })}
+              className={clsx(
+                'shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                get('genre') === g
+                  ? 'bg-accent/10 border-accent/40 text-accent'
+                  : 'bg-bg-card border-border text-text-secondary hover:text-text-primary'
+              )}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Цена — те же четыре диапазона, что и в панели, но под рукой */}
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mt-2">
+        <span className="shrink-0 self-center text-xs text-text-secondary pr-1">Цена:</span>
+        {PRICE_RANGES.map((r) => {
+          const active = get('price_min') === r.min && get('price_max') === r.max;
+          return (
+            <button
+              key={r.label}
+              onClick={() => {
+                const next = active ? { price_min: '', price_max: '' }
+                                    : { price_min: r.min, price_max: r.max };
+                setPriceMin(next.price_min);
+                setPriceMax(next.price_max);
+                push(next);
+              }}
+              className={clsx(
+                'shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                active
+                  ? 'bg-accent/10 border-accent/40 text-accent'
+                  : 'bg-bg-card border-border text-text-secondary hover:text-text-primary'
+              )}
+            >
+              {r.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Filter panel */}
       {panelOpen && (
         <div className="mt-4 p-4 bg-bg-card border border-border rounded-xl space-y-5">
           {/* Price range */}
           <div>
             <p className="text-xs uppercase tracking-wider text-text-secondary mb-2 font-medium">
-              Цена, BYN
+              Цена, BYN — точный диапазон
             </p>
             <div className="flex items-center gap-2">
               <input
@@ -247,31 +313,6 @@ export function CatalogFilters({
               ))}
             </div>
           </div>
-
-          {/* Genres */}
-          {genres.length > 0 && (
-            <div>
-              <p className="text-xs uppercase tracking-wider text-text-secondary mb-2 font-medium">
-                Жанр
-              </p>
-              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto scrollbar-hide">
-                {genres.slice(0, 24).map((g) => (
-                  <button
-                    key={g}
-                    onClick={() => push({ genre: get('genre') === g ? '' : g })}
-                    className={clsx(
-                      'px-3 py-1 rounded-full text-xs font-medium border transition-colors',
-                      get('genre') === g
-                        ? 'bg-accent/10 border-accent/40 text-accent'
-                        : 'border-border text-text-secondary hover:text-text-primary'
-                    )}
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Categories */}
           {categories.length > 0 && (

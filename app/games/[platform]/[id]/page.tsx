@@ -20,6 +20,7 @@ import { ProductGrid } from '@/components/products/ProductGrid';
 import { Badge } from '@/components/ui/Badge';
 import { FitImage } from '@/components/ui/FitImage';
 import { GameCover } from '@/components/products/GameCover';
+import { BackButton } from '@/components/ui/BackButton';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
 export const dynamic = 'force-dynamic';
@@ -227,6 +228,12 @@ export default async function GamePage({ params }: Props) {
       <TrackView product={product} />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Возврат туда, откуда пришли: с карточки дополнения — обратно к
+            изданиям игры, а не в общий каталог, куда ведут крошки. */}
+        <div className="mb-4">
+          <BackButton fallback={platformListPath} />
+        </div>
+
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-text-secondary mb-8">
           <Link href="/" className="hover:text-text-primary">Главная</Link>
