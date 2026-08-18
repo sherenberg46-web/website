@@ -6,6 +6,7 @@ import { useCartStore } from '@/store/cartStore';
 import { createWebOrder, getManagerLink } from '@/lib/api';
 import { getClientRegion } from '@/lib/region';
 import { clearPromo, loadPromo } from '@/lib/cart-promo';
+import { checkContact } from '@/lib/contact';
 import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -26,6 +27,20 @@ export function OrderForm() {
   const [promo, setPromo] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
+  // Показываем ошибку контакта только после того, как поле покинули: ругаться
+  // на «+37» посреди набора номера — значит мешать, а не помогать.
+  const [contactTouched, setContactTouched] = useState(false);
+
+  const contactCheck = checkContact(contact);
+  const contactError = contactTouched && contact.trim() ? contactCheck.error : null;
+
+  // Имя нужно живое, а не «ы» и не набор цифр: с ним менеджер обращается к
+  // покупателю. Двух букв достаточно, чтобы отсечь случайное нажатие.
+  // Флаг /u с \p{L} target проекта не поддерживает, поэтому перечисляем
+  // буквы явно: латиница и кириллица покрывают всех наших покупателей.
+  const nameOk = name.trim().length >= 2 && /[a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ]{2}/.test(name);
+  const nameError =
+    name.trim() && !nameOk ? 'Имя — хотя бы две буквы' : null;
 
   // Скидку показываем только для кода, который сервер выдал этому браузеру, —
   // так в сумме не появится процент, которого на самом деле нет.
@@ -36,8 +51,8 @@ export function OrderForm() {
   const finalPrice = Math.round((totalPrice - discount) * 100) / 100;
 
   const canSubmit =
-    !!name.trim() &&
-    !!contact.trim() &&
+    nameOk &&
+    contactCheck.ok &&
     hasAccount !== null &&
     (hasAccount === false || !!psEmail.trim());
 
@@ -56,7 +71,9 @@ export function OrderForm() {
           qty: i.qty,
         })),
         name: name.trim(),
-        contact: contact.trim(),
+        // Отправляем приведённый вид: +375291234567 или @username. Менеджер
+        // получает контакт в одном формате, а не как покупатель его набрал.
+        contact: contactCheck.normalized || contact.trim(),
         comment: comment.trim() || undefined,
         region: getClientRegion(),
         account_type: hasAccount ? 'my_account' : 'no_account',
@@ -146,8 +163,12 @@ export function OrderForm() {
           onChange={(e) => setName(e.target.value)}
           required
           placeholder="Иван"
-          className="w-full px-4 py-3 bg-bg-page border border-border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
+          className={clsx(
+            'w-full px-4 py-3 bg-bg-page border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none transition-colors',
+            nameError ? 'border-red-400/60 focus:border-red-400' : 'border-border focus:border-accent/50'
+          )}
         />
+        {nameError && <p className="text-red-400 text-xs mt-1">{nameError}</p>}
       </div>
 
       <div>
@@ -158,13 +179,25 @@ export function OrderForm() {
           type="text"
           value={contact}
           onChange={(e) => setContact(e.target.value)}
+          onBlur={() => setContactTouched(true)}
           required
           placeholder="@username или +375XXXXXXXXX"
-          className="w-full px-4 py-3 bg-bg-page border border-border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
+          className={clsx(
+            'w-full px-4 py-3 bg-bg-page border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none transition-colors',
+            contactError ? 'border-red-400/60 focus:border-red-400' : 'border-border focus:border-accent/50'
+          )}
         />
-        <p className="text-text-secondary text-xs mt-1">
-          Укажите хотя бы один способ связи
-        </p>
+        {contactError ? (
+          <p className="text-red-400 text-xs mt-1">{contactError}</p>
+        ) : contactCheck.ok ? (
+          <p className="text-accent text-xs mt-1">
+            {contactCheck.kind === 'phone' ? 'Телефон' : 'Telegram'}: {contactCheck.normalized}
+          </p>
+        ) : (
+          <p className="text-text-secondary text-xs mt-1">
+            Телефон с кодом страны или ник в Telegram — по нему менеджер напишет вам
+          </p>
+        )}
       </div>
 
 

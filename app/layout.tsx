@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { MetaPixel } from '@/components/analytics/MetaPixel';
 import { getSiteUrl } from '@/lib/site-url';
 import { COMPANY } from '@/lib/company';
+import { SupportChat } from '@/components/support/SupportChat';
 
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
@@ -137,6 +138,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <MetaPixel />
         <Header />
         <main className="flex-1">{children}</main>
+        {/* Консультант доступен на любой странице — как в приложении. */}
+        <SupportChat />
         <Footer />
       </body>
     </html>

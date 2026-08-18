@@ -250,6 +250,31 @@ export async function issueCartPromo(): Promise<CartPromo> {
   return res.json();
 }
 
+/**
+ * Вопрос консультанту. Тот же эндпоинт, что у чата в приложении Telegram, —
+ * логика и знание каталога общие, отличается только оформление.
+ *
+ * Кэшировать нечего: каждый ответ зависит от переписки, поэтому обычный fetch
+ * без next.revalidate.
+ */
+export async function askConsultant(
+  message: string,
+  history: { role: 'user' | 'assistant'; content: string }[],
+  region: string
+): Promise<{
+  reply: string;
+  history?: { role: 'user' | 'assistant'; content: string }[];
+  needs_manager?: boolean;
+}> {
+  const res = await fetch(`${API_BASE}/consultant/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, history, region }),
+  });
+  if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status });
+  return res.json();
+}
+
 export async function createWebOrder(
   payload: WebOrderPayload
 ): Promise<{ order_id?: number; message: string; total_byn?: number; promo_percent?: number }> {
