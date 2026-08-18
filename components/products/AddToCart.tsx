@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ShoppingCart, Check, Heart, ExternalLink } from 'lucide-react';
 import clsx from 'clsx';
 import { useCartStore } from '@/store/cartStore';
 import { useFavouritesStore } from '@/store/favouritesStore';
 import { useEditionStore } from '@/store/editionStore';
 import { normalizeImageUrl, getTelegramLink } from '@/lib/api';
+import { fbTrack } from '@/lib/fbq';
 import type { Product, CatalogEdition } from '@/lib/types';
 import type { Region } from '@/lib/region';
 import { PriceDisplay } from '@/components/ui/PriceDisplay';
@@ -79,6 +80,22 @@ export function AddToCart({ product, editions, region }: Props) {
   const price = selected ? editionPrice(selected, region) ?? productPrice : productPrice;
   const discount = selected?.discount_pct ?? product.discount_pct;
 
+  // Просмотр карточки товара для пикселя Meta.
+  //
+  // Шлём один раз на товар и берём цену самого товара, а не выбранного
+  // издания: смена издания не открывает новую карточку, и повторные события
+  // только размывали бы статистику.
+  useEffect(() => {
+    fbTrack('ViewContent', {
+      content_ids: [String(product.id)],
+      content_type: 'product',
+      content_name: product.title,
+      value: productPrice ?? undefined,
+      currency: 'BYN',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
+
   // Сравнение цен по регионам (обе есть в базе)
   const uaPrice = product.price_byn;
   const trPrice = product.price_byn_tr;
@@ -103,6 +120,14 @@ export function AddToCart({ product, editions, region }: Props) {
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+
+    fbTrack('AddToCart', {
+      content_ids: [String(product.id)],
+      content_type: 'product',
+      content_name: product.title,
+      value: price,
+      currency: 'BYN',
+    });
   }
 
   return (

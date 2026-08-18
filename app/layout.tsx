@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { MetaPixel } from '@/components/analytics/MetaPixel';
 import { getSiteUrl } from '@/lib/site-url';
 import { COMPANY } from '@/lib/company';
 
@@ -133,6 +134,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="bg-bg-page text-text-primary min-h-screen flex flex-col">
+        <MetaPixel />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
