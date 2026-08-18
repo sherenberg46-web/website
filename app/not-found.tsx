@@ -1,4 +1,18 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+// Раньше страница не объявляла свои метаданные и наследовала robots из
+// корневого layout (index: true) — хотя показывает ровно то же самое всем,
+// у кого notFound() сработал по любому адресу. Хуже того: у этого сайта
+// такие страницы часто отдаются с HTTP 200 вместо 404 (Next.js не может
+// поменять статус ответа, если он уже начал стримиться через глобальный
+// app/loading.tsx — см. объяснение в отчёте). Раз статус остаётся 200,
+// единственный сигнал, которым можно явно сказать Google «здесь нечего
+// индексировать», — это meta robots на самой странице.
+export const metadata: Metadata = {
+  title: 'Страница не найдена',
+  robots: { index: false, follow: false },
+};
 
 export default function NotFound() {
   return (
