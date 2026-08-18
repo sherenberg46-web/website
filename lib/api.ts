@@ -260,19 +260,30 @@ export async function issueCartPromo(): Promise<CartPromo> {
 export async function askConsultant(
   message: string,
   history: { role: 'user' | 'assistant'; content: string }[],
-  region: string
+  region: string,
+  sessionId: string
 ): Promise<{
   reply: string;
   history?: { role: 'user' | 'assistant'; content: string }[];
   needs_manager?: boolean;
+  dialog_id?: number;
 }> {
   const res = await fetch(`${API_BASE}/consultant/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, history, region }),
+    body: JSON.stringify({ message, history, region, session_id: sessionId, source: 'site' }),
   });
   if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status });
   return res.json();
+}
+
+/** Оценка диалога клиентом: 1 — помог, -1 — не помог. */
+export async function rateConsultant(dialogId: number, rating: 1 | -1): Promise<void> {
+  await fetch(`${API_BASE}/consultant/rate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ dialog_id: dialogId, rating }),
+  }).catch(() => undefined);
 }
 
 export async function createWebOrder(

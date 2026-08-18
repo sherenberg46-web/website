@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, ThumbsUp, ThumbsDown } from 'lucide-react';
 import clsx from 'clsx';
-import { askConsultant, getManagerLink } from '@/lib/api';
+import { askConsultant, rateConsultant, getManagerLink } from '@/lib/api';
 import { getClientRegion } from '@/lib/region';
 import { gamePath } from '@/lib/product-url';
 
@@ -50,8 +50,32 @@ export function SupportChat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [needsManager, setNeedsManager] = useState(false);
+  const [dialogId, setDialogId] = useState<number | null>(null);
+  const [rated, setRated] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Ключ разговора. Живёт во вкладке: перезагрузил страницу — тот же ключ,
+   * закрыл вкладку — новый. Нужен, чтобы владелец видел переписку одним
+   * диалогом, а не набором несвязанных вопросов.
+   *
+   * Ничего личного в нём нет — случайная строка, не привязанная к человеку.
+   */
+  const sessionRef = useRef<string>('');
+  if (!sessionRef.current && typeof window !== 'undefined') {
+    const KEY = 'gs_chat_session';
+    let sid = window.sessionStorage?.getItem(KEY) ?? '';
+    if (!sid) {
+      sid = `web-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+      try {
+        window.sessionStorage?.setItem(KEY, sid);
+      } catch {
+        /* приватный режим — обойдёмся ключом на время жизни вкладки */
+      }
+    }
+    sessionRef.current = sid;
+  }
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -73,7 +97,8 @@ export function SupportChat() {
     setNeedsManager(false);
     setLoading(true);
     try {
-      const data = await askConsultant(text, history, getClientRegion());
+      const data = await askConsultant(text, history, getClientRegion(), sessionRef.current);
+      if (data.dialog_id) setDialogId(data.dialog_id);
       setMessages((m) => [
         ...m,
         { role: 'assistant', content: data.reply || 'Извините, не расслышал. Повторите?' },
@@ -180,6 +205,33 @@ export function SupportChat() {
                 <div className="self-start bg-bg-page rounded-2xl rounded-bl-sm px-4 py-3">
                   <Loader2 className="w-4 h-4 animate-spin text-text-secondary" />
                 </div>
+              )}
+
+              {/* Оценка — единственный способ узнать, что консультант не
+                  справился: клиент, которому не помогли, обычно просто уходит
+                  молча. Показываем один раз, после второго ответа, чтобы не
+                  мешать в начале разговора. */}
+              {dialogId && !rated && !loading && messages.length >= 4 && (
+                <div className="self-start flex items-center gap-2 text-xs text-text-secondary">
+                  <span>Помог?</span>
+                  <button
+                    onClick={() => { rateConsultant(dialogId, 1); setRated(true); }}
+                    aria-label="Помог"
+                    className="w-8 h-8 rounded-full border border-border hover:border-accent/50 hover:text-accent flex items-center justify-center transition-colors"
+                  >
+                    <ThumbsUp className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => { rateConsultant(dialogId, -1); setRated(true); setNeedsManager(true); }}
+                    aria-label="Не помог"
+                    className="w-8 h-8 rounded-full border border-border hover:border-accent/50 hover:text-accent flex items-center justify-center transition-colors"
+                  >
+                    <ThumbsDown className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+              {rated && (
+                <p className="self-start text-xs text-text-secondary">Спасибо, учтём 🙌</p>
               )}
 
               {needsManager && (
