@@ -7,7 +7,19 @@ const API =
   process.env.NEXT_PUBLIC_API_URL ||
   'https://tg-shop-production-1b03.up.railway.app/api/v1';
 
-export function ReviewForm({ productId }: { productId: number }) {
+interface Props {
+  /** Отзыв об игре. Не задан — отзыв о самом магазине. */
+  productId?: number;
+}
+
+/**
+ * Форма отзыва — об игре или о магазине.
+ *
+ * Одна форма на два случая намеренно: у них общий антиспам, общая ловушка для
+ * ботов и общая модерация, и разъехаться они не должны. Отличаются только
+ * адресом и парой подписей.
+ */
+export function ReviewForm({ productId }: Props) {
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(5);
   const [name, setName] = useState('');
@@ -25,7 +37,11 @@ export function ReviewForm({ productId }: { productId: number }) {
     setBusy(true);
     setErr(null);
     try {
-      const res = await fetch(`${API}/products/${productId}/reviews`, {
+      const url =
+        productId != null
+          ? `${API}/products/${productId}/reviews`
+          : `${API}/store/reviews`;
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -40,7 +56,9 @@ export function ReviewForm({ productId }: { productId: number }) {
           res.status === 429
             ? 'Слишком много отзывов с вашего адреса. Попробуйте позже.'
             : res.status === 409
-            ? 'Вы уже оставляли отзыв на эту игру.'
+            ? productId != null
+              ? 'Вы уже оставляли отзыв на эту игру.'
+              : 'Вы уже оставляли отзыв о магазине.'
             : 'Не удалось отправить отзыв. Попробуйте ещё раз.'
         );
       }
@@ -68,7 +86,7 @@ export function ReviewForm({ productId }: { productId: number }) {
         className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition"
       >
         <Star className="w-4 h-4 fill-current" />
-        Оставить отзыв
+        {productId != null ? 'Оставить отзыв' : 'Оставить отзыв о покупке'}
       </button>
     );
   }
@@ -102,7 +120,11 @@ export function ReviewForm({ productId }: { productId: number }) {
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Ваше впечатление об игре (необязательно)"
+        placeholder={
+          productId != null
+            ? 'Ваше впечатление об игре (необязательно)'
+            : 'Как прошла покупка: сколько ждали, всё ли заработало (необязательно)'
+        }
         maxLength={2000}
         rows={3}
         className="w-full mb-2 rounded-lg bg-bg-page border border-border px-3 py-2 text-sm text-text-primary outline-none focus:border-accent resize-y"

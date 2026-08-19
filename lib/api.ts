@@ -175,6 +175,23 @@ export async function getProductReviews(id: number): Promise<ProductReviews> {
   }
 }
 
+/**
+ * Отзывы о самом магазине — одни и те же на всех карточках.
+ *
+ * На карточке новой игры отзывов об игре нет и взяться им неоткуда, и
+ * покупатель видит на дорогом товаре мёртвое «Пока нет отзывов». Вопрос,
+ * который его на самом деле держит, звучит иначе: не «хорошая ли игра», а
+ * «дойдёт ли до меня код». На это отвечают отзывы о покупке.
+ */
+export async function getStoreReviews(): Promise<ProductReviews> {
+  try {
+    const r = await apiFetch<ProductReviews>('/store/reviews', { revalidate: 300 });
+    return { average: r?.average ?? 0, count: r?.count ?? 0, items: r?.items ?? [] };
+  } catch {
+    return { average: 0, count: 0, items: [] };
+  }
+}
+
 export async function getProductGenres(): Promise<string[]> {
   try {
     return await apiFetch<string[]>('/products/genres', { revalidate: 3600 });

@@ -8,6 +8,7 @@ import {
   getProductDlc,
   getProducts,
   getProductReviews,
+  getStoreReviews,
   normalizeImageUrl,
 } from '@/lib/api';
 import { getRegion } from '@/lib/region-server';
@@ -15,6 +16,8 @@ import { getSiteUrl } from '@/lib/site-url';
 import { gamePath, platformSlug, isPlatformSegment } from '@/lib/product-url';
 import { AddToCart } from '@/components/products/AddToCart';
 import { GameDescription } from '@/components/products/GameDescription';
+import { ProductFaq } from '@/components/products/ProductFaq';
+import { productFaq } from '@/lib/product-faq';
 import { ReviewForm } from '@/components/products/ReviewForm';
 import { TrackView } from '@/components/products/TrackView';
 import { ProductGrid } from '@/components/products/ProductGrid';
@@ -120,7 +123,13 @@ export default async function GamePage({ params }: Props) {
   }
 
   // Отзывы покупателей (только одобренные) — для честной разметки Google.
-  const reviews = await getProductReviews(id);
+  // Отдельно об игре и отдельно о магазине: первые бывают редко и только у
+  // известных игр, вторые одни на весь магазин и отвечают на другой вопрос —
+  // не «хорошая ли игра», а «дойдёт ли до меня код».
+  const [reviews, storeReviews] = await Promise.all([
+    getProductReviews(id),
+    getStoreReviews(),
+  ]);
 
   // Похожие: тот же жанр, регион обязателен (иначе дубли), сортировка по рейтингу
   const mainGenre = product.genre?.split(',')[0]?.trim();
@@ -368,7 +377,84 @@ export default async function GamePage({ params }: Props) {
           </ScrollReveal>
         )}
 
-        {/* Отзывы: видимый блок под ту же разметку, что уходит в Google, + форма */}
+        {/* Частые вопросы — те же, что задают менеджеру перед первой покупкой.
+            Стоят выше отзывов: покупателю, который сомневается, ответ нужен
+            раньше, чем чужое мнение. Разметки FAQPage здесь намеренно нет —
+            один и тот же набор вопросов на сорока трёх тысячах карточек
+            поисковик считает штампованной разметкой, а на главной и на
+            «Как купить» она стоит по делу. */}
+        <ScrollReveal className="mt-16">
+          <h2 className="text-2xl font-bold mb-6">Частые вопросы</h2>
+          <div className="max-w-3xl">
+            <ProductFaq
+              items={productFaq({
+                region,
+                isPreorder: !!product.is_preorder,
+                hasEditions: editions.length > 1,
+              })}
+            />
+          </div>
+        </ScrollReveal>
+
+        {/* Отзывы о магазине.
+            Стоят выше отзывов об игре и показываются всегда: на карточке
+            только что появившейся игры отзывов о ней нет и взяться неоткуда,
+            и покупатель видел на товаре за три сотни мёртвую строчку «Пока
+            нет отзывов». О магазине же отзыв уместен на любой карточке — и
+            отвечает он на тот вопрос, который человека и держит. */}
+        <ScrollReveal className="mt-16">
+          <div className="flex items-center gap-3 mb-6">
+            <h2 className="text-2xl font-bold">Отзывы о магазине</h2>
+            {storeReviews.count > 0 && (
+              <span className="flex items-center gap-1.5">
+                <Star className="w-5 h-5 text-amber-400 fill-current" />
+                <span className="text-text-primary font-semibold">
+                  {storeReviews.average.toFixed(1)}
+                </span>
+                <span className="text-text-secondary text-sm">· {storeReviews.count}</span>
+              </span>
+            )}
+          </div>
+
+          {storeReviews.count > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 mb-6">
+              {storeReviews.items.slice(0, 6).map((r) => (
+                <div key={r.id} className="bg-bg-card border border-border rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-text-primary font-medium">{r.author_name}</span>
+                    <span className="text-amber-400 text-sm tracking-wide">
+                      {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
+                    </span>
+                  </div>
+                  {r.text && (
+                    <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-line">
+                      {r.text}
+                    </p>
+                  )}
+                  {r.created_at && (
+                    <p className="text-text-secondary/60 text-xs mt-2">
+                      {new Date(r.created_at.replace(' ', 'T') + 'Z').toLocaleDateString('ru-BY', {
+                        year: 'numeric', month: 'long', day: 'numeric',
+                      })}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-text-secondary text-sm mb-6">
+              Покупали у нас? Расскажите, как всё прошло — это помогает тем, кто решается
+              на первую покупку.
+            </p>
+          )}
+
+          <ReviewForm />
+        </ScrollReveal>
+
+        {/* Отзывы об игре: видимый блок под ту же разметку, что уходит в Google.
+            Показываем только когда они есть — пустой блок на каждой из сорока
+            трёх тысяч карточек выглядел мёртвым магазином. */}
+        {reviews.count > 0 && (
         <ScrollReveal className="mt-16">
           <div className="flex items-center gap-3 mb-6">
             <h2 className="text-2xl font-bold">Отзывы об игре</h2>
@@ -381,8 +467,7 @@ export default async function GamePage({ params }: Props) {
             )}
           </div>
 
-          {reviews.count > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 mb-6">
+          <div className="grid gap-4 sm:grid-cols-2 mb-6">
               {reviews.items.map((r) => (
                 <div key={r.id} className="bg-bg-card border border-border rounded-xl p-4">
                   <div className="flex items-center justify-between mb-2">
@@ -403,15 +488,11 @@ export default async function GamePage({ params }: Props) {
                   )}
                 </div>
               ))}
-            </div>
-          ) : (
-            <p className="text-text-secondary text-sm mb-6">
-              Пока нет отзывов. Будьте первым, кто поделится мнением об игре.
-            </p>
-          )}
+          </div>
 
           <ReviewForm productId={product.id} />
         </ScrollReveal>
+        )}
 
         {/* Similar */}
         {similar.length > 0 && (
