@@ -448,6 +448,7 @@ export default async function GamePage({ params }: Props) {
                 region,
                 isPreorder: !!product.is_preorder,
                 hasEditions: editions.length > 1,
+                productType: product.product_type,
                 russian: !langs.known
                   ? null
                   : langs.hasRussianAudio
