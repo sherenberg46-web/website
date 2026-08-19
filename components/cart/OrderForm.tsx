@@ -12,7 +12,20 @@ import clsx from 'clsx';
 
 type Status = 'idle' | 'loading' | 'success' | 'error' | 'fallback';
 
-export function OrderForm() {
+interface Props {
+  /**
+   * Заказ отправлен. Вызывается ДО очистки корзины.
+   *
+   * Страница корзины при пустом списке показывает «Корзина пуста» вместо
+   * всего содержимого, включая эту форму. Раньше очистка шла первой, React
+   * объединял оба обновления в один проход, форма размонтировалась вместе со
+   * своим экраном «Заказ принят» — и покупатель после отправки видел пустую
+   * корзину без единого слова о том, что заказ принят.
+   */
+  onOrdered?: () => void;
+}
+
+export function OrderForm({ onOrdered }: Props) {
   const items = useCartStore((s) => s.items);
   const clearCart = useCartStore((s) => s.clearCart);
   const totalPrice = useCartStore((s) => s.getTotalPrice());
@@ -81,6 +94,10 @@ export function OrderForm() {
         ps_password: hasAccount ? psPassword : undefined,
         promo_code: promo.trim() || undefined,
       });
+      // Порядок важен: сначала сообщаем странице, потом чистим корзину.
+      // Оба обновления попадут в один проход React, страница уже будет знать,
+      // что заказ оформлен, и не подменит форму экраном «Корзина пуста».
+      onOrdered?.();
       clearCart();
       clearPromo();
       setStatus('success');

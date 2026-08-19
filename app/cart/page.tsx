@@ -9,6 +9,7 @@ import { OrderForm } from '@/components/cart/OrderForm';
 import { CartPromoBanner } from '@/components/cart/CartPromoBanner';
 import { getTelegramLink } from '@/lib/api';
 import { gamePath } from '@/lib/product-url';
+import clsx from 'clsx';
 
 export default function CartPage() {
   const [mounted, setMounted] = useState(false);
@@ -16,6 +17,17 @@ export default function CartPage() {
   const removeItem = useCartStore((s) => s.removeItem);
   const updateQty = useCartStore((s) => s.updateQty);
   const totalPrice = useCartStore((s) => s.getTotalPrice());
+
+  /**
+   * Заказ только что оформлен.
+   *
+   * Нужен, потому что оформление опустошает корзину, а пустая корзина ниже
+   * подменяет всё содержимое страницы экраном «Корзина пуста» — вместе с
+   * формой и её подтверждением. Покупатель нажимал «Оформить заказ» и попадал
+   * на пустую корзину без единого слова о том, что заказ принят: естественная
+   * реакция — оформить ещё раз или уйти, решив, что сайт сломан.
+   */
+  const [ordered, setOrdered] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -27,7 +39,7 @@ export default function CartPage() {
     );
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !ordered) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-20 text-center">
         <ShoppingCart className="w-16 h-16 text-text-secondary mx-auto mb-4" />
@@ -45,13 +57,18 @@ export default function CartPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Корзина</h1>
+      {/* Оформленный заказ прячет всё лишнее классом, а не условным
+          рендером: убрать элемент из дерева — значит сдвинуть соседей, и React
+          пересоздаст форму, потеряв вместе с ней экран подтверждения. */}
+      <h1 className={clsx('text-3xl font-bold mb-8', ordered && 'hidden')}>Корзина</h1>
 
-      <CartPromoBanner />
+      <div className={clsx(ordered && 'hidden')}>
+        <CartPromoBanner />
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={clsx('grid grid-cols-1 gap-6', ordered ? 'max-w-xl mx-auto' : 'lg:grid-cols-3')}>
         {/* Items */}
-        <div className="lg:col-span-2 space-y-3">
+        <div className={clsx('lg:col-span-2 space-y-3', ordered && 'hidden')}>
           {items.map((item) => (
             <div
               key={`${item.product_id}-${item.edition_id}`}
@@ -113,9 +130,9 @@ export default function CartPage() {
 
         {/* Order form */}
         <div className="bg-bg-card border border-border rounded-2xl p-6">
-          <OrderForm />
+          <OrderForm onOrdered={() => setOrdered(true)} />
 
-          <div className="mt-4 pt-4 border-t border-border">
+          <div className={clsx('mt-4 pt-4 border-t border-border', ordered && 'hidden')}>
             <a
               href={getTelegramLink()}
               target="_blank"
