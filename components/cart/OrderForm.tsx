@@ -105,8 +105,18 @@ export function OrderForm({ onOrdered }: Props) {
   }, [promoCode]);
 
   const promoOk = promoState.status === 'ok';
-  const discount = promoOk ? Math.round(totalPrice * promoState.percent) / 100 : 0;
-  const finalPrice = Math.round((totalPrice - discount) * 100) / 100;
+  // Копеек в магазине нет: цены целые, итог тоже. Считаем ровно так же, как
+  // считает сервер (округление вверх от суммы со скидкой), иначе на экране и
+  // в заказе будут разные числа. Скидку показываем как разницу — тогда
+  // строчки в итоге всегда сходятся.
+  const cartTotal = Math.ceil(totalPrice);
+  // Именно (100 - p) / 100, а не (1 - p/100): вторая форма из-за двоичной
+  // дроби иногда даёт 3.0000000000000004 вместо ровной тройки, и округление
+  // вверх приписывает покупателю лишний рубль. Сервер считает так же.
+  const finalPrice = promoOk
+    ? Math.ceil((totalPrice * (100 - promoState.percent)) / 100)
+    : cartTotal;
+  const discount = cartTotal - finalPrice;
 
   const canSubmit =
     nameOk &&

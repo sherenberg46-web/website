@@ -332,7 +332,14 @@ export function getOriginalPrice(price: number, discountPct: number): number {
   return Math.round((price * 100) / (100 - discountPct));
 }
 
+/**
+ * Цена на витрине. Копеек в магазине нет — всё целое и округляется вверх.
+ *
+ * Каталог и так хранит целые цены (парсер округляет вверх при записи), но
+ * последняя защита стоит здесь: ни одна дробь не доедет до покупателя, даже
+ * если где-то в арифметике появится половина рубля.
+ */
 export function formatPrice(price: number | null | undefined): string {
   if (price == null) return '\u2014';
-  return `${price.toLocaleString('ru-BY')} BYN`;
+  return `${Math.ceil(price).toLocaleString('ru-BY')} BYN`;
 }
