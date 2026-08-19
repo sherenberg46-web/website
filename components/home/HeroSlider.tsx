@@ -208,7 +208,7 @@ function DefaultHero() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-text-secondary text-base sm:text-lg mb-8 max-w-lg"
           >
-            Игры, подписки и DLC по лучшим ценам в BYN. Мгновенная доставка кода.
+            Игры, подписки и DLC по лучшим ценам в BYN. Выдача обычно за 30 минут.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: reduceMotion ? 0 : 20 }}

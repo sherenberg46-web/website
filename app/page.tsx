@@ -33,7 +33,7 @@ export default async function HomePage() {
   const isTR = region === 'TR';
 
   const empty: Product[] = [];
-  const [bannersR, newGamesR, preordersR, top10R, onSaleR, topupsR, popularR] =
+  const [bannersR, newGamesR, preordersR, top10R, onSaleR, topupsR, popularR, cheapR] =
     await Promise.allSettled([
       getBanners(),
       // new_games всегда отдаёт UA-каталог (несёт цены обоих регионов) — как в Mini App
@@ -45,6 +45,12 @@ export default async function HomePage() {
         : getProducts({ task_type: 'sales', sort: 'discount', region, limit: 12 }),
       getProducts({ product_type: 'topup', region, limit: 12 }),
       isTR ? Promise.resolve(empty) : getPopularProducts(20, region),
+      // Дешёвые игры заслуживают своей полки, а не места в «популярном».
+      // Раньше они попадали туда сами: полка сортировалась по размеру
+      // скидки, и наверх выцарапывались LEGO по 19 BYN с −91 %. Здесь они
+      // работают на импульсную покупку, а не создают впечатление, что в
+      // магазине больше ничего нет.
+      getProducts({ price_max: 20, region, sort: 'rating', limit: 12 }),
     ]);
 
   const banners = val<Banner[]>(bannersR, []);
@@ -53,10 +59,19 @@ export default async function HomePage() {
   const top10 = val(top10R, empty);
   const onSale = val(onSaleR, empty);
   const topups = val(topupsR, empty);
-  // Популярные: эндпоинт отдаёт строки обоих регионов — фильтруем и убираем дубли
+  const cheap = val(cheapR, empty);
+  // Спрос: одинаковые названия из разных регионов схлопываем, а то, что уже
+  // стоит в «Топ 10», из полки убираем — иначе две соседние карусели
+  // показывают одни и те же игры.
+  //
+  // Фильтр по региону оставлен как страховка: сервер теперь отбирает регион
+  // сам, но до его выката витрина не должна показывать турецкие карточки в
+  // украинской полке.
   const seen = new Set<string>();
-  const popular = val(popularR, empty)
+  const inTop = new Set(top10.map((p) => p.id));
+  const popularOwn = val(popularR, empty)
     .filter((p) => p.region === region)
+    .filter((p) => !inTop.has(p.id))
     .filter((p) => {
       const key = p.title.trim().toLowerCase();
       if (seen.has(key)) return false;
@@ -110,12 +125,29 @@ export default async function HomePage() {
           <ProductCarousel title="Скидки" products={onSale} viewAllHref="/sale" />
         )}
 
-        {popular.length > 0 && (
+        {/* «Сейчас покупают» — наш собственный спрос: заказы и просмотры.
+            Раньше полка звалась «Популярное», подписывалась «чаще всего
+            смотрят», а на деле сортировалась по размеру скидки — ни одного
+            просмотра в этом не участвовало. И ссылка «все» вела на страницу
+            распродажи, что честно отражало содержимое, но не название.
+
+            Из полки убираем то, что уже стоит в «Топ 10»: тот берёт чарт
+            PS Store, и без вычитания две полки подряд показывали бы одно и
+            то же. */}
+        {popularOwn.length > 0 && (
           <ProductCarousel
-            title="Популярное"
-            eyebrow="Чаще всего смотрят"
-            products={popular}
-            viewAllHref="/sale"
+            title="Сейчас покупают"
+            eyebrow="Заказы и просмотры в нашем магазине"
+            products={popularOwn}
+          />
+        )}
+
+        {cheap.length > 0 && (
+          <ProductCarousel
+            title="Игры до 20 BYN"
+            eyebrow="Недорого и сразу"
+            products={cheap}
+            viewAllHref="/games?price_max=20"
           />
         )}
 

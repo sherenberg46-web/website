@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: '%s | GAME STORE',
   },
   description:
-    'Купите цифровые игры PlayStation по лучшим ценам в Беларуси. Мгновенная доставка кода, гарантия. PS4, PS5, PS Plus, пополнение кошелька PSN.',
+    'Купите цифровые игры PlayStation по лучшим ценам в Беларуси. Выдача обычно за 30 минут, гарантия. PS4, PS5, PS Plus, пополнение кошелька PSN.',
   keywords: [
     'PlayStation',
     'PS4',

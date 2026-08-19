@@ -323,6 +323,27 @@ export async function checkPromo(
   return res.json();
 }
 
+/**
+ * Отметить просмотр карточки — на этом строится полка «популярное».
+ *
+ * Тихая функция: любая ошибка проглатывается. Счётчик просмотров не та вещь,
+ * ради которой покупателю стоит показывать сообщение об ошибке.
+ */
+export async function trackView(productId: number): Promise<void> {
+  const { getGuestId } = await import('./guest');
+  const guest = getGuestId();
+  if (!guest) return;
+  try {
+    await fetch(`${API_BASE}/recommendations/view?product_id=${productId}`, {
+      method: 'POST',
+      headers: { 'X-Guest-Id': guest },
+      keepalive: true,
+    });
+  } catch {
+    /* не критично */
+  }
+}
+
 export async function createWebOrder(
   payload: WebOrderPayload,
   signal?: AbortSignal
