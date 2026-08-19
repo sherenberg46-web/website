@@ -1,13 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
 import { FitImage } from '@/components/ui/FitImage';
 import { useCartStore } from '@/store/cartStore';
 import { OrderForm } from '@/components/cart/OrderForm';
 import { CartPromoBanner } from '@/components/cart/CartPromoBanner';
-import { getTelegramLink } from '@/lib/api';
+import {
+  getProductById,
+  getProductEditionsStrict,
+  getTelegramLink,
+  normalizeImageUrl,
+} from '@/lib/api';
+import { getClientRegion } from '@/lib/region';
+import type { CartItemFresh } from '@/store/cartStore';
+import type { CatalogEdition, Product } from '@/lib/types';
 import { gamePath } from '@/lib/product-url';
 import clsx from 'clsx';
 
@@ -29,7 +37,137 @@ export default function CartPage() {
    */
   const [ordered, setOrdered] = useState(false);
 
+  const syncFromServer = useCartStore((s) => s.syncFromServer);
+  /** Что изменилось с прошлого визита: подорожало, подешевело, пропало. */
+  const [notices, setNotices] = useState<string[]>([]);
+  const syncedRef = useRef(false);
+
   useEffect(() => setMounted(true), []);
+
+  /**
+   * Сверка корзины с сервером при открытии страницы.
+   *
+   * Корзина хранит цену снимком в localStorage — иначе её нечем показать
+   * сразу. Но снимок стареет: товар, добавленный до конца распродажи, лежал
+   * со старой ценой, покупатель видел её в итоге, а заказ считался по
+   * текущей. Разницу обнаруживал уже менеджер в переписке.
+   *
+   * Сверяем один раз за открытие страницы. Что не удалось проверить —
+   * оставляем как есть: лучше показать старую цену, чем вычистить корзину
+   * из-за обрыва связи.
+   */
+  useEffect(() => {
+    if (!mounted || syncedRef.current) return;
+    const snapshot = useCartStore.getState().items;
+    if (snapshot.length === 0) return;
+    syncedRef.current = true;
+
+    let alive = true;
+    (async () => {
+      const region = getClientRegion();
+
+      // Издания берём тем же списком, что показывает карточка игры: цены в
+      // нём уже сверены с каталогом. Один запрос на товар, а не на позицию.
+      const parents = Array.from(
+        new Set(snapshot.filter((i) => i.edition_id != null).map((i) => i.product_id))
+      );
+      const plain = Array.from(
+        new Set(snapshot.filter((i) => i.edition_id == null).map((i) => i.product_id))
+      );
+
+      // null = проверить не удалось, 'gone' = сервер ответил «нет такого».
+      const edLists = new Map<number, CatalogEdition[] | null>();
+      const products = new Map<number, Product | 'gone' | null>();
+
+      await Promise.all([
+        ...parents.map(async (pid) => {
+          try {
+            edLists.set(pid, await getProductEditionsStrict(pid, region));
+          } catch {
+            edLists.set(pid, null);
+          }
+        }),
+        ...plain.map(async (pid) => {
+          try {
+            products.set(pid, await getProductById(pid));
+          } catch (e: unknown) {
+            products.set(pid, (e as { status?: number }).status === 404 ? 'gone' : null);
+          }
+        }),
+      ]);
+
+      const fresh: CartItemFresh[] = [];
+      const msgs: string[] = [];
+
+      for (const item of snapshot) {
+        let patch: CartItemFresh | null = null;
+
+        if (item.edition_id != null) {
+          const list = edLists.get(item.product_id);
+          if (!list) continue; // не проверили — не трогаем
+          const ed = list.find((e) => e.id === item.edition_id);
+          if (!ed) {
+            patch = { product_id: item.product_id, edition_id: item.edition_id, price_byn: null };
+          } else {
+            const raw = region === 'TR' ? ed.price_byn_tr : ed.price_byn;
+            const price = raw && raw > 0 ? raw : null;
+            patch = {
+              product_id: item.product_id,
+              edition_id: item.edition_id,
+              price_byn: price,
+              discount_pct: ed.discount_pct,
+              original_price_byn:
+                price && ed.discount_pct > 0
+                  ? Math.round((price * 100) / (100 - ed.discount_pct))
+                  : null,
+              edition_name: ed.edition_name ?? item.edition_name,
+            };
+          }
+        } else {
+          const prod = products.get(item.product_id);
+          if (prod === null || prod === undefined) continue; // не проверили
+          if (prod === 'gone') {
+            patch = { product_id: item.product_id, edition_id: null, price_byn: null };
+          } else {
+            const raw = region === 'TR' ? prod.price_byn_tr ?? prod.price_byn : prod.price_byn;
+            const price = raw && raw > 0 ? raw : null;
+            patch = {
+              product_id: item.product_id,
+              edition_id: null,
+              price_byn: price,
+              discount_pct: prod.discount_pct,
+              original_price_byn:
+                price && prod.discount_pct > 0
+                  ? Math.round((price * 100) / (100 - prod.discount_pct))
+                  : null,
+              title: prod.title,
+              image_url: normalizeImageUrl(prod.image_url),
+            };
+          }
+        }
+
+        if (!patch) continue;
+        fresh.push(patch);
+
+        const name = item.edition_name ? `${item.title} (${item.edition_name})` : item.title;
+        if (patch.price_byn == null) {
+          msgs.push(`«${name}» больше не продаётся — убрали из корзины`);
+        } else if (patch.price_byn > item.price_byn) {
+          msgs.push(`«${name}» подорожал: было ${item.price_byn} BYN, стало ${patch.price_byn} BYN`);
+        } else if (patch.price_byn < item.price_byn) {
+          msgs.push(`«${name}» подешевел: было ${item.price_byn} BYN, стало ${patch.price_byn} BYN`);
+        }
+      }
+
+      if (!alive) return;
+      if (fresh.length) syncFromServer(fresh);
+      setNotices(msgs);
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [mounted, syncFromServer]);
 
   if (!mounted) {
     return (
@@ -69,6 +207,18 @@ export default function CartPage() {
       <div className={clsx('grid grid-cols-1 gap-6', ordered ? 'max-w-xl mx-auto' : 'lg:grid-cols-3')}>
         {/* Items */}
         <div className={clsx('lg:col-span-2 space-y-3', ordered && 'hidden')}>
+          {notices.length > 0 && (
+            <div className="bg-bg-card border border-accent/30 rounded-2xl p-4 space-y-1">
+              <p className="text-text-primary text-sm font-semibold">
+                Корзина обновлена
+              </p>
+              {notices.map((n) => (
+                <p key={n} className="text-text-secondary text-xs">
+                  {n}
+                </p>
+              ))}
+            </div>
+          )}
           {items.map((item) => (
             <div
               key={`${item.product_id}-${item.edition_id}`}

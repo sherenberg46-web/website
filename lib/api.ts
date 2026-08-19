@@ -126,6 +126,22 @@ export async function getProductEditions(
   }
 }
 
+/**
+ * То же, что getProductEditions, но об ошибке сообщает, а не молчит.
+ *
+ * Обычная версия при любом сбое возвращает пустой список — для витрины это
+ * нормально (не показали блок изданий, и ладно). Корзине так нельзя: пустой
+ * ответ там означает «издание больше не продаётся», и обрыв связи вычистил
+ * бы покупателю корзину.
+ */
+export async function getProductEditionsStrict(
+  id: number,
+  region?: string
+): Promise<CatalogEdition[]> {
+  const r = region ? `?region=${region}` : '';
+  return apiFetch<CatalogEdition[]>(`/products/${id}/editions${r}`, { revalidate: 0 });
+}
+
 export async function getProductDlc(id: number): Promise<DlcItem[]> {
   try {
     return await apiFetch<DlcItem[]>(`/products/${id}/dlc`, { revalidate: 300 });

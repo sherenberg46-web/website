@@ -17,9 +17,31 @@ interface CartState {
   removeItem: (productId: number, editionId: number | null) => void;
   updateQty: (productId: number, editionId: number | null, qty: number) => void;
   clearCart: () => void;
+  syncFromServer: (fresh: CartItemFresh[]) => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
 }
+
+/**
+ * Свежие данные товара с сервера для позиции корзины.
+ *
+ * price_byn === null означает, что товара (или выбранного издания) больше нет
+ * в продаже — такую позицию из корзины убираем.
+ */
+export interface CartItemFresh {
+  product_id: number;
+  edition_id: number | null;
+  price_byn: number | null;
+  original_price_byn?: number | null;
+  discount_pct?: number;
+  title?: string;
+  image_url?: string;
+  edition_name?: string | null;
+}
+
+/** Позиция корзины — это товар плюс издание: одна игра может лежать дважды. */
+const itemKey = (productId: number, editionId: number | null) =>
+  `${productId}:${editionId ?? 'base'}`;
 
 /** Ключ в localStorage — он же имя persist, он же то, что слушаем между вкладками. */
 const STORAGE_KEY = 'gamestore-cart';
@@ -79,6 +101,44 @@ export const useCartStore = create<CartState>()(
       },
 
       clearCart: () => set({ items: [], updatedAt: 0 }),
+
+      /**
+       * Заменить снимок корзины свежими данными сервера.
+       *
+       * Корзина хранит цену в localStorage — иначе её нечем показать сразу
+       * при открытии страницы. Но снимок стареет: товар, добавленный до
+       * распродажи, показывал старую цену, а заказ уходил по текущей.
+       * Покупатель видел одну сумму, менеджер называл другую.
+       *
+       * Позицию, которой сервер не знает (снята с продажи), убираем.
+       * Позицию, о которой сервер ничего не сказал (не смогли проверить),
+       * оставляем как есть — лучше показать старую цену, чем вычистить
+       * корзину из-за обрыва связи.
+       *
+       * updatedAt не трогаем: это отметка «когда покупатель трогал корзину»,
+       * по ней считается предложение скидки за брошенную корзину. Обновление
+       * цен — не действие покупателя.
+       */
+      syncFromServer: (fresh) => {
+        const byKey = new Map(fresh.map((f) => [itemKey(f.product_id, f.edition_id), f]));
+        set((s) => ({
+          items: s.items.flatMap((i) => {
+            const f = byKey.get(itemKey(i.product_id, i.edition_id));
+            if (!f) return [i];
+            if (f.price_byn == null) return [];
+            return [{
+              ...i,
+              price_byn: f.price_byn,
+              original_price_byn:
+                f.original_price_byn !== undefined ? f.original_price_byn : i.original_price_byn,
+              discount_pct: f.discount_pct ?? i.discount_pct,
+              title: f.title ?? i.title,
+              image_url: f.image_url ?? i.image_url,
+              edition_name: f.edition_name !== undefined ? f.edition_name : i.edition_name,
+            }];
+          }),
+        }));
+      },
 
       getTotalItems: () => get().items.reduce((sum, i) => sum + i.qty, 0),
 
