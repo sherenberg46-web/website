@@ -14,6 +14,7 @@ import { getRegion } from '@/lib/region-server';
 import { getSiteUrl } from '@/lib/site-url';
 import { gamePath, platformSlug, isPlatformSegment } from '@/lib/product-url';
 import { AddToCart } from '@/components/products/AddToCart';
+import { GameDescription } from '@/components/products/GameDescription';
 import { ReviewForm } from '@/components/products/ReviewForm';
 import { TrackView } from '@/components/products/TrackView';
 import { ProductGrid } from '@/components/products/ProductGrid';
@@ -316,11 +317,7 @@ export default async function GamePage({ params }: Props) {
             </div>
 
             {/* Description */}
-            {cleanDescription && (
-              <p className="text-text-secondary leading-relaxed text-sm line-clamp-5 whitespace-pre-line">
-                {cleanDescription}
-              </p>
-            )}
+            {cleanDescription && <GameDescription text={cleanDescription} />}
 
             {/* Add to cart */}
             <AddToCart product={product} editions={editions} region={region} />

@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ShoppingCart, Check, Heart, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
+import { ShoppingCart, Check, Heart, ExternalLink, ShieldCheck, Clock, CreditCard, Globe } from 'lucide-react';
 import clsx from 'clsx';
 import { useCartStore } from '@/store/cartStore';
 import { useFavouritesStore } from '@/store/favouritesStore';
@@ -103,6 +104,26 @@ export function AddToCart({ product, editions, region }: Props) {
     product.product_type === 'game' && uaPrice != null && trPrice != null && uaPrice !== trPrice;
   const cheaper: Region = (uaPrice ?? Infinity) <= (trPrice ?? Infinity) ? 'UA' : 'TR';
 
+  // Насколько издание дороже самого дешёвого из доступных.
+  //
+  // «Ultimate Edition — 386 BYN» рядом со «Standard — 314 BYN» не отвечает на
+  // вопрос, который покупатель задаёт себе на самом деле: сколько стоит
+  // доплата. Разницу он считает в уме, и часто просто не считает.
+  const usablePrices = editions
+    .filter(isPriceUsable)
+    .map((e) => editionPrice(e, region))
+    .filter((p): p is number => p != null && p > 0);
+  const minEditionPrice = usablePrices.length ? Math.min(...usablePrices) : null;
+
+  // Дата выхода человеческим языком — её же показывает шапка карточки.
+  const releaseLabel = product.release_date
+    ? new Date(product.release_date).toLocaleDateString('ru-BY', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : null;
+
   function handleAdd() {
     if (!price) return;
     addItem({
@@ -180,12 +201,19 @@ export function AddToCart({ product, editions, region }: Props) {
                         -{ed.discount_pct}%
                       </span>
                     )}
-                    <span className={clsx('font-semibold', active ? 'text-accent' : '')}>
-                      {!usable
-                        ? <span className="text-xs font-medium">Цена уточняется</span>
-                        : ed.is_free
-                          ? 'Бесплатно'
-                          : p != null ? `${p} BYN` : '—'}
+                    <span className="text-right">
+                      <span className={clsx('font-semibold block', active ? 'text-accent' : '')}>
+                        {!usable
+                          ? <span className="text-xs font-medium">Цена уточняется</span>
+                          : ed.is_free
+                            ? 'Бесплатно'
+                            : p != null ? `${p} BYN` : '—'}
+                      </span>
+                      {usable && p != null && minEditionPrice != null && p > minEditionPrice && (
+                        <span className="block text-[11px] text-text-secondary font-medium">
+                          +{p - minEditionPrice} BYN
+                        </span>
+                      )}
                     </span>
                   </span>
                 </button>
@@ -229,6 +257,98 @@ export function AddToCart({ product, editions, region }: Props) {
         </div>
       )}
 
+      {/* Что входит в выбранное издание.
+          Список приезжает с сервера полем features — его снимает парсер со
+          страницы PS Store, и лежал он без дела: покупатель видел «Ultimate
+          Edition +72 BYN» и ни слова о том, за что доплачивает. */}
+      {selected?.features?.length ? (
+        <div className="bg-bg-card border border-border rounded-xl p-4">
+          <p className="text-sm font-semibold text-text-primary mb-2">
+            Что входит в «{selected.edition_label || selected.edition_name}»
+          </p>
+          <ul className="space-y-1.5">
+            {selected.features.slice(0, 8).map((f) => (
+              <li key={f} className="flex gap-2 text-text-secondary text-sm leading-snug">
+                <Check className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {/* Предзаказ: что произойдёт и когда.
+          Раньше на карточке стояло только «Требует немедленной оплаты» — фраза,
+          которая на товаре за три сотни читается как угроза, а не как условие. */}
+      {product.is_preorder && (
+        <div className="bg-bg-card border border-accent/30 rounded-xl p-4">
+          <p className="text-sm font-semibold text-text-primary mb-3">Как работает предзаказ</p>
+          <ol className="space-y-2 text-sm text-text-secondary">
+            <li className="flex gap-2.5">
+              <span className="text-accent font-bold shrink-0">1.</span>
+              <span>Сегодня оформляете и оплачиваете заказ — цена предзаказа закрепляется за вами.</span>
+            </li>
+            <li className="flex gap-2.5">
+              <span className="text-accent font-bold shrink-0">2.</span>
+              <span>
+                {releaseLabel ? `${releaseLabel} — игра выходит.` : 'Игра выходит в день релиза.'}
+              </span>
+            </li>
+            <li className="flex gap-2.5">
+              <span className="text-accent font-bold shrink-0">3.</span>
+              <span>В день выхода присылаем доступ — ждать после релиза не придётся.</span>
+            </li>
+          </ol>
+          <p className="text-text-secondary/70 text-xs mt-3 leading-relaxed">
+            Дату выхода назначает издатель и может её перенести — тогда вместе с ней
+            сдвинется и выдача.
+          </p>
+        </div>
+      )}
+
+      {/* Условия покупки — рядом с ценой, а не в подвале.
+          До этого покупатель не находил на карточке ответа ни на один из
+          вопросов, которые задаёт менеджеру каждый первый: какой нужен
+          аккаунт, когда придёт, что если не сработает, в чём платить. */}
+      <ul className="space-y-2.5 text-sm">
+        <li className="flex gap-2.5">
+          <Globe className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+          <span className="text-text-secondary">
+            Аккаунт региона{' '}
+            <span className="text-text-primary font-medium">
+              {region === 'TR' ? 'Турция (TR)' : 'Украина (UA)'}
+            </span>
+            . Основной аккаунт менять не нужно —{' '}
+            <Link href="/how-to-buy" className="text-accent hover:underline">
+              как это работает
+            </Link>
+          </span>
+        </li>
+        <li className="flex gap-2.5">
+          <Clock className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+          <span className="text-text-secondary">
+            {product.is_preorder
+              ? 'Доступ выдаём к дате выхода игры, а не в момент оплаты'
+              : 'В рабочее время 10:00–22:00 — обычно около 30 минут. Ночные заказы — с утра'}
+          </span>
+        </li>
+        <li className="flex gap-2.5">
+          <ShieldCheck className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+          <span className="text-text-secondary">
+            Не сработает — заменим или вернём деньги в течение 48 часов —{' '}
+            <Link href="/guarantees" className="text-accent hover:underline">
+              гарантии
+            </Link>
+          </span>
+        </li>
+        <li className="flex gap-2.5">
+          <CreditCard className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+          <span className="text-text-secondary">
+            Оплата в BYN после того, как менеджер подтвердит заказ
+          </span>
+        </li>
+      </ul>
+
       {/* Actions */}
       <div className="flex gap-3">
         <button
@@ -246,12 +366,12 @@ export function AddToCart({ product, editions, region }: Props) {
           {added ? (
             <>
               <Check className="w-4 h-4" />
-              Добавлено
+              Добавлено в корзину
             </>
           ) : (
             <>
               <ShoppingCart className="w-4 h-4" />
-              В корзину
+              {price ? `Купить за ${price} BYN` : 'Цена уточняется'}
             </>
           )}
         </button>
@@ -269,18 +389,32 @@ export function AddToCart({ product, editions, region }: Props) {
         </button>
       </div>
 
-      {/* Telegram CTA */}
+      {/* После добавления покупателю нужен путь дальше. Раньше его не было
+          вовсе: кнопка меняла надпись на «Добавлено», и человек оставался на
+          той же странице искать корзину сам. */}
+      {added && (
+        <Link
+          href="/cart"
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-bg-card border border-accent/40 text-text-primary text-sm font-semibold hover:border-accent transition-colors"
+        >
+          Перейти в корзину
+        </Link>
+      )}
+
+      {/* Telegram — запасной путь, а не второе равноправное действие.
+          Две одинаковые кнопки рядом заставляли выбирать способ покупки
+          вместо того, чтобы покупать. */}
       <a
         href={getTelegramLink(product.id)}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 w-full py-3 rounded-full border border-border text-text-secondary text-sm font-medium hover:border-accent/40 hover:text-text-primary transition-colors"
+        className="flex items-center justify-center gap-2 w-full py-2 text-text-secondary text-xs font-medium hover:text-text-primary transition-colors"
       >
         <svg className="w-4 h-4 text-accent" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.196 13.98l-2.948-.924c-.64-.203-.653-.64.136-.954l11.52-4.44c.534-.194 1.003.13.99.559z" />
         </svg>
-        Купить в Telegram
-        <ExternalLink className="w-3.5 h-3.5" />
+        Удобнее в Telegram? Напишите менеджеру
+        <ExternalLink className="w-3 h-3" />
       </a>
     </div>
   );
