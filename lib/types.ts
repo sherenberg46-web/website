@@ -90,6 +90,9 @@ export interface Product {
   region: string;
   genre: string | null;
   requires_ps_plus: boolean;
+  /** Языки озвучки и субтитров — снимаются со страницы PS Store. */
+  lang_audio?: string[];
+  lang_subs?: string[];
   editions: GameEdition[];
   /**
    * id основной карточки этой же игры, если открыта версия другого региона.

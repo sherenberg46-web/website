@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Star, Calendar, Monitor } from 'lucide-react';
+import { Star, Calendar, Monitor, Languages } from 'lucide-react';
 import {
   getProductById,
   getProductEditions,
@@ -19,6 +19,7 @@ import { GameDescription } from '@/components/products/GameDescription';
 import { ProductFaq } from '@/components/products/ProductFaq';
 import { productFaq } from '@/lib/product-faq';
 import { productSeoDescription, productSeoTitle } from '@/lib/seo';
+import { languageInfo, languageNames } from '@/lib/languages';
 import { ReviewForm } from '@/components/products/ReviewForm';
 import { TrackView } from '@/components/products/TrackView';
 import { ProductGrid } from '@/components/products/ProductGrid';
@@ -139,6 +140,8 @@ export default async function GamePage({ params }: Props) {
     getProductReviews(id),
     getStoreReviews(),
   ]);
+
+  const langs = languageInfo(product.lang_audio, product.lang_subs);
 
   // Похожие: тот же жанр, регион обязателен (иначе дубли), сортировка по рейтингу
   const mainGenre = product.genre?.split(',')[0]?.trim();
@@ -332,10 +335,51 @@ export default async function GamePage({ params }: Props) {
                 <Monitor className="w-4 h-4" />
                 <span>Каталог: {region === 'TR' ? 'Турция (TR)' : 'Украина (UA)'}</span>
               </div>
+              {/* Язык — первый вопрос покупателя, и до сих пор карточка на
+                  него молчала, хотя данные снимаются вместе с изданиями.
+                  Где их нет, не пишем ничего: «языки неизвестны» и «русского
+                  нет» для человека разные вещи, и путать их нельзя. */}
+              {langs.known && (
+                <div className="flex items-center gap-1.5">
+                  <Languages className="w-4 h-4" />
+                  <span
+                    className={
+                      langs.hasRussianAudio || langs.hasRussianSubs
+                        ? 'text-accent font-medium'
+                        : 'text-text-secondary'
+                    }
+                  >
+                    {langs.headline}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Description */}
             {cleanDescription && <GameDescription text={cleanDescription} />}
+
+            {/* Полный список языков. Озвучка и субтитры отдельно: для
+                покупателя это разные вещи, и «русский есть» без уточнения
+                каждый понимает по-своему. */}
+            {langs.known && (
+              <div className="bg-bg-card border border-border rounded-xl p-4 space-y-1.5">
+                {langs.audio.length > 0 && (
+                  <p className="text-sm">
+                    <span className="text-text-secondary">Озвучка: </span>
+                    <span className="text-text-primary">{languageNames(langs.audio)}</span>
+                  </p>
+                )}
+                {langs.subs.length > 0 && (
+                  <p className="text-sm">
+                    <span className="text-text-secondary">Субтитры: </span>
+                    <span className="text-text-primary">{languageNames(langs.subs)}</span>
+                  </p>
+                )}
+                <p className="text-text-secondary/70 text-xs pt-1">
+                  Язык выбирается в настройках игры и не зависит от региона аккаунта.
+                </p>
+              </div>
+            )}
 
             {/* Add to cart */}
             <AddToCart product={product} editions={editions} region={region} />
@@ -400,6 +444,13 @@ export default async function GamePage({ params }: Props) {
                 region,
                 isPreorder: !!product.is_preorder,
                 hasEditions: editions.length > 1,
+                russian: !langs.known
+                  ? null
+                  : langs.hasRussianAudio
+                    ? 'audio'
+                    : langs.hasRussianSubs
+                      ? 'subs'
+                      : 'none',
               })}
             />
           </div>
