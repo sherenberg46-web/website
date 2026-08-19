@@ -366,13 +366,17 @@ export default async function GamePage({ params }: Props) {
                 {langs.audio.length > 0 && (
                   <p className="text-sm">
                     <span className="text-text-secondary">Озвучка: </span>
-                    <span className="text-text-primary">{languageNames(langs.audio)}</span>
+                    <span className="text-text-primary">
+                      {languageNames(langs.audio, 'audio')}
+                    </span>
                   </p>
                 )}
                 {langs.subs.length > 0 && (
                   <p className="text-sm">
                     <span className="text-text-secondary">Субтитры: </span>
-                    <span className="text-text-primary">{languageNames(langs.subs)}</span>
+                    <span className="text-text-primary">
+                      {languageNames(langs.subs, 'subs')}
+                    </span>
                   </p>
                 )}
                 <p className="text-text-secondary/70 text-xs pt-1">
