@@ -18,6 +18,7 @@ import { AddToCart } from '@/components/products/AddToCart';
 import { GameDescription } from '@/components/products/GameDescription';
 import { ProductFaq } from '@/components/products/ProductFaq';
 import { productFaq } from '@/lib/product-faq';
+import { productSeoDescription, productSeoTitle } from '@/lib/seo';
 import { ReviewForm } from '@/components/products/ReviewForm';
 import { TrackView } from '@/components/products/TrackView';
 import { ProductGrid } from '@/components/products/ProductGrid';
@@ -44,9 +45,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const product = await getProductById(Number(params.id));
     const imageUrl = normalizeImageUrl(product.image_url);
     const title = product.title;
-    const desc =
-      product.description?.replace(/<[^>]+>/g, ' ').slice(0, 160) ||
-      `Купить ${title} для ${product.platform} в Беларуси. Цена: ${product.price_byn} BYN.`;
+    // Заголовок и описание собираем коммерчески — см. lib/seo.ts. Раньше в
+    // заголовке стояло голое название игры, а в описании — первые 160 знаков
+    // сюжета из PS Store, где нет ни цены, ни того, что игру можно купить.
+    const seoTitle = productSeoTitle(title, product.platform);
+    const desc = productSeoDescription({
+      title,
+      platform: product.platform,
+      price: product.price_byn,
+      isPreorder: product.is_preorder,
+      description: product.description,
+    });
 
     // Каноничный адрес карточки. Без него товар, открытый из каталога с
     // фильтром или из поиска, выглядит для робота как отдельная страница
@@ -63,19 +72,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const canonicalPath = gamePath(product.canonical_id ?? Number(params.id), product.platform);
 
     return {
-      title,
+      title: seoTitle,
       description: desc,
       alternates: { canonical: canonicalPath },
       openGraph: {
         url: canonicalPath,
-        title: `${title} | GAME STORE`,
+        title: `${seoTitle} | GAME STORE`,
         description: desc,
         images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
         type: 'website',
       },
       twitter: {
         card: 'summary_large_image',
-        title,
+        title: seoTitle,
         description: desc,
         images: [imageUrl],
       },

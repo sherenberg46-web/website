@@ -43,11 +43,24 @@ export const metadata: Metadata = {
     title: 'GAME STORE — Цифровые игры PlayStation | Беларусь',
     description:
       'Лучший магазин цифровых игр PlayStation в Беларуси. Игры, подписки, DLC по ценам BYN.',
+    // Картинка превью. Без неё ссылка на главную, отправленная в Telegram,
+    // Viber или соцсеть, выглядела голой строкой — а именно так магазин чаще
+    // всего и пересылают друг другу. У карточек товара превью было всегда
+    // (обложка игры), у главной — нет.
+    images: [
+      {
+        url: '/og-cover.png',
+        width: 1200,
+        height: 630,
+        alt: 'GAME STORE — цифровые игры PlayStation в Беларуси',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'GAME STORE — Цифровые игры PlayStation',
     description: 'Лучший магазин цифровых игр PlayStation в Беларуси.',
+    images: ['/og-cover.png'],
   },
   robots: {
     index: true,

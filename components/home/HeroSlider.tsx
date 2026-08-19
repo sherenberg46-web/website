@@ -108,12 +108,18 @@ export function HeroSlider({ banners }: Props) {
                 {banner.subtitle}
               </p>
             )}
-            <h1
+            {/* Название акции — не заголовок страницы.
+                Здесь стоял единственный h1 главной, и он менялся вместе со
+                слайдом: для поисковика страница называлась то «GTA VI», то
+                названием следующей акции. Главная — это магазин, а не баннер;
+                настоящий h1 теперь стоит на самой странице. Вид не изменился:
+                те же размеры, только тег другой. */}
+            <p
               className="font-extrabold leading-none tracking-tight mb-5 text-white"
               style={{ fontSize: 'clamp(1.75rem, 4vw, 3.25rem)' }}
             >
               {banner.title}
-            </h1>
+            </p>
             <div className="flex flex-wrap gap-3">
               <Link
                 href={linkHref}
