@@ -28,7 +28,7 @@ export function Header() {
   const [mounted, setMounted] = useState(false);
 
   const cartItems = useCartStore((s) => s.items);
-  const favProducts = useFavouritesStore((s) => s.products);
+  const favIds = useFavouritesStore((s) => s.ids);
 
   useEffect(() => {
     setMounted(true);
@@ -47,7 +47,7 @@ export function Header() {
   }, [menuOpen]);
 
   const cartCount = mounted ? cartItems.reduce((s, i) => s + i.qty, 0) : 0;
-  const favCount = mounted ? favProducts.length : 0;
+  const favCount = mounted ? favIds.length : 0;
 
   return (
     <>

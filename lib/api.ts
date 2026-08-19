@@ -286,13 +286,36 @@ export async function rateConsultant(dialogId: number, rating: 1 | -1): Promise<
   }).catch(() => undefined);
 }
 
+/**
+ * Действует ли промокод — спрашиваем сервер.
+ *
+ * Сверять введённый код с тем, что сайт выдал этому браузеру, нельзя: коды
+ * бывают и другие (менеджер выдал в переписке, код с прошлого устройства),
+ * а решает всё равно приёмник заказа. Раньше форма объявляла такой код
+ * «не найден», хотя сервер его принимал и скидку давал, — покупатель видел
+ * одну сумму, а в заказ уходила другая.
+ */
+export async function checkPromo(
+  code: string,
+  signal?: AbortSignal
+): Promise<{ valid: boolean; percent: number; reason: string }> {
+  const res = await fetch(
+    `${API_BASE}/web-orders/check-promo?code=${encodeURIComponent(code)}`,
+    { signal }
+  );
+  if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status });
+  return res.json();
+}
+
 export async function createWebOrder(
-  payload: WebOrderPayload
+  payload: WebOrderPayload,
+  signal?: AbortSignal
 ): Promise<{ order_id?: number; message: string; total_byn?: number; promo_percent?: number }> {
   const res = await fetch(`${API_BASE}/web-orders`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+    signal,
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

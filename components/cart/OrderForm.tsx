@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
-import { createWebOrder, getManagerLink } from '@/lib/api';
+import { checkPromo, createWebOrder, getManagerLink } from '@/lib/api';
 import { getClientRegion } from '@/lib/region';
 import { clearPromo, loadPromo } from '@/lib/cart-promo';
 import { checkContact } from '@/lib/contact';
@@ -40,6 +40,14 @@ export function OrderForm({ onOrdered }: Props) {
   const [promo, setPromo] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
+  // Номер заказа с сервера: по нему менеджер находит заказ, а покупатель
+  // может на него сослаться. Раньше ответ сервера просто выбрасывался.
+  const [orderId, setOrderId] = useState<number | null>(null);
+  const [promoState, setPromoState] = useState<{
+    status: 'idle' | 'checking' | 'ok' | 'bad';
+    percent: number;
+    reason: string;
+  }>({ status: 'idle', percent: 0, reason: '' });
   // Показываем ошибку контакта только после того, как поле покинули: ругаться
   // на «+37» посреди набора номера — значит мешать, а не помогать.
   const [contactTouched, setContactTouched] = useState(false);
@@ -55,19 +63,59 @@ export function OrderForm({ onOrdered }: Props) {
   const nameError =
     name.trim() && !nameOk ? 'Имя — хотя бы две буквы' : null;
 
-  // Скидку показываем только для кода, который сервер выдал этому браузеру, —
-  // так в сумме не появится процент, которого на самом деле нет.
-  const issued = loadPromo();
-  const promoOk =
-    !!issued && promo.trim().toUpperCase() === issued.code.toUpperCase();
-  const discount = promoOk ? Math.round(totalPrice * issued.percent) / 100 : 0;
+  // Код, который сайт уже выдал этому браузеру, подставляем сами: переписывать
+  // его руками — лишний шанс ошибиться в букве и решить, что скидки нет.
+  useEffect(() => {
+    const issued = loadPromo();
+    if (issued?.code) setPromo(issued.code.toUpperCase());
+  }, []);
+
+  // Промокод проверяет сервер, а не браузер. Сверять с кодом, который сайт
+  // выдал этому же браузеру, было ошибкой: сервер принимает любой невыданный
+  // ранее непросроченный код (в том числе выданный менеджером в переписке или
+  // на другом устройстве), а форма при этом писала «код не найден» и считала
+  // сумму без скидки. Покупатель видел одну цену, в заказ уходила другая.
+  const promoCode = promo.trim().toUpperCase();
+  useEffect(() => {
+    if (!promoCode) {
+      setPromoState({ status: 'idle', percent: 0, reason: '' });
+      return;
+    }
+    setPromoState({ status: 'checking', percent: 0, reason: '' });
+    const ctl = new AbortController();
+    // Пауза перед запросом — чтобы не дёргать сервер на каждую букву.
+    const timer = setTimeout(() => {
+      checkPromo(promoCode, ctl.signal)
+        .then((r) =>
+          setPromoState(
+            r.valid
+              ? { status: 'ok', percent: r.percent, reason: '' }
+              : { status: 'bad', percent: 0, reason: r.reason }
+          )
+        )
+        .catch((e: unknown) => {
+          if ((e as Error)?.name === 'AbortError') return;
+          setPromoState({ status: 'bad', percent: 0, reason: 'не удалось проверить' });
+        });
+    }, 400);
+    return () => {
+      clearTimeout(timer);
+      ctl.abort();
+    };
+  }, [promoCode]);
+
+  const promoOk = promoState.status === 'ok';
+  const discount = promoOk ? Math.round(totalPrice * promoState.percent) / 100 : 0;
   const finalPrice = Math.round((totalPrice - discount) * 100) / 100;
 
   const canSubmit =
     nameOk &&
     contactCheck.ok &&
     hasAccount !== null &&
-    (hasAccount === false || !!psEmail.trim());
+    (hasAccount === false || !!psEmail.trim()) &&
+    // Пока код проверяется, итог на экране ещё не окончательный — не даём
+    // отправить заказ с суммой, которая через полсекунды изменится.
+    promoState.status !== 'checking';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -76,8 +124,14 @@ export function OrderForm({ onOrdered }: Props) {
     setStatus('loading');
     setError('');
 
+    // Ответ может не прийти вовсе: сеть в метро, спящий сервер. Без предела
+    // ожидания кнопка остаётся в «Отправляем...» навсегда, и покупатель либо
+    // уходит, либо жмёт ещё раз и создаёт второй заказ.
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 20_000);
+
     try {
-      await createWebOrder({
+      const created = await createWebOrder({
         items: items.map((i) => ({
           product_id: i.product_id,
           edition_id: i.edition_id,
@@ -92,8 +146,9 @@ export function OrderForm({ onOrdered }: Props) {
         account_type: hasAccount ? 'my_account' : 'no_account',
         ps_email: hasAccount ? psEmail.trim() : undefined,
         ps_password: hasAccount ? psPassword : undefined,
-        promo_code: promo.trim() || undefined,
-      });
+        promo_code: promoCode || undefined,
+      }, ctl.signal);
+      setOrderId(created.order_id ?? null);
       // Порядок важен: сначала сообщаем странице, потом чистим корзину.
       // Оба обновления попадут в один проход React, страница уже будет знать,
       // что заказ оформлен, и не подменит форму экраном «Корзина пуста».
@@ -103,13 +158,22 @@ export function OrderForm({ onOrdered }: Props) {
       setStatus('success');
     } catch (err: unknown) {
       const status = (err as { status?: number }).status;
-      if (status === 404 || status === 405) {
+      if ((err as Error)?.name === 'AbortError') {
+        // Ждали 20 секунд и не дождались. Дошёл заказ или нет — мы не знаем,
+        // поэтому не зовём повторить вслепую, а ведём к менеджеру.
+        setError(
+          'Сервер не ответил. Напишите менеджеру в Telegram — он проверит, дошёл ли заказ.'
+        );
+        setStatus('error');
+      } else if (status === 404 || status === 405) {
         // Endpoint not deployed yet — show Telegram fallback
         setStatus('fallback');
       } else {
         setError('Произошла ошибка. Попробуйте ещё раз или напишите в Telegram.');
         setStatus('error');
       }
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -118,8 +182,14 @@ export function OrderForm({ onOrdered }: Props) {
       <div className="text-center py-10">
         <CheckCircle className="w-16 h-16 text-accent mx-auto mb-4" />
         <h2 className="text-2xl font-bold mb-2">Заказ принят!</h2>
+        {orderId !== null && (
+          <p className="text-text-primary font-semibold mb-2">
+            Номер заказа: <span className="text-accent">№{orderId}</span>
+          </p>
+        )}
         <p className="text-text-secondary mb-6">
           Менеджер свяжется с вами в ближайшее время для подтверждения заказа и оплаты.
+          {orderId !== null && ' Номер заказа пригодится, если захотите уточнить статус.'}
         </p>
         <a
           href={getManagerLink()}
@@ -296,11 +366,17 @@ export function OrderForm({ onOrdered }: Props) {
           placeholder="Если есть"
           className="w-full px-4 py-3 bg-bg-page border border-border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
         />
-        {promo.trim() && (
-          <p className={clsx('text-xs mt-1', promoOk ? 'text-accent' : 'text-text-secondary')}>
-            {promoOk
-              ? `Скидка ${issued!.percent} % применена`
-              : 'Код не найден — проверьте или оставьте поле пустым'}
+        {promoState.status !== 'idle' && (
+          <p
+            className={clsx(
+              'text-xs mt-1',
+              promoState.status === 'ok' ? 'text-accent' : 'text-text-secondary'
+            )}
+          >
+            {promoState.status === 'checking' && 'Проверяем код...'}
+            {promoState.status === 'ok' && `Скидка ${promoState.percent} % применена`}
+            {promoState.status === 'bad' &&
+              `Код не применён${promoState.reason ? `: ${promoState.reason}` : ''}`}
           </p>
         )}
       </div>
