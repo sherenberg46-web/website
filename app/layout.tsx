@@ -47,9 +47,12 @@ export const metadata: Metadata = {
     // Viber или соцсеть, выглядела голой строкой — а именно так магазин чаще
     // всего и пересылают друг другу. У карточек товара превью было всегда
     // (обложка игры), у главной — нет.
+    // JPG, а не PNG: та же картинка в PNG весит 692 КБ против 126 КБ, а
+    // превью должно успеть загрузиться в мессенджере до того, как человек
+    // пролистает сообщение.
     images: [
       {
-        url: '/og-cover.png',
+        url: '/og-cover.jpg',
         width: 1200,
         height: 630,
         alt: 'GAME STORE — цифровые игры PlayStation в Беларуси',
@@ -60,7 +63,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'GAME STORE — Цифровые игры PlayStation',
     description: 'Лучший магазин цифровых игр PlayStation в Беларуси.',
-    images: ['/og-cover.png'],
+    images: ['/og-cover.jpg'],
   },
   robots: {
     index: true,
