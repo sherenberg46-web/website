@@ -50,17 +50,17 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
 export function FAQ() {
   return (
     <section className="section-pad">
-      <div className="max-w-3xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4">
         <ScrollReveal>
-          <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight mb-4">
-            Часто задаваемые вопросы
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
+            Вопрос — ответ
           </h2>
-          <p className="text-center text-text-secondary mb-12">
+          <p className="text-text-secondary text-sm mb-8">
             Не нашли ответ? Напишите нам в Telegram — ответим быстро.
           </p>
         </ScrollReveal>
 
-        <div className="border-t border-border">
+        <div className="flex flex-col gap-2.5 max-w-3xl">
           {FAQS.map((faq, i) => (
             <FAQItem key={i} {...faq} index={i} />
           ))}

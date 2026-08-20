@@ -6,7 +6,6 @@ import { getRegion } from '@/lib/region-server';
 import type { Banner, Product } from '@/lib/types';
 import { HeroSlider } from '@/components/home/HeroSlider';
 import { ProductCarousel } from '@/components/home/ProductCarousel';
-import { SubscriptionsShowcase } from '@/components/home/SubscriptionsShowcase';
 import { RecentlyViewed } from '@/components/home/RecentlyViewed';
 import { Benefits } from '@/components/home/Benefits';
 import { HowToBuy } from '@/components/home/HowToBuy';
@@ -34,7 +33,7 @@ export default async function HomePage() {
   const isTR = region === 'TR';
 
   const empty: Product[] = [];
-  const [bannersR, newGamesR, preordersR, top10R, onSaleR, topupsR, popularR, cheapR] =
+  const [bannersR, newGamesR, preordersR, top10R, onSaleR, popularR] =
     await Promise.allSettled([
       getBanners(),
       // new_games всегда отдаёт UA-каталог (несёт цены обоих регионов) — как в Mini App
@@ -44,14 +43,7 @@ export default async function HomePage() {
       isTR
         ? Promise.resolve(empty)
         : getProducts({ task_type: 'sales', sort: 'discount', region, limit: 12 }),
-      getProducts({ product_type: 'topup', region, limit: 12 }),
       isTR ? Promise.resolve(empty) : getPopularProducts(20, region),
-      // Дешёвые игры заслуживают своей полки, а не места в «популярном».
-      // Раньше они попадали туда сами: полка сортировалась по размеру
-      // скидки, и наверх выцарапывались LEGO по 19 BYN с −91 %. Здесь они
-      // работают на импульсную покупку, а не создают впечатление, что в
-      // магазине больше ничего нет.
-      getProducts({ price_max: 20, region, sort: 'rating', limit: 12 }),
     ]);
 
   const banners = val<Banner[]>(bannersR, []);
@@ -59,8 +51,6 @@ export default async function HomePage() {
   const preorders = val(preordersR, empty);
   const top10 = val(top10R, empty);
   const onSale = val(onSaleR, empty);
-  const topups = val(topupsR, empty);
-  const cheap = val(cheapR, empty);
   // Спрос: одинаковые названия из разных регионов схлопываем, а то, что уже
   // стоит в «Топ 10», из полки убираем — иначе две соседние карусели
   // показывают одни и те же игры.
@@ -167,32 +157,7 @@ export default async function HomePage() {
           />
         )}
 
-        {cheap.length > 0 && (
-          <ProductCarousel
-            title="Игры до 20 BYN"
-            eyebrow="Недорого и сразу"
-            products={cheap}
-            viewAllHref="/games?price_max=20"
-          />
-        )}
-
         <RecentlyViewed />
-      </div>
-
-      {/* PS Plus + Пополнение PSN */}
-      <div className="bg-bg-card/30 border-y border-border">
-        <div className="max-w-7xl mx-auto px-4 py-16 space-y-14">
-          <ScrollReveal>
-            <SubscriptionsShowcase region={region} />
-          </ScrollReveal>
-          {topups.length > 0 && (
-            <ProductCarousel
-              title="Пополнение кошелька PSN"
-              products={topups}
-              viewAllHref="/topup"
-            />
-          )}
-        </div>
       </div>
 
       {/* Telegram CTA */}

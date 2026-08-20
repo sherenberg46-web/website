@@ -34,13 +34,17 @@ export function PriceDisplay({ price, discountPct = 0, className, size = 'md' }:
     );
   }
 
-  const originalPrice = discountPct > 0 ? getOriginalPrice(price, discountPct) : null;
+  const hasDiscount = discountPct > 0;
+  const originalPrice = hasDiscount ? getOriginalPrice(price, discountPct) : null;
 
+  // Цена со скидкой — жёлтая и на ступень крупнее: выгода читается сразу,
+  // ещё до того как глаз доберётся до бейджа с процентом.
   const priceClass = clsx(
-    'font-extrabold text-text-primary tracking-tight',
-    size === 'sm' && 'text-base',
-    size === 'md' && 'text-xl',
-    size === 'lg' && 'text-4xl'
+    'font-extrabold tracking-tight',
+    hasDiscount ? 'text-accent' : 'text-text-primary',
+    size === 'sm' && (hasDiscount ? 'text-lg' : 'text-base'),
+    size === 'md' && (hasDiscount ? 'text-2xl' : 'text-xl'),
+    size === 'lg' && (hasDiscount ? 'text-5xl' : 'text-4xl')
   );
 
   return (
