@@ -129,7 +129,7 @@ export function SearchBox() {
             onFocus={() => results.length > 0 && setOpen(true)}
             placeholder="Поиск игр…"
             aria-label="Поиск игр"
-            className="w-full bg-bg-card border border-border rounded-md pl-9 pr-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/60 outline-none focus:border-accent transition-colors"
+            className="w-full bg-bg-elevated border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/60 outline-none focus:border-accent/60 transition-colors"
           />
         </div>
       </form>

@@ -51,7 +51,7 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-bg-page border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-bg-page/90 backdrop-blur-xl border-b border-border">
         {/* Верхняя строка: лого · поиск · действия */}
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-4">
           {/* Logo */}
@@ -61,10 +61,10 @@ export function Header() {
               alt="GAME STORE"
               width={32}
               height={32}
-              className="rounded-lg"
+              className="rounded-full"
               priority
             />
-            <span className="font-extrabold text-base tracking-tight text-text-primary uppercase italic">
+            <span className="font-extrabold text-base tracking-tight text-text-primary">
               Game<span className="text-accent">Store</span>
             </span>
           </Link>
@@ -110,7 +110,7 @@ export function Header() {
               href={getTelegramLink()}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1.5 ml-2 px-4 py-2 bg-accent hover:bg-accent-hover text-accent-contrast text-xs font-bold rounded-md transition-colors"
+              className="hidden sm:flex items-center gap-1.5 ml-2 px-4 py-2 bg-accent hover:bg-accent-hover text-accent-contrast text-xs font-bold rounded-lg transition-colors"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.196 13.98l-2.948-.924c-.64-.203-.653-.64.136-.954l11.52-4.44c.534-.194 1.003.13.99.559z" />
@@ -131,7 +131,7 @@ export function Header() {
         </div>
 
         {/* Нижняя строка: навигация по разделам */}
-        <nav className="hidden md:block border-t border-border/60 bg-bg-card/40">
+        <nav className="hidden md:block border-t border-border/60">
           <div className="max-w-7xl mx-auto px-4 flex items-center gap-1">
             {NAV_LINKS.map((link) => {
               const active =
@@ -141,9 +141,9 @@ export function Header() {
                   key={link.href}
                   href={link.href}
                   className={clsx(
-                    'relative px-4 py-2.5 text-[13px] font-semibold uppercase tracking-wide whitespace-nowrap transition-colors',
+                    'relative px-4 py-2.5 text-[13px] font-semibold whitespace-nowrap transition-colors',
                     active
-                      ? 'text-accent'
+                      ? 'text-text-primary'
                       : 'text-text-secondary hover:text-text-primary'
                   )}
                 >
