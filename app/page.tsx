@@ -163,27 +163,21 @@ export default async function HomePage() {
       {/* Telegram CTA */}
       <ScrollReveal>
         <section className="section-pad">
-          <div className="max-w-3xl mx-auto px-4 text-center">
-            <div className="relative bg-bg-card rounded-xl border border-border p-10 md:p-16 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 text-center">
+            <div className="relative bg-bg-card rounded-2xl border border-border px-6 py-9 md:py-11 overflow-hidden">
               <div className="absolute inset-0 bg-card-glow" />
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl bg-accent mx-auto mb-6 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-accent-contrast" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.196 13.98l-2.948-.924c-.64-.203-.653-.64.136-.954l11.52-4.44c.534-.194 1.003.13.99.559z" />
-                  </svg>
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+                <h2 className="text-2xl font-bold tracking-tight mb-2.5">
                   Удобнее в Telegram
                 </h2>
-                <p className="text-text-secondary mb-8 max-w-sm mx-auto">
-                  Откройте наш бот — быстрые уведомления о скидках, удобный каталог и поддержка
-                  прямо в мессенджере.
+                <p className="text-text-secondary text-sm mb-6">
+                  Скидки, каталог и поддержка — прямо в мессенджере
                 </p>
                 <a
                   href={getTelegramLink()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-10 py-4 rounded-md text-base inline-flex items-center gap-2 transition-colors"
+                  className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-6 py-3 rounded-lg text-sm inline-flex items-center gap-2 transition-colors"
                 >
                   Открыть бота
                 </a>
