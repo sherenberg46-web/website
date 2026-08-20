@@ -69,7 +69,7 @@ export function SubscriptionsShowcase({ region }: { region: Region }) {
               className={clsx(
                 'px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
                 months === m
-                  ? 'bg-brand-gradient text-white'
+                  ? 'bg-brand-gradient text-accent-contrast'
                   : 'text-text-secondary hover:text-text-primary'
               )}
             >
@@ -93,7 +93,7 @@ export function SubscriptionsShowcase({ region }: { region: Region }) {
               )}
             >
               {highlighted && (
-                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-brand-gradient text-white text-[10px] font-bold rounded-full uppercase tracking-wide">
+                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-brand-gradient text-accent-contrast text-[10px] font-bold rounded-full uppercase tracking-wide">
                   Популярный
                 </span>
               )}
@@ -117,7 +117,7 @@ export function SubscriptionsShowcase({ region }: { region: Region }) {
                     added === id
                       ? 'bg-accent/20 text-accent'
                       : highlighted
-                        ? 'bg-accent hover:bg-accent-hover text-white'
+                        ? 'bg-accent hover:bg-accent-hover text-accent-contrast'
                         : 'bg-white/10 text-text-primary hover:bg-white/15'
                   )}
                 >

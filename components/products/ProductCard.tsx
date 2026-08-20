@@ -93,7 +93,7 @@ export function ProductCard({ product, priority = false }: Props) {
               className={clsx(
                 'absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-md backdrop-blur transition-all duration-200',
                 isFav
-                  ? 'bg-accent text-white opacity-100'
+                  ? 'bg-accent text-accent-contrast opacity-100'
                   : 'bg-black/50 text-white/80 hover:text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
               )}
             >
@@ -104,7 +104,7 @@ export function ProductCard({ product, priority = false }: Props) {
             <div className="absolute bottom-2 left-2 right-2 opacity-100 translate-y-0 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-2 sm:group-hover:translate-y-0 transition-all duration-300">
               <button
                 onClick={handleAddToCart}
-                className="w-full flex items-center justify-center gap-1.5 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold rounded-md transition-colors"
+                className="w-full flex items-center justify-center gap-1.5 py-2 bg-accent hover:bg-accent-hover text-accent-contrast text-xs font-bold rounded-md transition-colors"
               >
                 <ShoppingCart className="w-3.5 h-3.5" />
                 В корзину

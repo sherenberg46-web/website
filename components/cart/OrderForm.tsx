@@ -205,7 +205,7 @@ export function OrderForm({ onOrdered }: Props) {
           href={getManagerLink()}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white font-bold px-8 py-3.5 rounded-md transition-colors"
+          className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-8 py-3.5 rounded-md transition-colors"
         >
           Написать менеджеру
           <ExternalLink className="w-4 h-4" />
@@ -237,7 +237,7 @@ export function OrderForm({ onOrdered }: Props) {
           href={tgLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white font-bold px-8 py-3.5 rounded-md transition-colors"
+          className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-8 py-3.5 rounded-md transition-colors"
         >
           Отправить заказ менеджеру
           <ExternalLink className="w-4 h-4" />
@@ -429,7 +429,7 @@ export function OrderForm({ onOrdered }: Props) {
             'w-full flex items-center justify-center gap-2 py-3.5 rounded-full font-semibold text-sm transition-all',
             status === 'loading' || !canSubmit
               ? 'bg-bg-card border border-border text-text-secondary cursor-not-allowed'
-              : 'bg-accent hover:bg-accent-hover text-white'
+              : 'bg-accent hover:bg-accent-hover text-accent-contrast'
           )}
         >
           {status === 'loading' ? (

@@ -211,7 +211,7 @@ export default async function HomePage() {
                   href={getTelegramLink()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-accent hover:bg-accent-hover text-white font-bold px-10 py-4 rounded-md text-base inline-flex items-center gap-2 transition-colors"
+                  className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-10 py-4 rounded-md text-base inline-flex items-center gap-2 transition-colors"
                 >
                   Открыть бота
                 </a>

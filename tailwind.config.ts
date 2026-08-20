@@ -9,15 +9,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'bg-page': '#1a1d24',
-        'bg-card': '#22262e',
-        'bg-card-hover': '#2a2f3a',
-        accent: '#ff5400',
-        'accent-hover': '#ff6b1a',
+        'bg-page': '#07080B',
+        'bg-card': '#101218',
+        'bg-card-hover': '#161920',
+        'bg-elevated': '#14161C',
+        accent: '#FEC72C',
+        'accent-hover': '#FFD54F',
+        'accent-contrast': '#0A0A0B',
         'accent-blue': '#3b82f6',
-        border: '#2e333e',
-        'text-primary': '#ffffff',
-        'text-secondary': '#99a0ae',
+        border: '#1E2129',
+        'border-strong': '#2A2E38',
+        'text-primary': '#F4F4F5',
+        'text-secondary': '#8B909C',
+        'text-muted': '#5C616C',
       },
       fontFamily: {
         sans: [
@@ -31,14 +35,16 @@ const config: Config = {
         ],
       },
       backgroundImage: {
-        'brand-gradient': 'linear-gradient(135deg, #ff5400, #ff7a00)',
-        'brand-gradient-hover': 'linear-gradient(135deg, #e64c00, #ff5400)',
-        'card-glow': 'radial-gradient(ellipse at center, rgba(255,84,0,0.08) 0%, transparent 70%)',
+        'brand-gradient': 'linear-gradient(135deg, #FEC72C, #F5B301)',
+        'brand-gradient-hover': 'linear-gradient(135deg, #FFD54F, #FEC72C)',
+        'card-glow': 'radial-gradient(ellipse at center, rgba(254,199,44,0.06) 0%, transparent 70%)',
+        'hero-shade': 'linear-gradient(90deg, rgba(5,6,9,0.97) 8%, rgba(5,6,9,0.75) 42%, rgba(5,6,9,0.05) 75%)',
       },
       boxShadow: {
-        'glow-accent': '0 0 40px rgba(255, 84, 0, 0.2)',
+        'glow-accent': '0 0 40px rgba(254, 199, 44, 0.12)',
         'glow-card': '0 8px 32px rgba(0, 0, 0, 0.5)',
         'glow-card-hover': '0 16px 48px rgba(0, 0, 0, 0.45)',
+        'card-hover': '0 12px 40px rgba(0, 0, 0, 0.55)',
       },
       animation: {
         'fade-in': 'fadeIn 0.6s ease-out',

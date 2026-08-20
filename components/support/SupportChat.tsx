@@ -125,7 +125,7 @@ export function SupportChat() {
         <button
           onClick={() => setOpen(true)}
           aria-label="Чат с консультантом"
-          className="fixed right-5 bottom-5 z-40 w-14 h-14 rounded-full bg-accent hover:bg-accent-hover text-white shadow-lg shadow-accent/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+          className="fixed right-5 bottom-5 z-40 w-14 h-14 rounded-full bg-accent hover:bg-accent-hover text-accent-contrast shadow-lg shadow-accent/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
         >
           <MessageCircle className="w-6 h-6" />
           <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-green-400 border-2 border-bg-page" />
@@ -179,7 +179,7 @@ export function SupportChat() {
                       className={clsx(
                         'max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words',
                         isUser
-                          ? 'bg-accent text-white rounded-br-sm'
+                          ? 'bg-accent text-accent-contrast rounded-br-sm'
                           : 'bg-bg-page text-text-primary rounded-bl-sm'
                       )}
                     >
@@ -239,7 +239,7 @@ export function SupportChat() {
                   href={getManagerLink()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="self-start max-w-[85%] px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-white text-sm font-bold transition-colors"
+                  className="self-start max-w-[85%] px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-contrast text-sm font-bold transition-colors"
                 >
                   💬 Написать менеджеру
                 </a>
@@ -268,7 +268,7 @@ export function SupportChat() {
                 className={clsx(
                   'w-11 h-11 rounded-full shrink-0 flex items-center justify-center transition-all',
                   input.trim() && !loading
-                    ? 'bg-accent hover:bg-accent-hover text-white'
+                    ? 'bg-accent hover:bg-accent-hover text-accent-contrast'
                     : 'bg-bg-page text-text-secondary cursor-not-allowed'
                 )}
               >

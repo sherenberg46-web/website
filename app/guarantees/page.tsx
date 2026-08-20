@@ -82,7 +82,7 @@ export default function GuaranteesPage() {
           href={getManagerLink()}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-accent hover:bg-accent-hover text-white font-bold px-8 py-3.5 rounded-md transition-colors inline-block"
+          className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-8 py-3.5 rounded-md transition-colors inline-block"
         >
           Написать менеджеру
         </a>

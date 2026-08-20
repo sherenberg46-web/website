@@ -3,15 +3,18 @@
 @tailwind utilities;
 
 :root {
-  --bg-page: #1a1d24;
-  --bg-card: #22262e;
-  --accent: #ff5400;
-  --accent-hover: #ff6b1a;
+  --bg-page: #07080b;
+  --bg-card: #101218;
+  --accent: #fec72c;
+  --accent-hover: #ffd54f;
+  --accent-contrast: #0a0a0b;
   --accent-blue: #3b82f6;
-  --gradient: linear-gradient(135deg, #ff5400, #ff7a00);
-  --text-primary: #ffffff;
-  --text-secondary: #99a0ae;
-  --border: #2e333e;
+  --gradient: linear-gradient(135deg, #fec72c, #f5b301);
+  --text-primary: #f4f4f5;
+  --text-secondary: #8b909c;
+  --text-muted: #5c616c;
+  --border: #1e2129;
+  --border-strong: #2a2e38;
 }
 
 * {
@@ -67,6 +70,8 @@ body {
 /* Gradient button */
 .btn-gradient {
   background: var(--gradient);
+  color: var(--accent-contrast);
+  font-weight: 700;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .btn-gradient:hover {
@@ -79,9 +84,9 @@ body {
 
 /* Glass card */
 .glass {
-  background: rgba(20, 22, 29, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(7, 8, 11, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--border);
 }
 

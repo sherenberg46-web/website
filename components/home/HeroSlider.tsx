@@ -123,7 +123,7 @@ export function HeroSlider({ banners }: Props) {
             <div className="flex flex-wrap gap-3">
               <Link
                 href={linkHref}
-                className="bg-accent hover:bg-accent-hover text-white font-bold px-7 py-3 rounded-md text-sm transition-colors"
+                className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-7 py-3 rounded-md text-sm transition-colors"
               >
                 Смотреть
               </Link>
@@ -224,7 +224,7 @@ function DefaultHero() {
           >
             <Link
               href="/games"
-              className="bg-accent hover:bg-accent-hover text-white font-bold px-8 py-3.5 rounded-md text-sm transition-colors"
+              className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-8 py-3.5 rounded-md text-sm transition-colors"
             >
               Смотреть каталог
             </Link>

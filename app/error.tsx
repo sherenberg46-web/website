@@ -27,7 +27,7 @@ export default function GlobalError({
       <div className="flex flex-wrap gap-3 justify-center">
         <button
           onClick={reset}
-          className="bg-accent hover:bg-accent-hover text-white font-bold px-8 py-3.5 rounded-md transition-colors text-sm"
+          className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-8 py-3.5 rounded-md transition-colors text-sm"
         >
           Попробовать снова
         </button>

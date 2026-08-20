@@ -87,7 +87,7 @@ export function Header() {
             >
               <Heart className="w-[18px] h-[18px]" />
               {favCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-accent text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-accent text-accent-contrast text-[9px] font-bold rounded-full flex items-center justify-center">
                   {favCount > 9 ? '9+' : favCount}
                 </span>
               )}
@@ -100,7 +100,7 @@ export function Header() {
             >
               <ShoppingCart className="w-[18px] h-[18px]" />
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-accent text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-accent text-accent-contrast text-[9px] font-bold rounded-full flex items-center justify-center">
                   {cartCount > 9 ? '9+' : cartCount}
                 </span>
               )}
@@ -110,7 +110,7 @@ export function Header() {
               href={getTelegramLink()}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1.5 ml-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold rounded-md transition-colors"
+              className="hidden sm:flex items-center gap-1.5 ml-2 px-4 py-2 bg-accent hover:bg-accent-hover text-accent-contrast text-xs font-bold rounded-md transition-colors"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.196 13.98l-2.948-.924c-.64-.203-.653-.64.136-.954l11.52-4.44c.534-.194 1.003.13.99.559z" />
@@ -199,7 +199,7 @@ export function Header() {
               href={getTelegramLink()}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 flex items-center justify-center gap-2 py-3 bg-accent hover:bg-accent-hover text-white font-bold rounded-md transition-colors"
+              className="mt-4 flex items-center justify-center gap-2 py-3 bg-accent hover:bg-accent-hover text-accent-contrast font-bold rounded-md transition-colors"
             >
               Открыть в Telegram
             </a>

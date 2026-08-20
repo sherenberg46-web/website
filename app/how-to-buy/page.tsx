@@ -221,7 +221,7 @@ export default function HowToBuyPage() {
           <div className="flex flex-wrap gap-3 justify-center">
             <Link
               href="/games"
-              className="bg-accent hover:bg-accent-hover text-white font-bold px-8 py-3.5 rounded-md transition-colors"
+              className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-8 py-3.5 rounded-md transition-colors"
             >
               Перейти в каталог
             </Link>

@@ -87,7 +87,7 @@ export function PricingTable() {
               className={clsx(
                 'px-5 py-2 rounded-full text-sm font-medium transition-colors',
                 region === r.value
-                  ? 'bg-brand-gradient text-white'
+                  ? 'bg-brand-gradient text-accent-contrast'
                   : 'text-text-secondary hover:text-text-primary'
               )}
             >
@@ -107,7 +107,7 @@ export function PricingTable() {
               className={clsx(
                 'px-5 py-2 rounded-full text-sm font-medium transition-colors',
                 months === m
-                  ? 'bg-brand-gradient text-white'
+                  ? 'bg-brand-gradient text-accent-contrast'
                   : 'text-text-secondary hover:text-text-primary'
               )}
             >
@@ -152,7 +152,7 @@ export function PricingTable() {
                   className="object-contain p-2"
                 />
                 {highlighted && (
-                  <span className="absolute top-3 right-3 px-3 py-1 bg-brand-gradient text-white text-[10px] font-bold rounded-full uppercase tracking-wide">
+                  <span className="absolute top-3 right-3 px-3 py-1 bg-brand-gradient text-accent-contrast text-[10px] font-bold rounded-full uppercase tracking-wide">
                     Популярный
                   </span>
                 )}
@@ -182,7 +182,7 @@ export function PricingTable() {
                     added === key
                       ? 'bg-accent/20 text-accent'
                       : highlighted
-                        ? 'bg-accent hover:bg-accent-hover text-white'
+                        ? 'bg-accent hover:bg-accent-hover text-accent-contrast'
                         : 'bg-white/10 text-text-primary hover:bg-white/15'
                   )}
                 >
