@@ -61,11 +61,11 @@ export function ProductCard({ product, priority = false }: Props) {
       className="group relative"
     >
       <Link href={gamePath(product.id, product.platform)} className="block">
-        <div className="rounded-lg overflow-hidden bg-bg-card transition-all duration-300 group-hover:bg-bg-card-hover group-hover:shadow-glow-card">
+        <div>
           {/* Cover image.
-              Рамка 3:4, а не квадрат: обложки PS Store вертикальные 2:3,
-              в квадрате у них срезало треть высоты вместе с логотипом. */}
-          <div className="relative aspect-[3/4] overflow-hidden bg-bg-card-hover">
+              Рамка 2:3 — родная пропорция обложек PS Store: ничего не
+              обрезается, широкие баннеры добирает подложка FitImage. */}
+          <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-bg-card-hover transition-shadow duration-300 group-hover:shadow-card-hover">
             <FitImage
               src={imageUrl}
               alt={product.title}
@@ -113,7 +113,7 @@ export function ProductCard({ product, priority = false }: Props) {
           </div>
 
           {/* Info */}
-          <div className="p-3">
+          <div className="px-0.5 pt-3">
             {/* Платформа + рейтинг */}
             <div className="flex items-center justify-between mb-1">
               <p className="text-text-secondary text-[10px] uppercase tracking-wider truncate">

@@ -113,7 +113,7 @@ export function SubscriptionsShowcase({ region }: { region: Region }) {
                 <button
                   onClick={() => buy(tier.id)}
                   className={clsx(
-                    'flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-sm font-semibold transition-colors',
+                    'flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-semibold transition-colors',
                     added === id
                       ? 'bg-accent/20 text-accent'
                       : highlighted
@@ -156,7 +156,7 @@ export function SubscriptionsShowcase({ region }: { region: Region }) {
             <Link
               key={m}
               href={gamePath(EA_IDS_ALL[region][m])}
-              className="px-4 py-2 rounded-full text-sm font-medium bg-white/10 text-text-primary hover:bg-white/15 transition-colors"
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-white/10 text-text-primary hover:bg-white/15 transition-colors"
             >
               {monthsLabel(m)} · {PRICES[region].eaplay[m]} BYN
             </Link>

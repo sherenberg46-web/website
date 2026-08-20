@@ -31,30 +31,19 @@ const BENEFITS = [
 
 export function Benefits() {
   return (
-    <section className="section-pad">
-      <div className="max-w-7xl mx-auto px-4">
-        <ScrollReveal>
-          <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight text-text-primary mb-4">
-            Почему выбирают нас
-          </h2>
-          <p className="text-center text-text-secondary mb-12 max-w-lg mx-auto">
-            Мы работаем с 2020 года и за это время стали одним из самых надёжных магазинов цифровых игр в Беларуси.
-          </p>
-        </ScrollReveal>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {BENEFITS.map((b, i) => (
-            <ScrollReveal key={b.title} delay={i * 0.1}>
-              <div className="bg-bg-card border border-border rounded-2xl p-6 h-full hover:border-accent/30 transition-colors group">
-                <div className="w-12 h-12 rounded-xl bg-brand-gradient flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <b.icon className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-text-primary font-semibold mb-2">{b.title}</h3>
-                <p className="text-text-secondary text-sm leading-relaxed">{b.desc}</p>
+    <section className="max-w-7xl mx-auto px-4 pt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {BENEFITS.map((b, i) => (
+          <ScrollReveal key={b.title} delay={i * 0.08}>
+            <div className="flex items-start gap-3.5 bg-bg-card border border-border rounded-2xl px-5 py-5 h-full hover:border-border-strong transition-colors">
+              <b.icon className="w-[22px] h-[22px] text-accent shrink-0 mt-0.5" strokeWidth={1.8} />
+              <div>
+                <h3 className="text-text-primary font-semibold text-[13.5px] mb-1">{b.title}</h3>
+                <p className="text-text-muted text-[11.5px] leading-relaxed">{b.desc}</p>
               </div>
-            </ScrollReveal>
-          ))}
-        </div>
+            </div>
+          </ScrollReveal>
+        ))}
       </div>
     </section>
   );

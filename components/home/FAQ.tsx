@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import clsx from 'clsx';
@@ -14,18 +14,18 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
 
   return (
     <ScrollReveal delay={index * 0.05}>
-      <div className="border-b border-border">
+      <div className={clsx('bg-bg-card border rounded-xl transition-colors', open ? 'border-border-strong' : 'border-border')}>
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center justify-between w-full py-5 text-left gap-4"
+          className="flex items-center justify-between w-full px-5 py-4 text-left gap-4"
         >
-          <span className={clsx('font-medium transition-colors', open ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary')}>
+          <span className={clsx('text-[13.5px] font-semibold transition-colors', open ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary')}>
             {q}
           </span>
-          <ChevronDown
+          <Plus
             className={clsx(
-              'w-5 h-5 text-text-secondary shrink-0 transition-transform duration-300',
-              open && 'rotate-180 text-accent'
+              'w-[18px] h-[18px] text-accent shrink-0 transition-transform duration-300',
+              open && 'rotate-45'
             )}
           />
         </button>
@@ -38,7 +38,7 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
               transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <p className="text-text-secondary text-sm leading-relaxed pb-5 pr-8">{a}</p>
+              <p className="text-text-muted text-[12.5px] leading-relaxed px-5 pb-4 pr-10">{a}</p>
             </motion.div>
           )}
         </AnimatePresence>

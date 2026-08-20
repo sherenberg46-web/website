@@ -26,35 +26,30 @@ const STEPS = [
 
 export function HowToBuy() {
   return (
-    <section className="section-pad bg-bg-card/30">
+    <section className="section-pad">
       <div className="max-w-7xl mx-auto px-4">
         <ScrollReveal>
-          <h2 className="text-center text-3xl md:text-4xl font-bold tracking-tight mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
             Как купить
           </h2>
-          <p className="text-center text-text-secondary mb-12 max-w-md mx-auto">
+          <p className="text-text-secondary mb-8 max-w-md">
             Простой процесс покупки — от выбора игры до получения кода за несколько минут.
           </p>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mb-10">
           {STEPS.map((step, i) => (
             <ScrollReveal key={step.number} delay={i * 0.12}>
-              <div className="relative">
-                {i < STEPS.length - 1 && (
-                  <div className="hidden md:block absolute top-8 left-[calc(100%+12px)] w-full h-px bg-gradient-to-r from-accent/40 to-transparent z-10 -translate-x-6" />
-                )}
-                <div className="bg-bg-card border border-border rounded-2xl p-6 h-full">
-                  <div className="flex items-start gap-4 mb-4">
-                    <span className="text-4xl font-bold text-gradient opacity-60 leading-none shrink-0">
-                      {step.number}
+              <div className="relative h-full">
+                <div className="bg-bg-card border border-border rounded-2xl p-6 h-full hover:border-border-strong transition-colors">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="w-8 h-8 rounded-lg bg-accent text-accent-contrast font-extrabold text-sm flex items-center justify-center leading-none shrink-0">
+                      {i + 1}
                     </span>
-                    <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center">
-                      <step.icon className="w-5 h-5 text-accent" />
-                    </div>
+                    <step.icon className="w-5 h-5 text-accent" strokeWidth={1.8} />
                   </div>
-                  <h3 className="text-text-primary font-semibold text-lg mb-2">{step.title}</h3>
-                  <p className="text-text-secondary text-sm leading-relaxed">{step.desc}</p>
+                  <h3 className="text-text-primary font-semibold text-base mb-2">{step.title}</h3>
+                  <p className="text-text-muted text-[13px] leading-relaxed">{step.desc}</p>
                 </div>
               </div>
             </ScrollReveal>
@@ -73,7 +68,7 @@ export function HowToBuy() {
               href={getManagerLink()}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-8 py-3.5 rounded-full border border-border text-text-secondary hover:text-text-primary hover:border-accent/40 transition-colors"
+              className="flex items-center gap-2 px-8 py-3.5 rounded-lg border border-border text-text-secondary hover:text-text-primary hover:border-accent/40 transition-colors"
             >
               Написать менеджеру
             </a>

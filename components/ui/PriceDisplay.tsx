@@ -48,7 +48,7 @@ export function PriceDisplay({ price, discountPct = 0, className, size = 'md' }:
       {discountPct > 0 && (
         <span
           className={clsx(
-            'font-bold text-white bg-accent rounded',
+            'font-bold text-accent-contrast bg-accent rounded-md',
             size === 'sm' && 'text-[11px] px-1.5 py-0.5',
             size === 'md' && 'text-xs px-2 py-0.5',
             size === 'lg' && 'text-base px-2.5 py-1'

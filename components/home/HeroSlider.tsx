@@ -90,7 +90,7 @@ export function HeroSlider({ banners }: Props) {
               />
             )}
             {/* Затемнение слева под текст */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#050609]/95 via-[#050609]/60 to-transparent" />
           </motion.div>
         </AnimatePresence>
 
@@ -123,7 +123,7 @@ export function HeroSlider({ banners }: Props) {
             <div className="flex flex-wrap gap-3">
               <Link
                 href={linkHref}
-                className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-7 py-3 rounded-md text-sm transition-colors"
+                className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-7 py-3 rounded-lg text-sm transition-colors"
               >
                 Смотреть
               </Link>
@@ -131,7 +131,7 @@ export function HeroSlider({ banners }: Props) {
                 href={getTelegramLink()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-7 py-3 rounded-md border border-white/25 text-white text-sm font-semibold hover:bg-white/10 transition-colors backdrop-blur-sm"
+                className="flex items-center gap-2 px-7 py-3 rounded-lg border border-white/25 text-white text-sm font-semibold hover:bg-white/10 transition-colors backdrop-blur-sm"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.196 13.98l-2.948-.924c-.64-.203-.653-.64.136-.954l11.52-4.44c.534-.194 1.003.13.99.559z" />
@@ -155,7 +155,7 @@ export function HeroSlider({ banners }: Props) {
             <button
               onClick={next}
               aria-label="Следующий баннер"
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-md bg-black/40 backdrop-blur border border-white/10 flex items-center justify-center text-white hover:bg-accent hover:border-accent transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur border border-white/10 flex items-center justify-center text-white hover:bg-accent hover:border-accent hover:text-accent-contrast transition-colors"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -187,8 +187,8 @@ function DefaultHero() {
     <section className="max-w-7xl mx-auto px-4 pt-4">
       <div className="relative w-full overflow-hidden rounded-xl bg-bg-card aspect-[4/3] sm:aspect-[2/1] lg:aspect-[12/5] flex items-center">
         {/* Фоновый градиент */}
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-bg-card to-bg-page" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,84,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,84,0,0.04)_1px,transparent_1px)] bg-[size:60px_60px]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/15 via-bg-card to-bg-page" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(254,199,44,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(254,199,44,0.04)_1px,transparent_1px)] bg-[size:60px_60px]" />
 
         <div className="relative z-10 px-6 sm:px-10 lg:px-14 max-w-2xl">
           <motion.p
@@ -224,7 +224,7 @@ function DefaultHero() {
           >
             <Link
               href="/games"
-              className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-8 py-3.5 rounded-md text-sm transition-colors"
+              className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-8 py-3.5 rounded-lg text-sm transition-colors"
             >
               Смотреть каталог
             </Link>

@@ -28,7 +28,7 @@ export function RecentlyViewed() {
               href={gamePath(item.id, item.platform)}
               className="shrink-0 w-40 sm:w-48 snap-start group"
             >
-              <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-bg-card border border-border group-hover:border-accent/40 transition-colors">
+              <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-bg-card-hover group-hover:shadow-card-hover transition-shadow duration-300">
                 <FitImage
                   src={item.image_url}
                   alt={item.title}

@@ -12,6 +12,7 @@ import { Benefits } from '@/components/home/Benefits';
 import { HowToBuy } from '@/components/home/HowToBuy';
 import { FAQ } from '@/components/home/FAQ';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
+import { CategoryTiles } from '@/components/home/CategoryTiles';
 
 // Регион берётся из cookie → страница рендерится динамически,
 // данные при этом кэшируются на уровне fetch (revalidate в lib/api).
@@ -110,7 +111,13 @@ export default async function HomePage() {
         </p>
       </section>
 
+      {/* Преимущества — компактной строкой сразу под hero */}
+      <Benefits />
+
       <div className="max-w-7xl mx-auto px-4 space-y-12 py-10">
+        {/* Визуальная навигация по разделам */}
+        <CategoryTiles />
+
         {/* TR: игры из турецкого каталога временно недоступны — как в Mini App */}
         {isTR && (
           <ScrollReveal>
@@ -195,8 +202,8 @@ export default async function HomePage() {
             <div className="relative bg-bg-card rounded-xl border border-border p-10 md:p-16 overflow-hidden">
               <div className="absolute inset-0 bg-card-glow" />
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-xl bg-accent mx-auto mb-6 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <div className="w-16 h-16 rounded-2xl bg-accent mx-auto mb-6 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-accent-contrast" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.196 13.98l-2.948-.924c-.64-.203-.653-.64.136-.954l11.52-4.44c.534-.194 1.003.13.99.559z" />
                   </svg>
                 </div>
@@ -221,7 +228,6 @@ export default async function HomePage() {
         </section>
       </ScrollReveal>
 
-      <Benefits />
       <HowToBuy />
       <FAQ />
     </>
