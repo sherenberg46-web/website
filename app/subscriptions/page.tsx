@@ -1,24 +1,28 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { PricingTable } from '@/components/subscriptions/PricingTable';
+import { StandaloneSubBlock } from '@/components/subscriptions/StandaloneSubBlock';
+import { EaPlayPurchase } from '@/components/eaplay/EaPlayPurchase';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { getManagerLink } from '@/lib/api';
 import { getSiteUrl } from '@/lib/site-url';
+import { STANDALONE_SUB_PRICES } from '@/lib/subscriptions';
+import { GTA_PLUS_GAMES, UBISOFT_CLASSICS_GAMES } from '@/lib/subscription-games';
 import { SUBSCRIPTIONS_FAQ, subscriptionsFaqJsonLd } from '@/lib/subscriptions-faq';
 
 /**
  * Подписки — страница под запросы «пс плюс купить беларусь» и подобные.
  *
- * До этого здесь была таблица цен и три предложения над ней. Поисковику
- * нечего оценивать: цифры он не читает как текст, а вопрос покупателя
- * («чем Extra отличается от Deluxe и не пропадут ли игры») страница не
- * закрывала совсем.
+ * Четыре независимых блока: PS Plus оформляется через корзину, EA Play —
+ * тоже (те же ID и цены, что на странице /ea-play), а GTA+ и Ubisoft+
+ * Classics идут через менеджера — в каталоге API таких позиций нет.
  */
 
 export const metadata: Metadata = {
-  title: 'Подписки PS Plus и EA Play — цены в Беларуси',
+  title: 'Подписки PS Plus, EA Play, Ubisoft+ и GTA+ — цены в Беларуси',
   description:
-    'PS Plus Essential, Extra и Deluxe на 1, 3 и 12 месяцев по ценам в BYN. Чем отличаются тарифы, что даёт каждый и почему в нашем регионе Deluxe вместо Premium.',
+    'PS Plus Essential, Extra и Deluxe, EA Play, Ubisoft+ Classics и GTA+ — цены в BYN для украинского и турецкого региона. Чем отличаются подписки, что входит в каждую и что выбрать.',
   alternates: { canonical: '/subscriptions' },
 };
 
@@ -52,25 +56,102 @@ export default function SubscriptionsPage() {
               Подписки
             </p>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-              PS Plus и EA Play в Беларуси
+              Все подписки PlayStation в Беларуси
             </h1>
             <p className="text-text-secondary max-w-xl mx-auto">
-              Все тарифы и сроки в одном месте, цены в белорусских рублях. Ниже — чем
-              отличаются уровни подписки и что выбрать под ваши задачи.
+              PS Plus, EA Play, Ubisoft+ Classics и GTA+ — все тарифы в одном месте,
+              цены в белорусских рублях. Ниже — чем они отличаются и что выбрать
+              под ваши задачи.
             </p>
           </div>
         </ScrollReveal>
 
+        {/* PlayStation Plus */}
         <ScrollReveal>
-          <PricingTable />
+          <section id="ps-plus" className="scroll-mt-24">
+            <h2 className="text-2xl font-bold tracking-tight mb-2">PlayStation Plus</h2>
+            <p className="text-text-secondary text-sm mb-6 max-w-2xl">
+              Три уровня: Essential для сетевой игры, Extra с каталогом из 400+ игр
+              и Deluxe с классикой PS1, PS2 и PSP сверху.
+            </p>
+            <PricingTable />
+          </section>
         </ScrollReveal>
 
-        <div className="mt-16 prose-dark">
-          <h2>Какой тариф выбрать</h2>
+        {/* EA Play */}
+        <ScrollReveal>
+          <section id="ea-play" className="scroll-mt-24 mt-20">
+            <h2 className="text-2xl font-bold tracking-tight mb-2">EA Play</h2>
+            <p className="text-text-secondary text-sm mb-8 max-w-2xl">
+              Каталог игр Electronic Arts, пробные версии новинок до релиза и скидка
+              10% на цифровые покупки EA.
+            </p>
+            <EaPlayPurchase />
+            <Link
+              href="/ea-play"
+              className="mt-6 flex items-center justify-between bg-bg-card border border-border hover:border-accent/40 rounded-3xl p-6 transition-colors group"
+            >
+              <div>
+                <h3 className="font-bold text-lg group-hover:text-accent transition-colors">
+                  Игры в подписке EA Play
+                </h3>
+                <p className="text-sm text-text-secondary mt-1">
+                  Полный каталог EA Play на отдельной странице
+                </p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-accent shrink-0" />
+            </Link>
+          </section>
+        </ScrollReveal>
+
+        {/* Ubisoft+ Classics */}
+        <ScrollReveal>
+          <div className="mt-20">
+            <StandaloneSubBlock
+              id="ubisoft-classics"
+              name="Ubisoft+ Classics"
+              tagline="Каталог отмеченных наградами игр и классических франшиз Ubisoft: Assassin's Creed, Far Cry, Watch Dogs, The Division и десятки других."
+              cover="/images/ubisoft-classics-wide.jpg"
+              features={[
+                '67 игр Ubisoft для PS4 и PS5',
+                'Assassin\'s Creed, Far Cry, Watch Dogs',
+                'Каталог регулярно пополняется',
+                'Входит в PS Plus Extra и Deluxe',
+              ]}
+              games={UBISOFT_CLASSICS_GAMES}
+              prices={{ UA: STANDALONE_SUB_PRICES.UA.ubisoft, TR: STANDALONE_SUB_PRICES.TR.ubisoft }}
+              note="Учтите: та же коллекция уже входит в тарифы PS Plus Extra и Deluxe."
+            />
+          </div>
+        </ScrollReveal>
+
+        {/* GTA+ */}
+        <ScrollReveal>
+          <div className="mt-20">
+            <StandaloneSubBlock
+              id="gta-plus"
+              name="GTA+"
+              tagline="Эксклюзивные преимущества и ежемесячные награды для GTA Online, плюс доступ к избранным играм Rockstar."
+              cover="/images/gta-plus-wide.jpg"
+              features={[
+                'Ежемесячный депозит GTA$ на счёт в GTA Online',
+                'Эксклюзивные награды, транспорт и недвижимость',
+                'Игры Rockstar в подписке: GTA V, Red Dead Redemption и другие',
+                'Бонусы каждый месяц — без доната картами акулы',
+              ]}
+              games={GTA_PLUS_GAMES}
+              prices={{ UA: STANDALONE_SUB_PRICES.UA.gtaplus, TR: STANDALONE_SUB_PRICES.TR.gtaplus }}
+            />
+          </div>
+        </ScrollReveal>
+
+        <div className="mt-20 prose-dark">
+          <h2>Какую подписку выбрать</h2>
           <p>
-            Уровни складываются друг на друга: каждый следующий включает всё из
+            Уровни PS Plus складываются друг на друга: каждый следующий включает всё из
             предыдущего и добавляет своё. Переплачивать за верхний тариф имеет смысл
-            только если вам нужно именно то, что он добавляет.
+            только если вам нужно именно то, что он добавляет. Остальные подписки
+            независимы: они дополняют PS Plus, а не заменяют его.
           </p>
 
           <h3>
@@ -98,6 +179,22 @@ export default function SubscriptionsPage() {
           <p>
             Сверх Extra даёт каталог игр с PS1, PS2 и PSP и пробные версии новинок —
             несколько часов в свежей игре до покупки.
+          </p>
+
+          <h3>Ubisoft+ Classics — если любите Ubisoft</h3>
+          <p>
+            Каталог из почти семидесяти игр Ubisoft: серии Assassin&apos;s Creed, Far Cry,
+            Watch Dogs, The Division и другая классика издателя. Покупать отдельно есть
+            смысл, если у вас нет PS Plus Extra — та же коллекция уже входит в тарифы
+            Extra и Deluxe.
+          </p>
+
+          <h3>GTA+ — если живёте в GTA Online</h3>
+          <p>
+            Ежемесячный депозит GTA$, эксклюзивный транспорт и недвижимость, особые
+            награды и доступ к играм Rockstar: GTA V, Red Dead Redemption, L.A. Noire,
+            Bully и трилогии GTA. Окупается одним депозитом, если вы и так покупаете
+            карты акулы.
           </p>
 
           <h2>Почему Deluxe, а не Premium</h2>
