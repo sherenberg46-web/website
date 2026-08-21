@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { useCartStore } from '@/store/cartStore';
 import { REGIONS, getClientRegion, type Region } from '@/lib/region';
 import { RegionBadge } from '@/components/ui/RegionBadge';
+import { FitImage } from '@/components/ui/FitImage';
 import { SUB_PRICES, EA_IDS, monthsLabel } from '@/lib/subscriptions';
 
 const EA_PERIODS: (1 | 12)[] = [1, 12];
@@ -77,15 +78,24 @@ export function EaPlayPurchase() {
             <div
               key={m}
               className={clsx(
-                'relative bg-bg-card border rounded-2xl p-6 flex flex-col transition-colors',
+                'relative bg-bg-card border rounded-2xl overflow-hidden flex flex-col transition-colors',
                 highlighted ? 'border-accent/60' : 'border-border hover:border-border-strong'
               )}
             >
               {highlighted && (
-                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-accent text-accent-contrast text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full">
+                <span className="absolute top-3 right-3 z-10 bg-accent text-accent-contrast text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full">
                   Выгоднее
                 </span>
               )}
+              {/* Обложка квадратная — вписываем целиком поверх размытой копии,
+                  как в карточках тарифов PS Plus */}
+              <FitImage
+                src="/images/ea-play.jpg"
+                alt="EA Play"
+                sizes="(max-width: 640px) 90vw, 340px"
+                className="relative aspect-[16/9]"
+              />
+              <div className="p-6 pt-4 flex flex-col flex-1">
               <div className="text-sm font-semibold text-text-secondary">{monthsLabel(m)}</div>
               <div className="mt-2 flex items-baseline gap-1.5">
                 <span className="text-3xl font-extrabold tracking-tight">{price}</span>
@@ -113,6 +123,7 @@ export function EaPlayPurchase() {
                   </>
                 )}
               </button>
+              </div>
             </div>
           );
         })}
