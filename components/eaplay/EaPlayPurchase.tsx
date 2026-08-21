@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import { useCartStore } from '@/store/cartStore';
 import { REGIONS, getClientRegion, type Region } from '@/lib/region';
 import { RegionBadge } from '@/components/ui/RegionBadge';
-import { FitImage } from '@/components/ui/FitImage';
+import Image from 'next/image';
 import { SUB_PRICES, EA_IDS, monthsLabel } from '@/lib/subscriptions';
 
 const EA_PERIODS: (1 | 12)[] = [1, 12];
@@ -87,14 +87,16 @@ export function EaPlayPurchase() {
                   Выгоднее
                 </span>
               )}
-              {/* Обложка квадратная — вписываем целиком поверх размытой копии,
-                  как в карточках тарифов PS Plus */}
-              <FitImage
-                src="/images/ea-play.jpg"
-                alt="EA Play"
-                sizes="(max-width: 640px) 90vw, 340px"
-                className="relative aspect-[16/9]"
-              />
+              {/* Широкая 16:9-версия обложки — заполняет рамку целиком */}
+              <div className="relative aspect-[16/9]">
+                <Image
+                  src="/images/ea-play-wide.jpg"
+                  alt="EA Play"
+                  fill
+                  sizes="(max-width: 640px) 90vw, 340px"
+                  className="object-cover"
+                />
+              </div>
               <div className="p-6 pt-4 flex flex-col flex-1">
               <div className="text-sm font-semibold text-text-secondary">{monthsLabel(m)}</div>
               <div className="mt-2 flex items-baseline gap-1.5">
