@@ -19,6 +19,7 @@ const NAV_LINKS = [
   { href: '/new', label: 'Новинки' },
   { href: '/preorders', label: 'Предзаказы' },
   { href: '/subscriptions', label: 'PS Plus' },
+  { href: '/ea-play', label: 'EA Play' },
   { href: '/topup', label: 'Пополнение' },
 ];
 
@@ -65,7 +66,7 @@ export function Header() {
               priority
             />
             <span className="font-extrabold text-base tracking-tight text-text-primary">
-              Game<span className="text-accent">Store</span>
+              GAME<span className="text-accent">STORE</span>
             </span>
           </Link>
 
@@ -141,15 +142,15 @@ export function Header() {
                   key={link.href}
                   href={link.href}
                   className={clsx(
-                    'relative px-4 py-2.5 text-[13px] font-semibold whitespace-nowrap transition-colors',
+                    'relative my-1.5 px-4 py-2 text-[13.5px] font-bold tracking-wide whitespace-nowrap rounded-lg transition-all',
                     active
-                      ? 'text-text-primary'
-                      : 'text-text-secondary hover:text-text-primary'
+                      ? 'text-text-primary bg-bg-card'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-card/70'
                   )}
                 >
                   {link.label}
                   {active && (
-                    <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-accent rounded-full" />
+                    <span className="absolute -bottom-1.5 left-3 right-3 h-0.5 bg-accent rounded-full" />
                   )}
                 </Link>
               );

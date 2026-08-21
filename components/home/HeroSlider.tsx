@@ -6,7 +6,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Banner } from '@/lib/types';
 import { FitImage } from '@/components/ui/FitImage';
-import { normalizeImageUrl, getTelegramLink } from '@/lib/api';
+import { normalizeImageUrl } from '@/lib/api';
 import { gamePath } from '@/lib/product-url';
 
 interface Props {
@@ -127,17 +127,6 @@ export function HeroSlider({ banners }: Props) {
               >
                 Смотреть
               </Link>
-              <a
-                href={getTelegramLink()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-7 py-3 rounded-lg border border-white/25 text-white text-sm font-semibold hover:bg-white/10 transition-colors backdrop-blur-sm"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.196 13.98l-2.948-.924c-.64-.203-.653-.64.136-.954l11.52-4.44c.534-.194 1.003.13.99.559z" />
-                </svg>
-                Telegram
-              </a>
             </div>
           </motion.div>
         </div>
@@ -228,14 +217,6 @@ function DefaultHero() {
             >
               Смотреть каталог
             </Link>
-            <a
-              href={getTelegramLink()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-8 py-3.5 rounded-md border border-white/25 text-white text-sm font-semibold hover:bg-white/10 transition-colors"
-            >
-              Открыть в Telegram
-            </a>
           </motion.div>
         </div>
       </div>

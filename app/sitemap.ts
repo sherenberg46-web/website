@@ -39,6 +39,7 @@ const STATIC_PAGES: {
   { path: '/new', priority: 0.8, changeFrequency: 'daily' },
   { path: '/preorders', priority: 0.8, changeFrequency: 'daily' },
   { path: '/subscriptions', priority: 0.8, changeFrequency: 'weekly' },
+  { path: '/ea-play', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/topup', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/how-to-buy', priority: 0.5, changeFrequency: 'weekly' },
   { path: '/guarantees', priority: 0.5, changeFrequency: 'weekly' },

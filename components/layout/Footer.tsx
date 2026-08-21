@@ -40,7 +40,7 @@ export function Footer() {
             <Link href="/" className="flex items-center gap-2 mb-4">
               <Image src="/logo.png" alt="GAME STORE" width={30} height={30} className="rounded-full" />
               <span className="font-extrabold text-text-primary tracking-tight">
-                Game<span className="text-accent">Store</span>
+                GAME<span className="text-accent">STORE</span>
               </span>
             </Link>
             <p className="text-text-muted text-xs leading-relaxed">

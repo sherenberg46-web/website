@@ -48,6 +48,10 @@ export function RegionSwitcher() {
         title="Регион каталога"
       >
         <RegionBadge code={current.value} />
+        <span className="hidden sm:flex flex-col items-start leading-none">
+          <span className="text-[9px] uppercase tracking-wider text-text-muted">Регион</span>
+          <span className="text-xs font-bold text-text-primary mt-0.5">{current.value}</span>
+        </span>
         <ChevronDown className={clsx('w-3 h-3 transition-transform', open && 'rotate-180')} />
       </button>
 

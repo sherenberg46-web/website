@@ -40,9 +40,11 @@ export default async function HomePage() {
       isTR ? Promise.resolve(empty) : getProducts({ task_type: 'new_games', limit: 12 }),
       isTR ? Promise.resolve(empty) : getProducts({ task_type: 'preorders', region, limit: 12 }),
       isTR ? Promise.resolve(empty) : getProducts({ section: 'top15', region, limit: 10 }),
+      // Полка «Скидки» — от дорогих: иначе сортировка по размеру скидки
+      // выцарапывала наверх игры по 10 BYN с −90 %.
       isTR
         ? Promise.resolve(empty)
-        : getProducts({ task_type: 'sales', sort: 'discount', region, limit: 12 }),
+        : getProducts({ task_type: 'sales', sort: 'price_desc', region, limit: 12 }),
       isTR ? Promise.resolve(empty) : getPopularProducts(20, region),
     ]);
 
@@ -132,9 +134,12 @@ export default async function HomePage() {
           <ProductCarousel title="Предзаказы" products={preorders} viewAllHref="/preorders" />
         )}
 
-        {/* Без ссылки «Все»: в полке ровно десять позиций, показывать по ней
-            весь каталог по рейтингу — обманывать ожидание. */}
-        {top10.length > 0 && <ProductCarousel title="Топ 10" products={top10} />}
+        {/* «Все» для Топ 10 ведёт в каталог по рейтингу: отдельной страницы
+            чарта на сайте нет, а сортировка «По рейтингу» — ближайший
+            честный аналог. */}
+        {top10.length > 0 && (
+          <ProductCarousel title="Топ 10" products={top10} viewAllHref="/games?sort=rating" />
+        )}
 
         {onSale.length > 0 && (
           <ProductCarousel title="Скидки" products={onSale} viewAllHref="/sale" />

@@ -91,7 +91,17 @@ export function ProductCarousel({ title, products, viewAllHref, accentTitle, eye
               accentTitle ? 'text-gradient' : 'text-text-primary'
             )}
           >
-            {title}
+            {viewAllHref ? (
+              <Link
+                href={viewAllHref}
+                className="group/title inline-flex items-center gap-2 transition-colors hover:text-accent"
+              >
+                {title}
+                <ArrowRight className="w-5 h-5 text-accent opacity-0 -translate-x-1 transition-all group-hover/title:opacity-100 group-hover/title:translate-x-0" />
+              </Link>
+            ) : (
+              title
+            )}
           </h2>
         </div>
         {viewAllHref && (
