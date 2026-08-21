@@ -53,6 +53,16 @@ export function ProductCard({ product, priority = false }: Props) {
 
   const platforms = product.platform ? product.platform.split(',').map((p) => p.trim()) : [];
 
+  // «Новинка» — по дате релиза, а не по task_type: API помечает new_games
+  // почти весь каталог (это признак витрины-источника, а не свежести игры),
+  // поэтому шильдик появлялся даже на играх 2005 года. Свежее = релиз
+  // в последние 90 дней; будущие релизы — это «Предзаказ».
+  const isNewRelease = (() => {
+    if (!product.release_date) return false;
+    const days = (Date.now() - new Date(product.release_date).getTime()) / 86400000;
+    return days >= 0 && days <= 90;
+  })();
+
   return (
     <motion.article
       whileHover={{ y: -4 }}
@@ -81,7 +91,7 @@ export function ProductCard({ product, priority = false }: Props) {
             {/* Бейджи статуса */}
             <div className="absolute top-2 left-2 flex flex-col gap-1">
               {product.is_preorder && <Badge variant="preorder">Предзаказ</Badge>}
-              {product.task_type === 'new_games' && !product.discount_pct && (
+              {isNewRelease && !product.is_preorder && (
                 <Badge variant="new">Новинка</Badge>
               )}
             </div>
