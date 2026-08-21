@@ -7,7 +7,6 @@ import { ShoppingCart, Check, ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 import { useCartStore } from '@/store/cartStore';
 import { REGIONS, getClientRegion, type Region } from '@/lib/region';
-import { FitImage } from '@/components/ui/FitImage';
 import { RegionBadge } from '@/components/ui/RegionBadge';
 import {
   SUB_PRICES,
@@ -25,6 +24,14 @@ const TIER_IMAGES: Record<Tier, string> = {
   essential: '/images/ps-essential.jpg',
   extra: '/images/ps-extra.jpg',
   deluxe: '/images/ps-deluxe.jpg',
+};
+
+// Широкие 16:9-версии для шапок карточек: логотип крупно на фоне
+// фирменной текстуры тарифа (собраны из тех же исходников)
+const TIER_IMAGES_WIDE: Record<Tier, string> = {
+  essential: '/images/ps-essential-wide.jpg',
+  extra: '/images/ps-extra-wide.jpg',
+  deluxe: '/images/ps-deluxe-wide.jpg',
 };
 
 /** Подписки: вкладки региона и срока, карточки тарифов с картинками. */
@@ -132,24 +139,15 @@ export function PricingTable() {
                 highlighted ? 'border-accent/50 shadow-glow-card' : 'border-border'
               )}
             >
-              {/* Постер тарифа целиком поверх размытого фона (исходники портретные) */}
+              {/* Широкий постер тарифа — заполняет рамку целиком */}
               <div className="relative aspect-[16/9] overflow-hidden">
                 <Image
-                  src={TIER_IMAGES[tier.id]}
-                  alt=""
-                  aria-hidden
-                  fill
-                  quality={40}
-                  sizes="340px"
-                  className="object-cover scale-150 blur-xl brightness-[.45]"
-                />
-                <Image
-                  src={TIER_IMAGES[tier.id]}
+                  src={TIER_IMAGES_WIDE[tier.id]}
                   alt={`PS Plus ${tier.label}`}
                   fill
                   quality={85}
                   sizes="(max-width: 640px) 90vw, 340px"
-                  className="object-contain p-2"
+                  className="object-cover"
                 />
                 {highlighted && (
                   <span className="absolute top-3 right-3 px-3 py-1 bg-brand-gradient text-accent-contrast text-[10px] font-bold rounded-full uppercase tracking-wide">
@@ -204,14 +202,16 @@ export function PricingTable() {
 
       {/* EA Play */}
       <div className="mt-6 bg-bg-card rounded-3xl border border-border overflow-hidden flex flex-col sm:flex-row">
-        {/* Обложка EA Play квадратная (1254×1254). В полосе 16:9 от неё
-            оставалось меньше половины — вписываем целиком поверх размытой копии. */}
-        <FitImage
-          src="/images/ea-play.jpg"
-          alt="EA Play"
-          sizes="256px"
-          className="relative sm:w-64 aspect-[16/9] sm:aspect-auto shrink-0"
-        />
+        {/* Широкая 16:9-обложка EA Play — заполняет полосу целиком */}
+        <div className="relative sm:w-64 aspect-[16/9] sm:aspect-auto shrink-0 overflow-hidden">
+          <Image
+            src="/images/ea-play-wide.jpg"
+            alt="EA Play"
+            fill
+            sizes="256px"
+            className="object-cover"
+          />
+        </div>
         <div className="p-6 flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
           <div className="flex-1">
             <h3 className="font-bold text-lg">EA Play</h3>
