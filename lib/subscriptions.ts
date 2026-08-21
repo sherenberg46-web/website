@@ -46,14 +46,23 @@ export const EA_IDS: Record<Region, Record<1 | 12, number>> = {
 };
 
 /**
- * GTA+ и Ubisoft+ Classics — отдельные подписки, которых нет в каталоге API,
- * поэтому оформляются через менеджера. Цены выведены по той же логике, что
- * и EA Play (официальная цена PS Store × тот же коэффициент):
- * GTA+ — 259₴/199₺, Ubisoft+ Classics — 189₴/139₺. Срок у обеих — 1 месяц.
+ * GTA+ и Ubisoft+ Classics — отдельные подписки, срок у обеих только
+ * 1 месяц. Покупаются через корзину, как EA Play: ID продуктов из каталога,
+ * цены совпадают с ценами в базе (сервер считает итог заказа по своей базе).
  */
 export const STANDALONE_SUB_PRICES: Record<Region, { gtaplus: number; ubisoft: number }> = {
-  UA: { gtaplus: 70, ubisoft: 50 },
-  TR: { gtaplus: 30, ubisoft: 20 },
+  UA: { gtaplus: 35, ubisoft: 30 },
+  TR: { gtaplus: 35, ubisoft: 35 },
+};
+
+export const GTA_IDS: Record<Region, number> = {
+  UA: 96177,
+  TR: 96178,
+};
+
+export const UBI_IDS: Record<Region, number> = {
+  UA: 96179,
+  TR: 96180,
 };
 
 export const TIER_INFO: { id: Tier; label: string; features: string[] }[] = [

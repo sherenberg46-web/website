@@ -18,7 +18,7 @@ const NAV_LINKS = [
   { href: '/sale', label: 'Распродажа' },
   { href: '/new', label: 'Новинки' },
   { href: '/preorders', label: 'Предзаказы' },
-  { href: '/subscriptions', label: 'PS Plus' },
+  { href: '/subscriptions', label: 'Подписки' },
   { href: '/ea-play', label: 'EA Play' },
   { href: '/topup', label: 'Пополнение' },
 ];

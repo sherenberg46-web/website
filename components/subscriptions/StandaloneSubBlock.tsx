@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, ShoppingCart } from 'lucide-react';
 import clsx from 'clsx';
+import { useCartStore } from '@/store/cartStore';
 import { REGIONS, getClientRegion, type Region } from '@/lib/region';
 import { RegionBadge } from '@/components/ui/RegionBadge';
-import { getManagerLink } from '@/lib/api';
 import type { SubGame } from '@/lib/subscription-games';
 
 const COLLAPSED_COUNT = 12;
@@ -20,17 +20,20 @@ interface Props {
   cover: string;
   features: string[];
   games: SubGame[];
-  /** Цена за 1 месяц в BYN по регионам */
+  /** ID продукта в каталоге по регионам — как EA_IDS у EA Play */
+  productIds: Record<Region, number>;
+  /** Цена за 1 месяц в BYN по регионам — совпадает с ценой в базе */
   prices: Record<Region, number>;
+  /** Квадратная обложка для корзины */
+  cartImage: string;
   /** Короткая пометка под кнопкой — например, где ещё доступна подписка */
   note?: string;
 }
 
 /**
- * Подписка без позиции в каталоге API (GTA+, Ubisoft+ Classics).
- * В корзину её положить нельзя — сервер такого product_id не знает и заказ
- * не пройдёт. Поэтому вместо корзины — оформление через менеджера, как и
- * любой нестандартный заказ в магазине.
+ * Отдельная подписка с одним сроком (1 месяц): GTA+, Ubisoft+ Classics.
+ * Тот же поток покупки, что в таблице PS Plus и у EA Play: те же ID
+ * продуктов, те же цены, та же корзина.
  */
 export function StandaloneSubBlock({
   id,
@@ -39,16 +42,37 @@ export function StandaloneSubBlock({
   cover,
   features,
   games,
+  productIds,
   prices,
+  cartImage,
   note,
 }: Props) {
+  const addItem = useCartStore((s) => s.addItem);
   const [region, setRegion] = useState<Region>('UA');
+  const [added, setAdded] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
   // Стартуем с региона из шапки — как в таблице цен подписок
   useEffect(() => {
     setRegion(getClientRegion());
   }, []);
+
+  function buy() {
+    addItem({
+      product_id: productIds[region],
+      edition_id: null,
+      edition_name: null,
+      qty: 1,
+      title: `${name} — 1 месяц (${region})`,
+      image_url: cartImage,
+      price_byn: prices[region],
+      original_price_byn: null,
+      discount_pct: 0,
+      product_type: 'subscription',
+    });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
+  }
 
   const visible = expanded ? games : games.slice(0, COLLAPSED_COUNT);
 
@@ -114,7 +138,7 @@ export function StandaloneSubBlock({
             )}
           </div>
 
-          {/* Цена и заказ */}
+          {/* Цена и покупка */}
           <div className="lg:border-l lg:border-border lg:pl-6 flex flex-col">
             <div className="flex gap-1 bg-bg-page border border-border rounded-full p-1 self-start mb-5">
               {REGIONS.map((r) => (
@@ -142,22 +166,28 @@ export function StandaloneSubBlock({
               <span className="text-text-secondary text-sm font-semibold">BYN</span>
             </div>
 
-            <a
-              href={getManagerLink(`Здравствуйте! Хочу оформить подписку ${name} (${region}, 1 месяц)`)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-5 inline-flex items-center justify-center gap-2 w-full py-3 rounded-lg text-sm font-bold bg-accent hover:bg-accent-hover text-accent-contrast transition-colors"
+            <button
+              onClick={buy}
+              className={clsx(
+                'mt-5 flex items-center justify-center gap-2 w-full py-3 rounded-lg text-sm font-bold transition-colors',
+                added
+                  ? 'bg-accent/20 text-accent'
+                  : 'bg-accent hover:bg-accent-hover text-accent-contrast'
+              )}
             >
-              <svg className="w-4 h-4" viewBox="0 0 448 512" fill="currentColor" aria-hidden="true">
-                <path d="M446.7 98.6l-67.6 318.8c-5.1 22.5-18.4 28.1-37.3 17.5l-103-75.9-49.7 47.8c-5.5 5.5-10.1 10.1-20.7 10.1l7.4-104.9 190.9-172.5c8.3-7.4-1.8-11.5-12.9-4.1L117.8 284 16.2 252.2c-22.1-6.9-22.5-22.1 4.6-32.7L418.2 66.4c18.4-6.9 34.5 4.1 28.5 32.2z" />
-              </svg>
-              Заказать в Telegram
-            </a>
-            <p className="mt-3 text-xs text-text-muted leading-relaxed">
-              Оформление через менеджера: подтвердит цену и активирует подписку на ваш
-              аккаунт.
-              {note ? ` ${note}` : ''}
-            </p>
+              {added ? (
+                <>
+                  <Check className="w-4 h-4" /> В корзине
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-4 h-4" /> В корзину
+                </>
+              )}
+            </button>
+            {note && (
+              <p className="mt-3 text-xs text-text-muted leading-relaxed">{note}</p>
+            )}
           </div>
         </div>
       </div>

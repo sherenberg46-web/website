@@ -7,16 +7,16 @@ import { EaPlayPurchase } from '@/components/eaplay/EaPlayPurchase';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { getManagerLink } from '@/lib/api';
 import { getSiteUrl } from '@/lib/site-url';
-import { STANDALONE_SUB_PRICES } from '@/lib/subscriptions';
+import { STANDALONE_SUB_PRICES, GTA_IDS, UBI_IDS } from '@/lib/subscriptions';
 import { GTA_PLUS_GAMES, UBISOFT_CLASSICS_GAMES } from '@/lib/subscription-games';
 import { SUBSCRIPTIONS_FAQ, subscriptionsFaqJsonLd } from '@/lib/subscriptions-faq';
 
 /**
  * Подписки — страница под запросы «пс плюс купить беларусь» и подобные.
  *
- * Четыре независимых блока: PS Plus оформляется через корзину, EA Play —
- * тоже (те же ID и цены, что на странице /ea-play), а GTA+ и Ubisoft+
- * Classics идут через менеджера — в каталоге API таких позиций нет.
+ * Четыре независимых блока: PS Plus, EA Play, GTA+ и Ubisoft+ Classics.
+ * Все покупаются через корзину — те же ID продуктов и цены, что в базе
+ * (у EA Play ID общие со страницей /ea-play).
  */
 
 export const metadata: Metadata = {
@@ -119,7 +119,9 @@ export default function SubscriptionsPage() {
                 'Входит в PS Plus Extra и Deluxe',
               ]}
               games={UBISOFT_CLASSICS_GAMES}
+              productIds={UBI_IDS}
               prices={{ UA: STANDALONE_SUB_PRICES.UA.ubisoft, TR: STANDALONE_SUB_PRICES.TR.ubisoft }}
+              cartImage="/images/ubisoft-classics.jpg"
               note="Учтите: та же коллекция уже входит в тарифы PS Plus Extra и Deluxe."
             />
           </div>
@@ -140,7 +142,9 @@ export default function SubscriptionsPage() {
                 'Бонусы каждый месяц — без доната картами акулы',
               ]}
               games={GTA_PLUS_GAMES}
+              productIds={GTA_IDS}
               prices={{ UA: STANDALONE_SUB_PRICES.UA.gtaplus, TR: STANDALONE_SUB_PRICES.TR.gtaplus }}
+              cartImage="/images/gta-plus.jpg"
             />
           </div>
         </ScrollReveal>

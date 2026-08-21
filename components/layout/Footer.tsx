@@ -100,7 +100,7 @@ export function Footer() {
               {[
                 { href: '/games?platform=PS5', label: 'PlayStation 5' },
                 { href: '/games?platform=PS4', label: 'PlayStation 4' },
-                { href: '/subscriptions', label: 'PS Plus' },
+                { href: '/subscriptions', label: 'Подписки' },
                 { href: '/topup', label: 'Пополнение PSN' },
               ].map((link) => (
                 <li key={link.href}>
