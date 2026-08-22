@@ -23,6 +23,7 @@ import { languageInfo, languageNames } from '@/lib/languages';
 import { ReviewForm } from '@/components/products/ReviewForm';
 import { TrackView } from '@/components/products/TrackView';
 import { ProductGrid } from '@/components/products/ProductGrid';
+import { TrGamesBlocked } from '@/components/products/TrGamesBlocked';
 import { Badge } from '@/components/ui/Badge';
 import { FitImage } from '@/components/ui/FitImage';
 import { GameCover } from '@/components/products/GameCover';
@@ -142,6 +143,13 @@ export default async function GamePage({ params }: Props) {
   ]);
 
   const langs = languageInfo(product.lang_audio, product.lang_subs);
+
+  // Покупку закрываем по региону самого товара, а не по cookie: так TR-игра
+  // недоступна и по прямой ссылке (поисковик, пересланный URL), даже если у
+  // посетителя выбран украинский регион.
+  const trGameBlocked =
+    product.region === 'TR' &&
+    (product.product_type === 'game' || product.product_type === 'dlc');
 
   // Похожие: тот же жанр, регион обязателен (иначе дубли), сортировка по рейтингу
   const mainGenre = product.genre?.split(',')[0]?.trim();
@@ -385,8 +393,14 @@ export default async function GamePage({ params }: Props) {
               </div>
             )}
 
-            {/* Add to cart */}
-            <AddToCart product={product} editions={editions} region={region} />
+            {/* Add to cart. TR-игры временно не продаём: вместо покупки —
+                отбивка, как на главной и в каталоге. Подписки и пополнение
+                (другие product_type) не затрагиваем. */}
+            {trGameBlocked ? (
+              <TrGamesBlocked />
+            ) : (
+              <AddToCart product={product} editions={editions} region={region} />
+            )}
           </div>
         </div>
 

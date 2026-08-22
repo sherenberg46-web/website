@@ -63,6 +63,13 @@ export function ProductCard({ product, priority = false }: Props) {
     return days >= 0 && days <= 90;
   })();
 
+  // TR-игры временно не продаём: быстрой покупки с карточки быть не должно
+  // ни в одном разделе (каталог, похожие, избранное). Подписки и пополнение
+  // (другие product_type) не затрагиваем.
+  const trBlocked =
+    product.region === 'TR' &&
+    (product.product_type === 'game' || product.product_type === 'dlc');
+
   return (
     <motion.article
       whileHover={{ y: -4 }}
@@ -110,16 +117,18 @@ export function ProductCard({ product, priority = false }: Props) {
               <Heart className={clsx('w-4 h-4', isFav && 'fill-current')} />
             </button>
 
-            {/* Кнопка корзины — при наведении */}
-            <div className="absolute bottom-2 left-2 right-2 opacity-100 translate-y-0 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-2 sm:group-hover:translate-y-0 transition-all duration-300">
-              <button
-                onClick={handleAddToCart}
-                className="w-full flex items-center justify-center gap-1.5 py-2 bg-accent hover:bg-accent-hover text-accent-contrast text-xs font-bold rounded-md transition-colors"
-              >
-                <ShoppingCart className="w-3.5 h-3.5" />
-                В корзину
-              </button>
-            </div>
+            {/* Кнопка корзины — при наведении (не для TR-игр) */}
+            {!trBlocked && (
+              <div className="absolute bottom-2 left-2 right-2 opacity-100 translate-y-0 sm:opacity-0 sm:group-hover:opacity-100 sm:translate-y-2 sm:group-hover:translate-y-0 transition-all duration-300">
+                <button
+                  onClick={handleAddToCart}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 bg-accent hover:bg-accent-hover text-accent-contrast text-xs font-bold rounded-md transition-colors"
+                >
+                  <ShoppingCart className="w-3.5 h-3.5" />
+                  В корзину
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Info */}

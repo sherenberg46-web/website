@@ -4,6 +4,7 @@ import { getCategories, getProductGenres, getProducts, getProductCount } from '@
 import { getRegion } from '@/lib/region-server';
 import { CatalogFilters } from '@/components/products/CatalogFilters';
 import { ProductGrid } from '@/components/products/ProductGrid';
+import { TrGamesBlocked } from '@/components/products/TrGamesBlocked';
 import { CatalogPagination } from '@/components/products/CatalogPagination';
 import { DataError } from '@/components/ui/DataError';
 import type { ProductFilters } from '@/lib/types';
@@ -126,6 +127,18 @@ async function FiltersSection() {
 }
 
 export default async function GamesPage({ searchParams }: Props) {
+  // TR: игры из турецкого каталога временно не продаём — отбивка вместо
+  // выдачи, иначе из каталога/поиска можно было положить TR-игру в корзину.
+  // Подписки и пополнение это не касается: они на своих страницах.
+  if (getRegion() === 'TR') {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold tracking-tight mb-6">Каталог игр</h1>
+        <TrGamesBlocked />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold tracking-tight mb-6">Каталог игр</h1>

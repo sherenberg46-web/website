@@ -6,6 +6,7 @@ import type { ProductFilters } from '@/lib/types';
 import { CatalogFilters } from '@/components/products/CatalogFilters';
 import { CatalogPagination } from '@/components/products/CatalogPagination';
 import { ProductGrid } from '@/components/products/ProductGrid';
+import { TrGamesBlocked } from '@/components/products/TrGamesBlocked';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
 export const metadata: Metadata = {
@@ -30,6 +31,17 @@ interface Props {
 
 export default async function PreordersPage({ searchParams }: Props) {
   const region = getRegion();
+
+  // TR: игры из турецкого каталога временно не продаём — отбивка вместо выдачи.
+  if (region === 'TR') {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold tracking-tight mb-6">Предзаказы</h1>
+        <TrGamesBlocked />
+      </div>
+    );
+  }
+
   const offset = Number(searchParams.offset ?? 0);
 
   // task_type=preorders — тот же фильтр, что в Mini App

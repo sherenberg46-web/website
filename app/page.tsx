@@ -12,6 +12,7 @@ import { HowToBuy } from '@/components/home/HowToBuy';
 import { FAQ } from '@/components/home/FAQ';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CategoryTiles } from '@/components/home/CategoryTiles';
+import { TrGamesBlocked } from '@/components/products/TrGamesBlocked';
 
 // Регион берётся из cookie → страница рендерится динамически,
 // данные при этом кэшируются на уровне fetch (revalidate в lib/api).
@@ -113,16 +114,7 @@ export default async function HomePage() {
         {/* TR: игры из турецкого каталога временно недоступны — как в Mini App */}
         {isTR && (
           <ScrollReveal>
-            <div className="bg-bg-card border border-border rounded-xl p-10 text-center max-w-2xl mx-auto">
-              <div className="text-5xl mb-4">🚧</div>
-              <h2 className="text-2xl font-bold mb-3">Временно недоступно</h2>
-              <p className="text-text-secondary">
-                Покупка игр из турецкого каталога временно приостановлена.
-              </p>
-              <p className="text-text-secondary mt-1">
-                Но вы можете купить подписку PS Plus или пополнить кошелёк 👇
-              </p>
-            </div>
+            <TrGamesBlocked />
           </ScrollReveal>
         )}
 

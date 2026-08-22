@@ -82,7 +82,7 @@ export interface Product {
   discount_pct: number;
   discount_until: string | null;
   release_date: string | null;
-  product_type: 'game' | 'subscription' | 'topup' | 'key';
+  product_type: 'game' | 'dlc' | 'subscription' | 'topup' | 'key';
   is_preorder: boolean;
   store_price: number | null;
   cost_byn: number | null;
