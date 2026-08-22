@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
-import { checkPromo, createWebOrder, getManagerLink } from '@/lib/api';
+import { checkPromo, createWebOrder, getManagerLink, issueCartPromo } from '@/lib/api';
 import { getClientRegion } from '@/lib/region';
 import { clearPromo, loadPromo } from '@/lib/cart-promo';
+import { PLUS5_CODE, plus5Active, plus5Available, markPlus5Used } from '@/lib/plus5';
 import { checkContact } from '@/lib/contact';
 import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
@@ -48,6 +49,10 @@ export function OrderForm({ onOrdered }: Props) {
     percent: number;
     reason: string;
   }>({ status: 'idle', percent: 0, reason: '' });
+  // PLUS5 — алиас акции: сервер такого кода не знает, поэтому при вводе PLUS5
+  // мы просим у сервера настоящий одноразовый код 5 % и держим его здесь.
+  // В заказ уходит он, а покупатель видит привычный PLUS5.
+  const [promoRealCode, setPromoRealCode] = useState<string | null>(null);
   // Показываем ошибку контакта только после того, как поле покинули: ругаться
   // на «+37» посреди набора номера — значит мешать, а не помогать.
   const [contactTouched, setContactTouched] = useState(false);
@@ -77,14 +82,40 @@ export function OrderForm({ onOrdered }: Props) {
   // сумму без скидки. Покупатель видел одну цену, в заказ уходила другая.
   const promoCode = promo.trim().toUpperCase();
   useEffect(() => {
+    // Любая смена ввода обнуляет алиас: код из прошлого ввода в заказ не
+    // должен уехать под видом нового.
+    setPromoRealCode(null);
     if (!promoCode) {
       setPromoState({ status: 'idle', percent: 0, reason: '' });
       return;
     }
     setPromoState({ status: 'checking', percent: 0, reason: '' });
     const ctl = new AbortController();
+    // issueCartPromo сигнала не принимает — от гонок страхуемся флагом.
+    let stale = false;
     // Пауза перед запросом — чтобы не дёргать сервер на каждую букву.
     const timer = setTimeout(() => {
+      if (promoCode === PLUS5_CODE && plus5Active()) {
+        if (!plus5Available()) {
+          setPromoState({
+            status: 'bad',
+            percent: 0,
+            reason: 'этот промокод уже использован',
+          });
+          return;
+        }
+        issueCartPromo()
+          .then((p) => {
+            if (stale) return;
+            setPromoRealCode(p.code);
+            setPromoState({ status: 'ok', percent: p.percent, reason: '' });
+          })
+          .catch(() => {
+            if (stale) return;
+            setPromoState({ status: 'bad', percent: 0, reason: 'не удалось применить' });
+          });
+        return;
+      }
       checkPromo(promoCode, ctl.signal)
         .then((r) =>
           setPromoState(
@@ -99,6 +130,7 @@ export function OrderForm({ onOrdered }: Props) {
         });
     }, 400);
     return () => {
+      stale = true;
       clearTimeout(timer);
       ctl.abort();
     };
@@ -165,6 +197,9 @@ export function OrderForm({ onOrdered }: Props) {
       onOrdered?.();
       clearCart();
       clearPromo();
+      // PLUS5 — одна покупка: после успешного заказа алиас для этого
+      // браузера больше не срабатывает.
+      if (promoRealCode) markPlus5Used();
       setStatus('success');
     } catch (err: unknown) {
       const status = (err as { status?: number }).status;
@@ -376,6 +411,12 @@ export function OrderForm({ onOrdered }: Props) {
           placeholder="Если есть"
           className="w-full px-4 py-3 bg-bg-page border border-border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
         />
+        {promoState.status === 'idle' && !promoCode && plus5Active() && (
+          <p className="text-xs mt-1 text-text-secondary">
+            По промокоду <span className="text-accent font-semibold">PLUS5</span> —
+            скидка 5 % на первую покупку
+          </p>
+        )}
         {promoState.status !== 'idle' && (
           <p
             className={clsx(
@@ -384,7 +425,10 @@ export function OrderForm({ onOrdered }: Props) {
             )}
           >
             {promoState.status === 'checking' && 'Проверяем код...'}
-            {promoState.status === 'ok' && `Скидка ${promoState.percent} % применена`}
+            {promoState.status === 'ok' &&
+              (promoRealCode
+                ? `Промокод ${PLUS5_CODE} — скидка ${promoState.percent} % применена`
+                : `Скидка ${promoState.percent} % применена`)}
             {promoState.status === 'bad' &&
               `Код не применён${promoState.reason ? `: ${promoState.reason}` : ''}`}
           </p>

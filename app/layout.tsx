@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/layout/Header';
+import { PromoStrip } from '@/components/layout/PromoStrip';
 import { Footer } from '@/components/layout/Footer';
 import { MetaPixel } from '@/components/analytics/MetaPixel';
 import { getSiteUrl } from '@/lib/site-url';
@@ -153,6 +154,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-bg-page text-text-primary min-h-screen flex flex-col">
         <MetaPixel />
         <Header />
+        {/* Анонс акции PLUS5 — под фиксированной шапкой, скрывается сам
+            по концу срока или после использования кода. */}
+        <PromoStrip />
         <main className="flex-1">{children}</main>
         {/* Консультант доступен на любой странице — как в приложении. */}
         <SupportChat />
