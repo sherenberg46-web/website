@@ -6,6 +6,7 @@ import { PromoStrip } from '@/components/layout/PromoStrip';
 import { Footer } from '@/components/layout/Footer';
 import { MetaPixel } from '@/components/analytics/MetaPixel';
 import { YandexMetrika } from '@/components/analytics/YandexMetrika';
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { getSiteUrl } from '@/lib/site-url';
 import { COMPANY } from '@/lib/company';
 import { SupportChat } from '@/components/support/SupportChat';
@@ -155,6 +156,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-bg-page text-text-primary min-h-screen flex flex-col">
         <MetaPixel />
         <YandexMetrika />
+        <GoogleAnalytics />
         <Header />
         {/* Анонс акции PLUS5 — под фиксированной шапкой, скрывается сам
             по концу срока или после использования кода. */}
