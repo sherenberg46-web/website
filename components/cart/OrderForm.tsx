@@ -56,6 +56,9 @@ export function OrderForm({ onOrdered }: Props) {
   // Показываем ошибку контакта только после того, как поле покинули: ругаться
   // на «+37» посреди набора номера — значит мешать, а не помогать.
   const [contactTouched, setContactTouched] = useState(false);
+  // Код ушёл в заказ, но сервер скидку не посчитал — предупреждаем на экране
+  // успеха, что менеджер пересчитает вручную (сумма есть в комментарии).
+  const [promoNotApplied, setPromoNotApplied] = useState(false);
 
   const contactCheck = checkContact(contact);
   const contactError = contactTouched && contact.trim() ? contactCheck.error : null;
@@ -173,6 +176,23 @@ export function OrderForm({ onOrdered }: Props) {
     const timer = setTimeout(() => ctl.abort(), 20_000);
 
     try {
+      // PLUS5-алиас: выданный сервером код живёт 30 минут. Если покупатель
+      // долго заполнял форму, код мог истечь — перед отправкой проверяем
+      // и при необходимости берём свежий, иначе заказ уйдёт без скидки.
+      let codeToSend = promoRealCode;
+      if (promoRealCode) {
+        try {
+          const still = await checkPromo(promoRealCode, ctl.signal);
+          if (!still.valid) {
+            const fresh = await issueCartPromo();
+            codeToSend = fresh.code;
+          }
+        } catch {
+          // Проверка не удалась — отправляем как есть: решает сервер,
+          // а менеджер видит сумму со скидкой в комментарии ниже.
+        }
+      }
+
       const created = await createWebOrder({
         items: items.map((i) => ({
           product_id: i.product_id,
@@ -183,14 +203,30 @@ export function OrderForm({ onOrdered }: Props) {
         // Отправляем приведённый вид: +375291234567 или @username. Менеджер
         // получает контакт в одном формате, а не как покупатель его набрал.
         contact: contactCheck.normalized || contact.trim(),
-        comment: comment.trim() || undefined,
+        // Если промокод применён — дублируем скидку в комментарий: менеджер
+        // видит и процент, и итоговую сумму прямо в сообщении о заказе,
+        // даже если что-то пойдёт не так на стороне сервера.
+        comment:
+          [
+            comment.trim(),
+            promoOk
+              ? `Промокод ${promoCode} (−${promoState.percent}%): итог со скидкой ${finalPrice} BYN вместо ${cartTotal} BYN`
+              : '',
+          ]
+            .filter(Boolean)
+            .join(' | ') || undefined,
         region: getClientRegion(),
         account_type: hasAccount ? 'my_account' : 'no_account',
         ps_email: hasAccount ? psEmail.trim() : undefined,
         ps_password: hasAccount ? psPassword : undefined,
-        promo_code: promoCode || undefined,
+        // При алиасе PLUS5 уходит настоящий код, выданный сервером, —
+        // само слово PLUS5 серверу неизвестно.
+        promo_code: codeToSend ?? (promoCode || undefined),
       }, ctl.signal);
       setOrderId(created.order_id ?? null);
+      // Страховка: код ушёл в заказ, а сервер скидку не посчитал
+      // (promo_percent в ответе нулевой) — не притворяемся, что всё хорошо.
+      if (codeToSend && !created.promo_percent) setPromoNotApplied(true);
       // Порядок важен: сначала сообщаем странице, потом чистим корзину.
       // Оба обновления попадут в один проход React, страница уже будет знать,
       // что заказ оформлен, и не подменит форму экраном «Корзина пуста».
@@ -236,6 +272,12 @@ export function OrderForm({ onOrdered }: Props) {
           Менеджер свяжется с вами в ближайшее время для подтверждения заказа и оплаты.
           {orderId !== null && ' Номер заказа пригодится, если захотите уточнить статус.'}
         </p>
+        {promoNotApplied && (
+          <p className="text-amber-400 text-sm bg-amber-400/10 border border-amber-400/20 rounded-xl px-4 py-3 mb-6 max-w-md mx-auto">
+            Промокод не применился автоматически — не переживайте: менеджер
+            видит сумму со скидкой в комментарии к заказу и пересчитает цену.
+          </p>
+        )}
         <a
           href={getManagerLink()}
           target="_blank"
