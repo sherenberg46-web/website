@@ -42,6 +42,11 @@ const STATIC_PAGES: {
   { path: '/ea-play', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/topup', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/how-to-buy', priority: 0.5, changeFrequency: 'weekly' },
+  // Гайды — SEO-статьи с покупательским намерением, обновляются редко.
+  { path: '/guides', priority: 0.7, changeFrequency: 'weekly' },
+  { path: '/guides/kak-kupit-igru-ps5-v-belarusi', priority: 0.7, changeFrequency: 'weekly' },
+  { path: '/guides/kak-oplatit-igry-cherez-erip', priority: 0.7, changeFrequency: 'weekly' },
+  { path: '/guides/region-ua-akkaunt-playstation', priority: 0.7, changeFrequency: 'weekly' },
   { path: '/guarantees', priority: 0.5, changeFrequency: 'weekly' },
   { path: '/contacts', priority: 0.5, changeFrequency: 'weekly' },
   // Правовые документы. Приоритет низкий — по ним не ищут, но в индексе они

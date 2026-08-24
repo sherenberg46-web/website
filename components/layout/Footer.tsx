@@ -14,6 +14,7 @@ const SHOP_LINKS = [
 
 const INFO_LINKS = [
   { href: '/how-to-buy', label: 'Как купить' },
+  { href: '/guides', label: 'Гайды' },
   { href: '/guarantees', label: 'Гарантии' },
   { href: '/contacts', label: 'Контакты' },
 ];

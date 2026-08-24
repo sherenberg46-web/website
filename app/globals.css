@@ -164,3 +164,59 @@ body {
 details > summary::-webkit-details-marker {
   display: none;
 }
+
+/* Контент статей раздела «Гайды» (/guides). Разметка статей хранится
+   готовым HTML в guides-data.ts, поэтому стили задаём селекторами по тегам.
+   Цвета — из переменных темы, чтобы тексты не выбивались из дизайна. */
+.guide-content h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 2.25rem 0 1rem;
+  color: var(--text-primary);
+}
+.guide-content h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 1.75rem 0 0.75rem;
+  color: var(--text-primary);
+}
+.guide-content p {
+  margin: 0.9rem 0;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+.guide-content ul,
+.guide-content ol {
+  margin: 0.9rem 0 0.9rem 1.4rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+.guide-content ul li {
+  list-style: disc;
+  margin: 0.35rem 0;
+}
+.guide-content ol li {
+  list-style: decimal;
+  margin: 0.35rem 0;
+}
+.guide-content li strong,
+.guide-content p strong {
+  color: var(--text-primary);
+}
+.guide-content a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.guide-content a:hover {
+  color: var(--accent-hover);
+}
+/* Жёлтые CTA-кнопки внутри статей подчёркивать не нужно */
+.guide-content a.bg-accent {
+  text-decoration: none;
+}
+/* Цвет текста кнопки: правило выше красит все ссылки в акцент, у кнопки
+   жёлтый фон — текст должен оставаться тёмным */
+.guide-content a.bg-accent {
+  color: var(--accent-contrast);
+}
