@@ -21,6 +21,7 @@ const NAV_LINKS = [
   { href: '/subscriptions', label: 'Подписки' },
   { href: '/ea-play', label: 'EA Play' },
   { href: '/topup', label: 'Пополнение' },
+  { href: '/guides', label: 'Гайды' },
 ];
 
 export function Header() {
