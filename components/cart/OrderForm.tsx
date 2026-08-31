@@ -7,6 +7,7 @@ import { checkPromo, createWebOrder, getManagerLink, issueCartPromo } from '@/li
 import { getClientRegion } from '@/lib/region';
 import { clearPromo, loadPromo } from '@/lib/cart-promo';
 import { PLUS5_CODE, plus5Active, plus5Available, markPlus5Used } from '@/lib/plus5';
+import { LEVEL5_CODE, level5Active } from '@/lib/level5';
 import { checkContact } from '@/lib/contact';
 import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
@@ -84,6 +85,13 @@ export function OrderForm({ onOrdered }: Props) {
   // на другом устройстве), а форма при этом писала «код не найден» и считала
   // сумму без скидки. Покупатель видел одну цену, в заказ уходила другая.
   const promoCode = promo.trim().toUpperCase();
+  // LEVEL5 — только на игры: сервер считает скидку от всей корзины, поэтому
+  // корзину с подписками или пополнениями код не принимает вовсе, иначе
+  // скидка легла бы и на них. Зависимость эффекта ниже от этого флага
+  // перепроверяет код, когда состав корзины меняет применимость.
+  const level5Eligible = !items.some(
+    (i) => i.product_type === 'subscription' || i.product_type === 'topup'
+  );
   useEffect(() => {
     // Любая смена ввода обнуляет алиас: код из прошлого ввода в заказ не
     // должен уехать под видом нового.
@@ -119,6 +127,27 @@ export function OrderForm({ onOrdered }: Props) {
           });
         return;
       }
+      if (promoCode === LEVEL5_CODE && level5Active()) {
+        if (!level5Eligible) {
+          setPromoState({
+            status: 'bad',
+            percent: 0,
+            reason: 'LEVEL5 действует только на игры — уберите из корзины подписки и пополнения',
+          });
+          return;
+        }
+        issueCartPromo()
+          .then((p) => {
+            if (stale) return;
+            setPromoRealCode(p.code);
+            setPromoState({ status: 'ok', percent: p.percent, reason: '' });
+          })
+          .catch(() => {
+            if (stale) return;
+            setPromoState({ status: 'bad', percent: 0, reason: 'не удалось применить' });
+          });
+        return;
+      }
       checkPromo(promoCode, ctl.signal)
         .then((r) =>
           setPromoState(
@@ -137,9 +166,14 @@ export function OrderForm({ onOrdered }: Props) {
       clearTimeout(timer);
       ctl.abort();
     };
-  }, [promoCode]);
+  }, [promoCode, level5Eligible]);
 
-  const promoOk = promoState.status === 'ok';
+  // Страховка на случай устаревшего состояния: LEVEL5 не применяется,
+  // если в корзине есть подписки или пополнения, — даже если код успел
+  // пройти проверку до изменения корзины.
+  const promoOk =
+    promoState.status === 'ok' &&
+    !(promoCode === LEVEL5_CODE && !level5Eligible);
   // Копеек в магазине нет: цены целые, итог тоже. Считаем ровно так же, как
   // считает сервер (округление вверх от суммы со скидкой), иначе на экране и
   // в заказе будут разные числа. Скидку показываем как разницу — тогда
@@ -176,10 +210,12 @@ export function OrderForm({ onOrdered }: Props) {
     const timer = setTimeout(() => ctl.abort(), 20_000);
 
     try {
-      // PLUS5-алиас: выданный сервером код живёт 30 минут. Если покупатель
-      // долго заполнял форму, код мог истечь — перед отправкой проверяем
-      // и при необходимости берём свежий, иначе заказ уйдёт без скидки.
-      let codeToSend = promoRealCode;
+      // Алиасы (PLUS5, LEVEL5): выданный сервером код живёт 30 минут. Если
+      // покупатель долго заполнял форму, код мог истечь — перед отправкой
+      // проверяем и при необходимости берём свежий, иначе заказ уйдёт без
+      // скидки. Если скидка не применима (например, LEVEL5 при подписке в
+      // корзине) — реальный код не отправляем вовсе.
+      let codeToSend = promoOk ? promoRealCode : null;
       if (promoRealCode) {
         try {
           const still = await checkPromo(promoRealCode, ctl.signal);
@@ -219,8 +255,8 @@ export function OrderForm({ onOrdered }: Props) {
         account_type: hasAccount ? 'my_account' : 'no_account',
         ps_email: hasAccount ? psEmail.trim() : undefined,
         ps_password: hasAccount ? psPassword : undefined,
-        // При алиасе PLUS5 уходит настоящий код, выданный сервером, —
-        // само слово PLUS5 серверу неизвестно.
+        // При алиасе (PLUS5, LEVEL5) уходит настоящий код, выданный
+        // сервером, — само слово-алиас серверу неизвестно.
         promo_code: codeToSend ?? (promoCode || undefined),
       }, ctl.signal);
       setOrderId(created.order_id ?? null);
@@ -234,8 +270,8 @@ export function OrderForm({ onOrdered }: Props) {
       clearCart();
       clearPromo();
       // PLUS5 — одна покупка: после успешного заказа алиас для этого
-      // браузера больше не срабатывает.
-      if (promoRealCode) markPlus5Used();
+      // браузера больше не срабатывает. LEVEL5 многоразовый, не помечаем.
+      if (promoRealCode && promoCode === PLUS5_CODE) markPlus5Used();
       setStatus('success');
     } catch (err: unknown) {
       const status = (err as { status?: number }).status;
@@ -453,10 +489,20 @@ export function OrderForm({ onOrdered }: Props) {
           placeholder="Если есть"
           className="w-full px-4 py-3 bg-bg-page border border-border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
         />
-        {promoState.status === 'idle' && !promoCode && plus5Active() && (
+        {promoState.status === 'idle' && !promoCode && (plus5Active() || level5Active()) && (
           <p className="text-xs mt-1 text-text-secondary">
-            По промокоду <span className="text-accent font-semibold">PLUS5</span> —
-            скидка 5 % на первую покупку
+            {plus5Active() && (
+              <>
+                <span className="text-accent font-semibold">PLUS5</span> — скидка 5 % на
+                первую покупку.{' '}
+              </>
+            )}
+            {level5Active() && (
+              <>
+                <span className="text-accent font-semibold">LEVEL5</span> — скидка 5 % на
+                игры до 4 сентября
+              </>
+            )}
           </p>
         )}
         {promoState.status !== 'idle' && (
@@ -469,7 +515,7 @@ export function OrderForm({ onOrdered }: Props) {
             {promoState.status === 'checking' && 'Проверяем код...'}
             {promoState.status === 'ok' &&
               (promoRealCode
-                ? `Промокод ${PLUS5_CODE} — скидка ${promoState.percent} % применена`
+                ? `Промокод ${promoCode} — скидка ${promoState.percent} % применена`
                 : `Скидка ${promoState.percent} % применена`)}
             {promoState.status === 'bad' &&
               `Код не применён${promoState.reason ? `: ${promoState.reason}` : ''}`}
