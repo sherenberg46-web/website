@@ -23,7 +23,7 @@ export const SUB_PRICES: Record<
       3: { essential: 140, extra: 185, deluxe: 190 },
       12: { essential: 290, extra: 450, deluxe: 530 },
     },
-    eaplay: { 1: 35, 12: 150 },
+    eaplay: { 1: 35, 12: 145 },
   },
 };
 
