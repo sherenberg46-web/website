@@ -148,12 +148,17 @@ export function ProductCard({ product, priority = false }: Props) {
               <span className="whitespace-nowrap text-[15px] font-bold text-accent">Бесплатно</span>
             ) : (
               <>
-                <span className="shrink-0 whitespace-nowrap text-[15px] font-bold tracking-tight text-text-primary">
+                <span
+                  className={clsx(
+                    'shrink-0 whitespace-nowrap text-[15px] font-bold tracking-tight',
+                    oldPrice != null ? 'text-accent' : 'text-text-primary'
+                  )}
+                >
                   {price} BYN
                 </span>
                 {oldPrice != null && (
                   <span className="whitespace-nowrap text-xs text-text-muted line-through">
-                    {oldPrice}
+                    {oldPrice} BYN
                   </span>
                 )}
               </>

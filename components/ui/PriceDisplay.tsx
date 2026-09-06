@@ -73,7 +73,7 @@ export function PriceDisplay({ price, discountPct = 0, className, size = 'md' }:
             size === 'lg' && 'text-lg'
           )}
         >
-          {originalPrice}
+          {originalPrice} BYN
         </span>
       )}
       <span className={priceClass}>{price} BYN</span>

@@ -84,9 +84,13 @@ export function MobileTabBar() {
 
   return (
     <>
+      {/* fixed + backdrop-blur заставляет мобильный Chrome/Safari на инерционном
+          скролле терять синхронизацию слоя — панель «подпрыгивает». Фон делаем
+          непрозрачным (за почти чёрной панелью размытие всё равно не видно) и
+          держим панель на своём GPU-слое, чтобы композитор её не двигал. */}
       <nav
         aria-label="Основная навигация"
-        className="md:hidden fixed inset-x-0 bottom-0 z-50 border-t border-border bg-bg-page/95 backdrop-blur-xl pb-safe"
+        className="md:hidden fixed inset-x-0 bottom-0 z-50 border-t border-border bg-bg-page pb-safe transform-gpu will-change-transform"
       >
         <ul className="flex items-stretch">
           {tabs.map((t) => {

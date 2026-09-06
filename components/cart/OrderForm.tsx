@@ -682,7 +682,7 @@ export function OrderForm({ onOrdered }: Props) {
                   {finalPrice} BYN
                 </span>
                 {discount > 0 && (
-                  <span className="ml-2 text-xs text-text-muted line-through">{cartTotal}</span>
+                  <span className="ml-2 text-xs text-text-muted line-through">{cartTotal} BYN</span>
                 )}
                 {!canSubmit && status !== 'loading' && submitHint && (
                   <span className="block text-2xs leading-tight text-text-secondary" aria-live="polite">

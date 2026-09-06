@@ -475,7 +475,7 @@ export function AddToCart({ product, editions, region }: Props) {
               </span>
               {oldPrice != null && (
                 <span className="whitespace-nowrap text-xs text-text-muted line-through">
-                  {oldPrice}
+                  {oldPrice} BYN
                 </span>
               )}
               {discount > 0 && (
