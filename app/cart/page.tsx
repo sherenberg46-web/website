@@ -171,130 +171,180 @@ export default function CartPage() {
 
   if (!mounted) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-20 text-center">
-        <div className="w-12 h-12 rounded-full border-2 border-border border-t-accent animate-spin mx-auto" />
+      <div className="mx-auto max-w-5xl px-4 py-20 text-center">
+        <div className="mx-auto h-12 w-12 animate-spin rounded-full border-2 border-border border-t-accent" />
       </div>
     );
   }
 
   if (items.length === 0 && !ordered) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-20 text-center">
-        <ShoppingCart className="w-16 h-16 text-text-secondary mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Корзина пуста</h1>
-        <p className="text-text-secondary mb-8">Добавьте игры из каталога</p>
-        <Link
-          href="/games"
-          className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-8 py-3.5 rounded-md transition-colors inline-block"
-        >
+      <div className="mx-auto flex min-h-[60vh] max-w-5xl flex-col items-center justify-center px-4 py-16 text-center">
+        <div className="mb-4 grid h-16 w-16 place-items-center rounded-card bg-surface-1 text-text-secondary">
+          <ShoppingCart className="h-7 w-7" />
+        </div>
+        <h1 className="mb-1.5 text-xl font-bold">Корзина пуста</h1>
+        <p className="mb-6 text-sm text-text-secondary">Добавьте игры из каталога</p>
+        <Link href="/games" className="btn btn-primary">
           Перейти в каталог
         </Link>
       </div>
     );
   }
 
+  // Итоги по корзине — по проверенным данным стора. Промокод применяется
+  // отдельно в форме (там своя, серверная, арифметика), поэтому здесь
+  // показываем стоимость игр до промокода.
+  const itemsFullTotal = items.reduce(
+    (s, i) => s + (i.original_price_byn ?? i.price_byn) * i.qty,
+    0
+  );
+  const itemsTotal = Math.ceil(totalPrice);
+  const itemsDiscount = Math.max(0, Math.round(itemsFullTotal) - itemsTotal);
+
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      {/* Оформленный заказ прячет всё лишнее классом, а не условным
-          рендером: убрать элемент из дерева — значит сдвинуть соседей, и React
-          пересоздаст форму, потеряв вместе с ней экран подтверждения. */}
-      <h1 className={clsx('text-3xl font-bold mb-8', ordered && 'hidden')}>Корзина</h1>
+    <div
+      className={clsx(
+        'mx-auto max-w-5xl px-4 pt-8',
+        // Место под мобильную закреплённую панель оформления (см. OrderForm).
+        ordered ? 'pb-10' : 'pb-[6.5rem] md:pb-10'
+      )}
+    >
+      <h1 className={clsx('mb-6 text-2xl font-bold md:text-3xl', ordered && 'hidden')}>
+        Корзина
+      </h1>
 
       <div className={clsx(ordered && 'hidden')}>
         <CartPromoBanner />
       </div>
 
-      <div className={clsx('grid grid-cols-1 gap-6', ordered ? 'max-w-xl mx-auto' : 'lg:grid-cols-3')}>
-        {/* Items */}
-        <div className={clsx('lg:col-span-2 space-y-3', ordered && 'hidden')}>
+      <div
+        className={clsx('grid gap-6', ordered ? 'mx-auto max-w-xl' : 'lg:grid-cols-3 lg:items-start')}
+      >
+        {/* Товары + итоги */}
+        <div className={clsx('space-y-4 lg:col-span-2', ordered && 'hidden')}>
           {notices.length > 0 && (
-            <div className="bg-bg-card border border-accent/30 rounded-2xl p-4 space-y-1">
-              <p className="text-text-primary text-sm font-semibold">
-                Корзина обновлена
-              </p>
+            <div className="space-y-1 rounded-card border border-accent/30 bg-surface-1 p-4">
+              <p className="text-sm font-semibold text-text-primary">Корзина обновлена</p>
               {notices.map((n) => (
-                <p key={n} className="text-text-secondary text-xs">
+                <p key={n} className="text-xs text-text-secondary">
                   {n}
                 </p>
               ))}
             </div>
           )}
+
           {items.map((item) => (
             <div
               key={`${item.product_id}-${item.edition_id}`}
-              className="flex gap-4 bg-bg-card border border-border rounded-2xl p-4"
+              className="flex gap-3 rounded-card border border-border bg-surface-1 p-3"
             >
-              <FitImage
-                src={item.image_url}
-                alt={item.title}
-                sizes="80px"
-                backdrop={false}
-                className="relative w-16 aspect-[3/4] rounded-xl shrink-0"
-              />
+              <Link href={gamePath(item.product_id)} className="shrink-0">
+                <FitImage
+                  src={item.image_url}
+                  alt={item.title}
+                  sizes="72px"
+                  backdrop={false}
+                  className="relative aspect-[3/4] w-14 rounded-control"
+                />
+              </Link>
 
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <Link
                   href={gamePath(item.product_id)}
-                  className="font-medium text-text-primary text-sm hover:text-accent transition-colors line-clamp-2"
+                  className="line-clamp-2 text-sm font-medium text-text-primary transition-colors hover:text-accent"
                 >
                   {item.title}
                 </Link>
                 {item.edition_name && (
-                  <p className="text-text-secondary text-xs mt-0.5">{item.edition_name}</p>
+                  <p className="mt-0.5 text-xs text-text-secondary">{item.edition_name}</p>
                 )}
-                <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center gap-2">
+
+                <p className="mt-1.5 text-sm font-bold text-text-primary">
+                  {item.price_byn * item.qty} BYN
+                </p>
+
+                <div className="mt-2 flex items-center justify-between">
+                  <div className="flex items-center rounded-control border border-border">
                     <button
+                      type="button"
                       onClick={() => updateQty(item.product_id, item.edition_id, item.qty - 1)}
-                      className="w-7 h-7 rounded-lg border border-border flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
+                      aria-label="Уменьшить количество"
+                      className="tap-target grid place-items-center text-text-secondary transition-colors hover:text-text-primary"
                     >
-                      <Minus className="w-3 h-3" />
+                      <Minus className="h-4 w-4" />
                     </button>
-                    <span className="w-6 text-center text-sm font-medium text-text-primary">
+                    <span
+                      className="w-7 text-center text-sm font-medium text-text-primary"
+                      aria-live="polite"
+                    >
                       {item.qty}
                     </span>
                     <button
+                      type="button"
                       onClick={() => updateQty(item.product_id, item.edition_id, item.qty + 1)}
-                      className="w-7 h-7 rounded-lg border border-border flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
+                      aria-label="Увеличить количество"
+                      className="tap-target grid place-items-center text-text-secondary transition-colors hover:text-text-primary"
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="h-4 w-4" />
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-text-primary text-sm">
-                      {item.price_byn * item.qty} BYN
-                    </span>
-                    <button
-                      onClick={() => removeItem(item.product_id, item.edition_id)}
-                      className="text-text-secondary hover:text-red-400 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.product_id, item.edition_id)}
+                    aria-label={`Удалить «${item.title}» из корзины`}
+                    className="tap-target grid place-items-center text-text-secondary transition-colors hover:text-red-400"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             </div>
           ))}
+
+          {/* Итоги по корзине */}
+          <div className="space-y-2 rounded-card border border-border bg-surface-1 p-4 text-sm">
+            {itemsDiscount > 0 && (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Товары</span>
+                  <span className="text-text-secondary line-through">
+                    {Math.round(itemsFullTotal)} BYN
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Скидка</span>
+                  <span className="text-accent">−{itemsDiscount} BYN</span>
+                </div>
+              </>
+            )}
+            <div className="flex items-baseline justify-between border-t border-border pt-2">
+              <span className="font-medium text-text-primary">Итого</span>
+              <span className="text-lg font-extrabold tracking-tight text-text-primary">
+                {itemsTotal} BYN
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Order form */}
-        <div className="bg-bg-card border border-border rounded-2xl p-6">
+        {/* Оформление */}
+        <div className="rounded-card border border-border bg-surface-1 p-5 lg:sticky lg:top-24 lg:self-start">
           <OrderForm onOrdered={() => setOrdered(true)} />
 
-          <div className={clsx('mt-4 pt-4 border-t border-border', ordered && 'hidden')}>
-            <a
-              href={getTelegramLink()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-full border border-border text-text-secondary text-sm hover:border-accent/40 hover:text-text-primary transition-colors"
-            >
-              <svg className="w-4 h-4 text-accent" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.196 13.98l-2.948-.924c-.64-.203-.653-.64.136-.954l11.52-4.44c.534-.194 1.003.13.99.559z" />
-              </svg>
-              Купить напрямую в Telegram
-            </a>
-          </div>
+          {!ordered && (
+            <p className="mt-4 border-t border-border pt-4 text-center text-xs text-text-secondary">
+              Не хотите оформлять здесь?{' '}
+              <a
+                href={getTelegramLink()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent hover:underline"
+              >
+                Написать менеджеру в Telegram
+              </a>
+            </p>
+          )}
         </div>
       </div>
     </div>

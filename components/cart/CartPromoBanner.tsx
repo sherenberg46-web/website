@@ -84,7 +84,7 @@ export function CartPromoBanner() {
   if (!promo || hidden || !items.length || left <= 0) return null;
 
   return (
-    <div className="relative mb-6 rounded-xl border border-accent/40 bg-accent/10 px-4 py-4 sm:px-5">
+    <div className="relative mb-6 rounded-card border border-accent/40 bg-accent/10 px-4 py-4 sm:px-5">
       <button
         type="button"
         onClick={() => setHidden(true)}
@@ -102,7 +102,7 @@ export function CartPromoBanner() {
           </p>
           <p className="mt-1 text-sm text-text-secondary">
             Введите промокод{' '}
-            <code className="rounded bg-bg-page px-1.5 py-0.5 font-mono text-text-primary">
+            <code className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-text-primary">
               {promo.code}
             </code>{' '}
             в форме заказа. Действует{' '}

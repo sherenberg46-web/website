@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cartStore';
 import { checkPromo, createWebOrder, getManagerLink, issueCartPromo } from '@/lib/api';
@@ -13,6 +14,9 @@ import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 
 type Status = 'idle' | 'loading' | 'success' | 'error' | 'fallback';
+
+/** id формы — чтобы закреплённая кнопка (портал в body) сабмитила её через form=… */
+const FORM_ID = 'checkout-form';
 
 interface Props {
   /**
@@ -27,6 +31,9 @@ interface Props {
   onOrdered?: () => void;
 }
 
+const inputBase =
+  'w-full rounded-control border bg-surface-2 px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary/70 outline-none transition-colors';
+
 export function OrderForm({ onOrdered }: Props) {
   const items = useCartStore((s) => s.items);
   const clearCart = useCartStore((s) => s.clearCart);
@@ -38,7 +45,10 @@ export function OrderForm({ onOrdered }: Props) {
   // Те же поля, что спрашивает Mini App: без них менеджер не сможет выдать игру.
   const [hasAccount, setHasAccount] = useState<boolean | null>(null);
   const [psEmail, setPsEmail] = useState('');
-  const [psPassword, setPsPassword] = useState('');
+  // Пароль от аккаунта на сайте больше не вводится — его передают менеджеру в
+  // переписке. Значение остаётся пустым; payload при этом байт-в-байт совпадает
+  // с прежним сценарием «оставил поле пустым», который бэкенд уже принимает.
+  const [psPassword] = useState('');
   const [promo, setPromo] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
@@ -61,16 +71,17 @@ export function OrderForm({ onOrdered }: Props) {
   // успеха, что менеджер пересчитает вручную (сумма есть в комментарии).
   const [promoNotApplied, setPromoNotApplied] = useState(false);
 
+  // Портал закреплённой кнопки — только на клиенте.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const contactCheck = checkContact(contact);
   const contactError = contactTouched && contact.trim() ? contactCheck.error : null;
 
   // Имя нужно живое, а не «ы» и не набор цифр: с ним менеджер обращается к
   // покупателю. Двух букв достаточно, чтобы отсечь случайное нажатие.
-  // Флаг /u с \p{L} target проекта не поддерживает, поэтому перечисляем
-  // буквы явно: латиница и кириллица покрывают всех наших покупателей.
   const nameOk = name.trim().length >= 2 && /[a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ]{2}/.test(name);
-  const nameError =
-    name.trim() && !nameOk ? 'Имя — хотя бы две буквы' : null;
+  const nameError = name.trim() && !nameOk ? 'Имя — хотя бы две буквы' : null;
 
   // Код, который сайт уже выдал этому браузеру, подставляем сами: переписывать
   // его руками — лишний шанс ошибиться в букве и решить, что скидки нет.
@@ -196,6 +207,34 @@ export function OrderForm({ onOrdered }: Props) {
     // отправить заказ с суммой, которая через полсекунды изменится.
     promoState.status !== 'checking';
 
+  // Короткая подсказка «чего не хватает» — для закреплённой кнопки, где полей
+  // формы под рукой нет.
+  const submitHint = !nameOk
+    ? 'Укажите имя'
+    : !contactCheck.ok
+      ? 'Укажите телефон или ник в Telegram'
+      : hasAccount === null
+        ? 'Выберите: есть аккаунт или нужен новый'
+        : hasAccount && !psEmail.trim()
+          ? 'Укажите email аккаунта PlayStation'
+          : promoState.status === 'checking'
+            ? 'Проверяем промокод…'
+            : '';
+
+  // Высота закреплённой панели — Chat FAB поднимается на неё (см. SupportChat).
+  // Та же переменная, что использует sticky-CTA на странице товара.
+  useEffect(() => {
+    const el = document.documentElement;
+    if (status === 'success' || status === 'fallback') {
+      el.style.removeProperty('--pdp-cta-h');
+      return;
+    }
+    el.style.setProperty('--pdp-cta-h', '4.5rem');
+    return () => {
+      el.style.removeProperty('--pdp-cta-h');
+    };
+  }, [status]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
@@ -296,20 +335,20 @@ export function OrderForm({ onOrdered }: Props) {
 
   if (status === 'success') {
     return (
-      <div className="text-center py-10">
-        <CheckCircle className="w-16 h-16 text-accent mx-auto mb-4" />
-        <h2 className="text-2xl font-bold mb-2">Заказ принят!</h2>
+      <div className="py-8 text-center">
+        <CheckCircle className="mx-auto mb-4 h-14 w-14 text-accent" />
+        <h2 className="mb-2 text-xl font-bold">Заказ принят!</h2>
         {orderId !== null && (
-          <p className="text-text-primary font-semibold mb-2">
+          <p className="mb-2 font-semibold text-text-primary">
             Номер заказа: <span className="text-accent">№{orderId}</span>
           </p>
         )}
-        <p className="text-text-secondary mb-6">
+        <p className="mx-auto mb-6 max-w-sm text-sm text-text-secondary">
           Менеджер свяжется с вами в ближайшее время для подтверждения заказа и оплаты.
           {orderId !== null && ' Номер заказа пригодится, если захотите уточнить статус.'}
         </p>
         {promoNotApplied && (
-          <p className="text-amber-400 text-sm bg-amber-400/10 border border-amber-400/20 rounded-xl px-4 py-3 mb-6 max-w-md mx-auto">
+          <p className="mx-auto mb-6 max-w-md rounded-card border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-400">
             Промокод не применился автоматически — не переживайте: менеджер
             видит сумму со скидкой в комментарии к заказу и пересчитает цену.
           </p>
@@ -318,10 +357,10 @@ export function OrderForm({ onOrdered }: Props) {
           href={getManagerLink()}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-8 py-3.5 rounded-md transition-colors"
+          className="btn btn-primary"
         >
           Написать менеджеру
-          <ExternalLink className="w-4 h-4" />
+          <ExternalLink className="h-4 w-4" />
         </a>
       </div>
     );
@@ -336,262 +375,340 @@ export function OrderForm({ onOrdered }: Props) {
     );
 
     return (
-      <div className="text-center py-10">
-        <div className="w-16 h-16 rounded-2xl bg-brand-gradient mx-auto mb-4 flex items-center justify-center">
-          <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+      <div className="py-8 text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-card bg-brand-gradient">
+          <svg className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.196 13.98l-2.948-.924c-.64-.203-.653-.64.136-.954l11.52-4.44c.534-.194 1.003.13.99.559z" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold mb-2">Оформить через Telegram</h2>
-        <p className="text-text-secondary mb-6 max-w-sm mx-auto">
+        <h2 className="mb-2 text-xl font-bold">Оформить через Telegram</h2>
+        <p className="mx-auto mb-6 max-w-sm text-sm text-text-secondary">
           Нажмите кнопку ниже — мы предзаполним сообщение с вашим заказом, остаётся только отправить.
         </p>
-        <a
-          href={tgLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-8 py-3.5 rounded-md transition-colors"
-        >
+        <a href={tgLink} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
           Отправить заказ менеджеру
-          <ExternalLink className="w-4 h-4" />
+          <ExternalLink className="h-4 w-4" />
         </a>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-xl font-bold mb-6">Оформить заказ</h2>
+    <>
+      <form id={FORM_ID} onSubmit={handleSubmit} className="space-y-6">
+        <h2 className="text-lg font-bold">Оформление заказа</h2>
 
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1.5">
-          Ваше имя <span className="text-accent">*</span>
-        </label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          placeholder="Иван"
-          className={clsx(
-            'w-full px-4 py-3 bg-bg-page border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none transition-colors',
-            nameError ? 'border-red-400/60 focus:border-red-400' : 'border-border focus:border-accent/50'
-          )}
-        />
-        {nameError && <p className="text-red-400 text-xs mt-1">{nameError}</p>}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1.5">
-          Telegram или телефон <span className="text-accent">*</span>
-        </label>
-        <input
-          type="text"
-          value={contact}
-          onChange={(e) => setContact(e.target.value)}
-          onBlur={() => setContactTouched(true)}
-          required
-          placeholder="@username или +375XXXXXXXXX"
-          className={clsx(
-            'w-full px-4 py-3 bg-bg-page border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none transition-colors',
-            contactError ? 'border-red-400/60 focus:border-red-400' : 'border-border focus:border-accent/50'
-          )}
-        />
-        {contactError ? (
-          <p className="text-red-400 text-xs mt-1">{contactError}</p>
-        ) : contactCheck.ok ? (
-          <p className="text-accent text-xs mt-1">
-            {contactCheck.kind === 'phone' ? 'Телефон' : 'Telegram'}: {contactCheck.normalized}
+        {/* Контакты */}
+        <div className="space-y-4">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-text-secondary">
+            Контакты
           </p>
-        ) : (
-          <p className="text-text-secondary text-xs mt-1">
-            Телефон с кодом страны или ник в Telegram — по нему менеджер напишет вам
-          </p>
-        )}
-      </div>
 
-
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1.5">
-          Аккаунт PlayStation <span className="text-accent">*</span>
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { value: true, label: 'У меня есть' },
-            { value: false, label: 'Нужен новый' },
-          ].map((o) => (
-            <button
-              key={String(o.value)}
-              type="button"
-              onClick={() => setHasAccount(o.value)}
-              className={clsx(
-                'py-3 rounded-xl text-sm font-medium border transition-colors',
-                hasAccount === o.value
-                  ? 'border-accent bg-accent/10 text-text-primary'
-                  : 'border-border bg-bg-page text-text-secondary hover:text-text-primary'
-              )}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {hasAccount === true && (
-        <>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">
-              Email от аккаунта PS <span className="text-accent">*</span>
+            <label htmlFor="of-name" className="mb-1.5 block text-sm font-medium text-text-secondary">
+              Ваше имя <span className="text-accent">*</span>
             </label>
             <input
-              type="email"
-              value={psEmail}
-              onChange={(e) => setPsEmail(e.target.value)}
+              id="of-name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
-              placeholder="you@example.com"
-              className="w-full px-4 py-3 bg-bg-page border border-border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
+              placeholder="Иван"
+              aria-invalid={!!nameError}
+              aria-describedby={nameError ? 'of-name-err' : undefined}
+              className={clsx(
+                inputBase,
+                nameError ? 'border-red-400/60 focus:border-red-400' : 'border-border focus:border-accent/50'
+              )}
             />
+            {nameError && (
+              <p id="of-name-err" className="mt-1 text-xs text-red-400">
+                {nameError}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">
-              Пароль от аккаунта PS
+            <label
+              htmlFor="of-contact"
+              className="mb-1.5 block text-sm font-medium text-text-secondary"
+            >
+              Telegram или телефон <span className="text-accent">*</span>
             </label>
             <input
-              type="password"
-              value={psPassword}
-              onChange={(e) => setPsPassword(e.target.value)}
-              placeholder="Можно передать менеджеру лично"
-              className="w-full px-4 py-3 bg-bg-page border border-border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
+              id="of-contact"
+              type="text"
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
+              onBlur={() => setContactTouched(true)}
+              required
+              placeholder="@username или +375XXXXXXXXX"
+              aria-invalid={!!contactError}
+              aria-describedby="of-contact-hint"
+              className={clsx(
+                inputBase,
+                contactError
+                  ? 'border-red-400/60 focus:border-red-400'
+                  : 'border-border focus:border-accent/50'
+              )}
             />
-            <p className="text-text-secondary text-xs mt-1">
-              Нужен, чтобы зайти в аккаунт и купить игру. Если не хотите вводить
-              здесь — оставьте поле пустым, менеджер запросит его в переписке.
+            <p id="of-contact-hint" className="mt-1 text-xs" aria-live="polite">
+              {contactError ? (
+                <span className="text-red-400">{contactError}</span>
+              ) : contactCheck.ok ? (
+                <span className="text-accent">
+                  {contactCheck.kind === 'phone' ? 'Телефон' : 'Telegram'}: {contactCheck.normalized}
+                </span>
+              ) : (
+                <span className="text-text-secondary">
+                  Телефон с кодом страны или ник в Telegram — по нему менеджер напишет вам
+                </span>
+              )}
             </p>
           </div>
-        </>
-      )}
-
-      {hasAccount === false && (
-        <p className="text-text-secondary text-xs bg-bg-page border border-border rounded-xl px-4 py-3">
-          Создадим для вас новый аккаунт и передадим данные вместе с игрой.
-        </p>
-      )}
-
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1.5">
-          Промокод
-        </label>
-        <input
-          type="text"
-          value={promo}
-          onChange={(e) => setPromo(e.target.value.toUpperCase())}
-          placeholder="Если есть"
-          className="w-full px-4 py-3 bg-bg-page border border-border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
-        />
-        {promoState.status === 'idle' && !promoCode && (plus5Active() || level5Active()) && (
-          <p className="text-xs mt-1 text-text-secondary">
-            {plus5Active() && (
-              <>
-                <span className="text-accent font-semibold">PLUS5</span> — скидка 5 % на
-                первую покупку.{' '}
-              </>
-            )}
-            {level5Active() && (
-              <>
-                <span className="text-accent font-semibold">LEVEL5</span> — скидка 5 % на
-                игры до 4 сентября
-              </>
-            )}
-          </p>
-        )}
-        {promoState.status !== 'idle' && (
-          <p
-            className={clsx(
-              'text-xs mt-1',
-              promoState.status === 'ok' ? 'text-accent' : 'text-text-secondary'
-            )}
-          >
-            {promoState.status === 'checking' && 'Проверяем код...'}
-            {promoState.status === 'ok' &&
-              (promoRealCode
-                ? `Промокод ${promoCode} — скидка ${promoState.percent} % применена`
-                : `Скидка ${promoState.percent} % применена`)}
-            {promoState.status === 'bad' &&
-              `Код не применён${promoState.reason ? `: ${promoState.reason}` : ''}`}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1.5">
-          Комментарий (необязательно)
-        </label>
-        <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          rows={3}
-          placeholder="Уточнения по заказу..."
-          className="w-full px-4 py-3 bg-bg-page border border-border rounded-xl text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors resize-none"
-        />
-      </div>
-
-      {error && (
-        <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3">
-          {error}
-        </p>
-      )}
-
-      <div className="pt-2">
-        {discount > 0 && (
-          <div className="flex justify-between text-sm mb-1.5">
-            <span className="text-text-secondary">Скидка по промокоду:</span>
-            <span className="text-accent font-medium">−{discount} BYN</span>
-          </div>
-        )}
-        <div className="flex justify-between text-sm mb-4">
-          <span className="text-text-secondary">Итого:</span>
-          <span className="text-text-primary font-bold text-lg">{finalPrice} BYN</span>
         </div>
 
-        <button
-          type="submit"
-          disabled={status === 'loading' || !canSubmit}
-          className={clsx(
-            'w-full flex items-center justify-center gap-2 py-3.5 rounded-full font-semibold text-sm transition-all',
-            status === 'loading' || !canSubmit
-              ? 'bg-bg-card border border-border text-text-secondary cursor-not-allowed'
-              : 'bg-accent hover:bg-accent-hover text-accent-contrast'
-          )}
-        >
-          {status === 'loading' ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Отправляем...
-            </>
-          ) : (
-            'Оформить заказ'
-          )}
-        </button>
+        {/* Аккаунт PlayStation */}
+        <div className="space-y-3 border-t border-border pt-5">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-text-secondary">
+            Аккаунт PlayStation <span className="text-accent">*</span>
+          </p>
 
-        <p className="text-center text-text-secondary text-xs mt-3">
-          Оплата — после подтверждения заказа менеджером
-        </p>
+          <div
+            role="radiogroup"
+            aria-label="Тип аккаунта PlayStation"
+            className="grid grid-cols-2 gap-2"
+          >
+            {[
+              { value: true, label: 'У меня есть аккаунт' },
+              { value: false, label: 'Нужен новый аккаунт' },
+            ].map((o) => (
+              <label key={String(o.value)} className="cursor-pointer">
+                <input
+                  type="radio"
+                  name="account_type"
+                  className="peer sr-only"
+                  checked={hasAccount === o.value}
+                  onChange={() => setHasAccount(o.value)}
+                />
+                <span className="flex min-h-[44px] items-center justify-center rounded-control border border-border bg-surface-2 px-3 text-center text-sm font-medium text-text-secondary transition-colors peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-text-primary peer-focus-visible:ring-2 peer-focus-visible:ring-accent">
+                  {o.label}
+                </span>
+              </label>
+            ))}
+          </div>
 
-        {/* Момент принятия оферты. Именно здесь покупатель передаёт нам свои
-            данные и заключает договор, поэтому предупреждение должно стоять
-            у кнопки, а не теряться в подвале. */}
-        <p className="text-center text-text-secondary text-xs mt-3 leading-relaxed">
-          Оформляя заказ, вы принимаете{' '}
-          <Link href="/offer" className="text-accent hover:underline">
-            публичную оферту
-          </Link>{' '}
-          и соглашаетесь с{' '}
-          <Link href="/privacy" className="text-accent hover:underline">
-            политикой конфиденциальности
-          </Link>
-        </p>
-      </div>
-    </form>
+          {hasAccount === true && (
+            <div className="space-y-2.5">
+              <div>
+                <label
+                  htmlFor="of-email"
+                  className="mb-1.5 block text-sm font-medium text-text-secondary"
+                >
+                  Email от аккаунта PS <span className="text-accent">*</span>
+                </label>
+                <input
+                  id="of-email"
+                  type="email"
+                  value={psEmail}
+                  onChange={(e) => setPsEmail(e.target.value)}
+                  required
+                  placeholder="you@example.com"
+                  className={clsx(inputBase, 'border-border focus:border-accent/50')}
+                />
+              </div>
+              <p className="rounded-control border border-border bg-surface-2 px-3.5 py-3 text-xs leading-relaxed text-text-secondary">
+                Пароль вводить здесь не нужно. Данные для входа в аккаунт вы передадите
+                менеджеру в переписке уже после оформления заказа.
+              </p>
+            </div>
+          )}
+
+          {hasAccount === false && (
+            <p className="rounded-control border border-border bg-surface-2 px-3.5 py-3 text-xs leading-relaxed text-text-secondary">
+              Создадим для вас новый аккаунт и передадим данные вместе с игрой.
+            </p>
+          )}
+        </div>
+
+        {/* Промокод и комментарий */}
+        <div className="space-y-4 border-t border-border pt-5">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-text-secondary">
+            Промокод и комментарий
+          </p>
+
+          <div>
+            <label
+              htmlFor="of-promo"
+              className="mb-1.5 block text-sm font-medium text-text-secondary"
+            >
+              Промокод
+            </label>
+            <input
+              id="of-promo"
+              type="text"
+              value={promo}
+              onChange={(e) => setPromo(e.target.value.toUpperCase())}
+              placeholder="Если есть"
+              aria-describedby="of-promo-hint"
+              className={clsx(inputBase, 'border-border focus:border-accent/50')}
+            />
+            <p id="of-promo-hint" className="mt-1 text-xs" aria-live="polite">
+              {promoState.status === 'idle' && !promoCode && (plus5Active() || level5Active()) && (
+                <span className="text-text-secondary">
+                  {plus5Active() && (
+                    <>
+                      <span className="font-semibold text-accent">PLUS5</span> — скидка 5 % на
+                      первую покупку.{' '}
+                    </>
+                  )}
+                  {level5Active() && (
+                    <>
+                      <span className="font-semibold text-accent">LEVEL5</span> — скидка 5 % на
+                      игры до 4 сентября
+                    </>
+                  )}
+                </span>
+              )}
+              {promoState.status !== 'idle' && (
+                <span
+                  className={
+                    promoState.status === 'ok' ? 'text-accent' : 'text-text-secondary'
+                  }
+                >
+                  {promoState.status === 'checking' && 'Проверяем код…'}
+                  {promoState.status === 'ok' &&
+                    (promoRealCode
+                      ? `Промокод ${promoCode} — скидка ${promoState.percent} % применена`
+                      : `Скидка ${promoState.percent} % применена`)}
+                  {promoState.status === 'bad' &&
+                    `Код не применён${promoState.reason ? `: ${promoState.reason}` : ''}`}
+                </span>
+              )}
+            </p>
+          </div>
+
+          <div>
+            <label
+              htmlFor="of-comment"
+              className="mb-1.5 block text-sm font-medium text-text-secondary"
+            >
+              Комментарий (необязательно)
+            </label>
+            <textarea
+              id="of-comment"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              rows={3}
+              placeholder="Уточнения по заказу…"
+              className={clsx(inputBase, 'resize-none border-border focus:border-accent/50')}
+            />
+          </div>
+        </div>
+
+        {error && (
+          <p
+            role="alert"
+            className="rounded-control border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-400"
+          >
+            {error}
+          </p>
+        )}
+
+        {/* Итого + основное действие */}
+        <div className="space-y-3 border-t border-border pt-4">
+          {discount > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-text-secondary">Скидка по промокоду</span>
+              <span className="font-medium text-accent">−{discount} BYN</span>
+            </div>
+          )}
+          <div className="flex items-baseline justify-between">
+            <span className="text-sm text-text-secondary">Итого к оплате</span>
+            <span className="text-xl font-extrabold tracking-tight text-text-primary" aria-live="polite">
+              {finalPrice} BYN
+            </span>
+          </div>
+
+          <button
+            type="submit"
+            disabled={status === 'loading' || !canSubmit}
+            className="btn btn-primary btn-block"
+          >
+            {status === 'loading' ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Отправляем…
+              </>
+            ) : (
+              `Оформить заказ · ${finalPrice} BYN`
+            )}
+          </button>
+
+          <p className="text-center text-xs text-text-secondary">
+            Оплата — после того, как менеджер подтвердит заказ
+          </p>
+          {/* Момент принятия оферты — у кнопки, а не в подвале. */}
+          <p className="text-center text-xs leading-relaxed text-text-secondary">
+            Оформляя заказ, вы принимаете{' '}
+            <Link href="/offer" className="text-accent hover:underline">
+              публичную оферту
+            </Link>{' '}
+            и соглашаетесь с{' '}
+            <Link href="/privacy" className="text-accent hover:underline">
+              политикой конфиденциальности
+            </Link>
+          </p>
+        </div>
+      </form>
+
+      {/* Мобильная закреплённая панель оформления.
+          Портал в body: страница корзины внутри motion.div из template.tsx
+          (transform ломает fixed). Кнопка сабмитит форму через form=…
+          Экраны успеха/фолбэка сюда не доходят — они выходят раньше по return. */}
+      {mounted &&
+        createPortal(
+          <div
+            className="md:hidden fixed inset-x-0 z-40 border-t border-border bg-surface-1/95 backdrop-blur-xl"
+            style={{ bottom: 'calc(var(--mobile-nav-h) + env(safe-area-inset-bottom))' }}
+          >
+            <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5">
+              <div className="min-w-0 flex-1">
+                <span
+                  className="text-base font-extrabold tracking-tight text-text-primary"
+                  aria-live="polite"
+                >
+                  {finalPrice} BYN
+                </span>
+                {discount > 0 && (
+                  <span className="ml-2 text-xs text-text-muted line-through">{cartTotal}</span>
+                )}
+                {!canSubmit && status !== 'loading' && submitHint && (
+                  <span className="block text-2xs leading-tight text-text-secondary" aria-live="polite">
+                    {submitHint}
+                  </span>
+                )}
+              </div>
+              <button
+                type="submit"
+                form={FORM_ID}
+                disabled={status === 'loading' || !canSubmit}
+                className="btn btn-primary btn-sm shrink-0 px-5"
+              >
+                {status === 'loading' ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Отправляем…
+                  </>
+                ) : (
+                  'Оформить заказ'
+                )}
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   );
 }
