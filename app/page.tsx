@@ -10,7 +10,6 @@ import { RecentlyViewed } from '@/components/home/RecentlyViewed';
 import { Benefits } from '@/components/home/Benefits';
 import { HowToBuy } from '@/components/home/HowToBuy';
 import { FAQ } from '@/components/home/FAQ';
-import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CategoryTiles } from '@/components/home/CategoryTiles';
 import { TrGamesBlocked } from '@/components/products/TrGamesBlocked';
 
@@ -117,11 +116,7 @@ export default async function HomePage() {
           инфоблоков. */}
       <div className="max-w-7xl mx-auto px-4 space-y-10 py-8">
         {/* TR: игры из турецкого каталога временно недоступны — как в Mini App */}
-        {isTR && (
-          <ScrollReveal>
-            <TrGamesBlocked />
-          </ScrollReveal>
-        )}
+        {isTR && <TrGamesBlocked />}
 
         {newGames.length > 0 && (
           <ProductCarousel title="Новинки" products={newGames} viewAllHref="/new" accentTitle />
@@ -171,31 +166,26 @@ export default async function HomePage() {
       </div>
 
       {/* Telegram CTA */}
-      <ScrollReveal>
-        <section className="section-pad">
-          <div className="max-w-7xl mx-auto px-4 text-center">
-            <div className="relative bg-bg-card rounded-2xl border border-border px-6 py-9 md:py-11 overflow-hidden">
-              <div className="absolute inset-0 bg-card-glow" />
-              <div className="relative z-10">
-                <h2 className="text-2xl font-bold tracking-tight mb-2.5">
-                  Удобнее в Telegram
-                </h2>
-                <p className="text-text-secondary text-sm mb-6">
-                  Скидки, каталог и поддержка — прямо в мессенджере
-                </p>
-                <a
-                  href={getTelegramLink()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-accent hover:bg-accent-hover text-accent-contrast font-bold px-6 py-3 rounded-lg text-sm inline-flex items-center gap-2 transition-colors"
-                >
-                  Открыть бота
-                </a>
-              </div>
-            </div>
+      <section className="section-pad">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <div className="rounded-card border border-border bg-surface-1 px-6 py-9 md:py-11">
+            <h2 className="text-2xl font-bold tracking-tight mb-2.5">
+              Удобнее в Telegram
+            </h2>
+            <p className="text-text-secondary text-sm mb-6">
+              Скидки, каталог и поддержка — прямо в мессенджере
+            </p>
+            <a
+              href={getTelegramLink()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+            >
+              Открыть бота
+            </a>
           </div>
-        </section>
-      </ScrollReveal>
+        </div>
+      </section>
 
       <HowToBuy />
       <FAQ />

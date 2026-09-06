@@ -3,47 +3,44 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import clsx from 'clsx';
 // Тексты живут в lib/faq.ts: те же вопросы главная отдаёт разметкой FAQPage
 import { FAQS } from '@/lib/faq';
 
 
-function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
+function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <ScrollReveal delay={index * 0.05}>
-      <div className={clsx('bg-bg-card border rounded-xl transition-colors', open ? 'border-border-strong' : 'border-border')}>
-        <button
-          onClick={() => setOpen(!open)}
-          className="flex items-center justify-between w-full px-5 py-4 text-left gap-4"
-        >
-          <span className={clsx('text-[13.5px] font-semibold transition-colors', open ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary')}>
-            {q}
-          </span>
-          <Plus
-            className={clsx(
-              'w-[18px] h-[18px] text-accent shrink-0 transition-transform duration-300',
-              open && 'rotate-45'
-            )}
-          />
-        </button>
-        <AnimatePresence initial={false}>
-          {open && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="overflow-hidden"
-            >
-              <p className="text-text-muted text-[12.5px] leading-relaxed px-5 pb-4 pr-10">{a}</p>
-            </motion.div>
+    <div className={clsx('bg-surface-1 border rounded-card transition-colors', open ? 'border-border-strong' : 'border-border')}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center justify-between w-full px-5 py-4 text-left gap-4"
+      >
+        <span className={clsx('text-[13.5px] font-semibold transition-colors', open ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary')}>
+          {q}
+        </span>
+        <Plus
+          className={clsx(
+            'w-[18px] h-[18px] text-accent shrink-0 transition-transform duration-300',
+            open && 'rotate-45'
           )}
-        </AnimatePresence>
-      </div>
-    </ScrollReveal>
+        />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <p className="text-text-muted text-[12.5px] leading-relaxed px-5 pb-4 pr-10">{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -51,18 +48,16 @@ export function FAQ() {
   return (
     <section className="section-pad">
       <div className="max-w-7xl mx-auto px-4">
-        <ScrollReveal>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
-            Вопрос — ответ
-          </h2>
-          <p className="text-text-secondary text-sm mb-8">
-            Не нашли ответ? Напишите нам в Telegram — ответим быстро.
-          </p>
-        </ScrollReveal>
+        <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
+          Вопрос — ответ
+        </h2>
+        <p className="text-text-secondary text-sm mb-8">
+          Не нашли ответ? Напишите нам в Telegram — ответим быстро.
+        </p>
 
         <div className="flex flex-col gap-2.5 max-w-3xl">
           {FAQS.map((faq, i) => (
-            <FAQItem key={i} {...faq} index={i} />
+            <FAQItem key={i} {...faq} />
           ))}
         </div>
       </div>

@@ -6,7 +6,6 @@ import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 import type { Product } from '@/lib/types';
 import { ProductCard } from '@/components/products/ProductCard';
-import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
 interface Props {
   title: string;
@@ -76,7 +75,7 @@ export function ProductCarousel({ title, products, viewAllHref, accentTitle, eye
   if (!products.length) return null;
 
   return (
-    <ScrollReveal className="relative">
+    <div className="relative">
       {/* Header */}
       <div className="flex items-end justify-between mb-5">
         <div>
@@ -161,6 +160,6 @@ export function ProductCarousel({ title, products, viewAllHref, accentTitle, eye
           </button>
         )}
       </div>
-    </ScrollReveal>
+    </div>
   );
 }
