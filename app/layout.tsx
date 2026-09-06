@@ -10,6 +10,7 @@ import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { getSiteUrl } from '@/lib/site-url';
 import { COMPANY } from '@/lib/company';
 import { SupportChat } from '@/components/support/SupportChat';
+import { MobileTabBar } from '@/components/layout/MobileTabBar';
 
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
@@ -135,9 +136,11 @@ const searchLd = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0a0b0e',
+  themeColor: '#07080B',
   width: 'device-width',
   initialScale: 1,
+  // Нужно, чтобы env(safe-area-inset-*) был ненулевым на iPhone с вырезом
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -161,7 +164,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Анонс акции PLUS5 — под фиксированной шапкой, скрывается сам
             по концу срока или после использования кода. */}
         <PromoStrip />
-        <main className="flex-1">{children}</main>
+        {/* Нижний паддинг на мобильных — чтобы контент не уходил под
+            постоянную нижнюю навигацию (см. MobileTabBar). */}
+        <main className="flex-1 pb-[calc(var(--mobile-nav-h)_+_env(safe-area-inset-bottom))] md:pb-0">
+          {children}
+        </main>
+        {/* Постоянная нижняя навигация — только мобильные (md:hidden внутри) */}
+        <MobileTabBar />
         {/* Консультант доступен на любой странице — как в приложении. */}
         <SupportChat />
         <Footer />

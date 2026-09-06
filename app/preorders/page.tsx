@@ -83,7 +83,14 @@ export default async function PreordersPage({ searchParams }: Props) {
       </ScrollReveal>
 
       <Suspense>
-        <CatalogFilters basePath="/preorders" hideSearch hideDiscount sortOptions={PRE_SORT} genres={genres} />
+        <CatalogFilters
+          basePath="/preorders"
+          hideSearch
+          hideDiscount
+          sortOptions={PRE_SORT}
+          genres={genres}
+          baseCountParams={{ task_type: 'preorders' }}
+        />
       </Suspense>
 
       <p className="text-text-secondary text-sm mb-4">

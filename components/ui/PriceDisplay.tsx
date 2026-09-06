@@ -9,15 +9,19 @@ interface Props {
 }
 
 /**
- * Цена в стиле Instant Gaming:
- * [-84%] [зачёркнутая старая] [крупная белая цена]
+ * Цена: [-N%] [зачёркнутая старая] [крупная текущая].
+ *
+ * Серверный компонент, чистая функция от пропсов — источник цены не трогаем.
+ * Старая цена считается существующим getOriginalPrice из product.discount_pct.
+ * Токены приведены к дизайн-системе (rounded-pill бейдж, text-muted у старой
+ * цены); размер lg немного уменьшен, чтобы цена не была «гигантской».
  */
 export function PriceDisplay({ price, discountPct = 0, className, size = 'md' }: Props) {
   if (price == null) {
     return <span className={clsx('text-text-secondary', className)}>Цена по запросу</span>;
   }
 
-  // Бесплатные игры (например, free-to-play): цена 0 — это «Бесплатно», а не «0 BYN»
+  // Бесплатные игры (free-to-play): цена 0 — это «Бесплатно», а не «0 BYN»
   if (price === 0) {
     return (
       <span
@@ -37,14 +41,13 @@ export function PriceDisplay({ price, discountPct = 0, className, size = 'md' }:
   const hasDiscount = discountPct > 0;
   const originalPrice = hasDiscount ? getOriginalPrice(price, discountPct) : null;
 
-  // Цена со скидкой — жёлтая и на ступень крупнее: выгода читается сразу,
-  // ещё до того как глаз доберётся до бейджа с процентом.
+  // Цена со скидкой — акцентная и на ступень крупнее: выгода читается сразу.
   const priceClass = clsx(
     'font-extrabold tracking-tight',
     hasDiscount ? 'text-accent' : 'text-text-primary',
     size === 'sm' && (hasDiscount ? 'text-lg' : 'text-base'),
     size === 'md' && (hasDiscount ? 'text-2xl' : 'text-xl'),
-    size === 'lg' && (hasDiscount ? 'text-5xl' : 'text-4xl')
+    size === 'lg' && (hasDiscount ? 'text-4xl' : 'text-3xl')
   );
 
   return (
@@ -52,10 +55,10 @@ export function PriceDisplay({ price, discountPct = 0, className, size = 'md' }:
       {discountPct > 0 && (
         <span
           className={clsx(
-            'font-bold text-accent-contrast bg-accent rounded-md',
+            'font-bold text-accent-contrast bg-accent rounded-pill',
             size === 'sm' && 'text-[11px] px-1.5 py-0.5',
             size === 'md' && 'text-xs px-2 py-0.5',
-            size === 'lg' && 'text-base px-2.5 py-1'
+            size === 'lg' && 'text-sm px-2.5 py-1'
           )}
         >
           -{Math.round(discountPct)}%
@@ -64,10 +67,10 @@ export function PriceDisplay({ price, discountPct = 0, className, size = 'md' }:
       {originalPrice && (
         <span
           className={clsx(
-            'line-through text-text-secondary/70',
+            'line-through text-text-muted',
             size === 'sm' && 'text-xs',
             size === 'md' && 'text-sm',
-            size === 'lg' && 'text-xl'
+            size === 'lg' && 'text-lg'
           )}
         >
           {originalPrice}

@@ -1,111 +1,63 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Search, Loader2, X } from 'lucide-react';
-import type { Product } from '@/lib/types';
-import { FitImage } from '@/components/ui/FitImage';
-import { API_BASE, normalizeImageUrl, formatPrice } from '@/lib/api';
-import { getClientRegion } from '@/lib/region';
-import { gamePath } from '@/lib/product-url';
+import { useEffect, useRef, useState } from 'react';
+import { Search, Loader2, X, RotateCw, Clock } from 'lucide-react';
+import { useLiveSearch, ResultRow } from './search-shared';
 
-/** Общая логика живого поиска — для десктопной и мобильной версий. */
-function useLiveSearch() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [q, setQ] = useState('');
-  const [results, setResults] = useState<Product[]>([]);
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Сброс при смене страницы
-  useEffect(() => {
-    setOpen(false);
-    setQ('');
-    setResults([]);
-  }, [pathname]);
-
-  const doSearch = useCallback(async (query: string) => {
-    setLoading(true);
-    try {
-      // Регион обязателен — иначе в выдаче появляются дубли из TR-каталога
-      const params = new URLSearchParams({
-        search: query,
-        limit: '7',
-        region: getClientRegion(),
-      });
-      const res = await fetch(`${API_BASE}/products?${params}`);
-      const data: Product[] = res.ok ? await res.json() : [];
-      setResults(Array.isArray(data) ? data : []);
-      setOpen(true);
-    } catch {
-      setResults([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  function handleChange(val: string) {
-    setQ(val);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (val.trim().length < 2) {
-      setResults([]);
-      setOpen(false);
-      return;
-    }
-    timerRef.current = setTimeout(() => doSearch(val.trim()), 350);
-  }
-
-  function submit() {
-    if (q.trim().length < 2) return;
-    setOpen(false);
-    router.push(`/games?search=${encodeURIComponent(q.trim())}`);
-  }
-
-  return { q, results, open, loading, setOpen, handleChange, submit };
-}
-
-function ResultRow({ p, onNavigate }: { p: Product; onNavigate: () => void }) {
-  return (
-    <Link
-      href={gamePath(p.id, p.platform)}
-      className="flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors"
-      onClick={onNavigate}
-    >
-      <FitImage
-        src={normalizeImageUrl(p.image_url)}
-        alt={p.title}
-        sizes="44px"
-        backdrop={false}
-        className="relative w-9 aspect-[3/4] rounded-md shrink-0"
-      />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm text-text-primary truncate">{p.title}</p>
-        <p className="text-xs text-text-secondary">
-          {formatPrice(p.price_byn)}
-          {p.discount_pct > 0 && (
-            <span className="text-accent ml-1.5">-{Math.round(p.discount_pct)}%</span>
-          )}
-        </p>
-      </div>
-    </Link>
-  );
-}
-
-/** Живой поиск в шапке (десктоп) с выпадающими результатами. */
+/**
+ * Живой поиск в шапке (десктоп) с выпадающим списком.
+ *
+ * Мобильный поиск — отдельный полноэкранный SearchOverlay (открывается из
+ * нижней навигации). Общая логика (дебаунс, гонки, ошибка, недавние запросы)
+ * — в ./search-shared. Здесь только десктопная подача.
+ */
 export function SearchBox() {
-  const { q, results, open, loading, setOpen, handleChange, submit } = useLiveSearch();
-  const boxRef = useRef<HTMLDivElement>(null);
+  const {
+    q,
+    results,
+    loading,
+    error,
+    recent,
+    mounted,
+    setOpen,
+    handleChange,
+    submit,
+    applyQuery,
+    retry,
+    refreshRecent,
+    removeRecent,
+    clearRecent,
+  } = useLiveSearch();
 
-  // Закрытие по клику вне
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [focused, setFocused] = useState(false);
+
+  const close = () => {
+    setFocused(false);
+    setOpen(false);
+  };
+  const handleSubmit = () => {
+    setFocused(false);
+    submit();
+  };
+
+  const query = q.trim();
+  const showRecent = focused && query.length < 2 && mounted && recent.length > 0;
+  const showResults = focused && query.length >= 2;
+  const dropdownOpen = showRecent || showResults;
+
+  // Закрытие выпадающего списка по клику вне. Esc обрабатываем на самом
+  // поле (см. onKeyDown) — иначе браузер сначала по-своему очистит
+  // type="search", и до нашего обработчика Esc не дойдёт «как задумано».
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
+    const onClick = (e: MouseEvent) => {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) {
+        setFocused(false);
+        setOpen(false);
+      }
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
   }, [setOpen]);
 
   return (
@@ -113,7 +65,7 @@ export function SearchBox() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          submit();
+          handleSubmit();
         }}
       >
         <div className="relative">
@@ -126,106 +78,100 @@ export function SearchBox() {
             type="search"
             value={q}
             onChange={(e) => handleChange(e.target.value)}
-            onFocus={() => results.length > 0 && setOpen(true)}
+            onFocus={() => {
+              setFocused(true);
+              refreshRecent();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault(); // не даём type="search" самому очистить поле
+                setFocused(false);
+                setOpen(false);
+              }
+            }}
             placeholder="Поиск игр…"
             aria-label="Поиск игр"
-            className="w-full bg-bg-elevated border border-border rounded-lg pl-9 pr-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/60 outline-none focus:border-accent/60 transition-colors"
+            className="w-full bg-bg-elevated border border-border rounded-control pl-9 pr-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/60 outline-none focus:border-accent/60 transition-colors"
           />
         </div>
       </form>
 
-      {open && (
-        <div className="absolute left-0 right-0 top-full mt-2 bg-bg-card border border-border rounded-lg shadow-2xl overflow-hidden z-50">
-          {results.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-text-secondary">Ничего не найдено</p>
+      {dropdownOpen && (
+        <div className="absolute left-0 right-0 top-full mt-2 overflow-hidden rounded-card border border-border bg-surface-3 shadow-elevation-2 z-50">
+          {showRecent ? (
+            <div>
+              <div className="flex items-center justify-between px-3 pt-2.5 pb-1">
+                <span className="text-2xs font-semibold uppercase tracking-wider text-text-secondary">
+                  Недавние
+                </span>
+                <button
+                  type="button"
+                  onClick={clearRecent}
+                  className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  Очистить
+                </button>
+              </div>
+              {recent.map((r) => (
+                <div
+                  key={r}
+                  className="group flex items-center gap-2 pr-2 transition-colors hover:bg-surface-2"
+                >
+                  <button
+                    type="button"
+                    onClick={() => applyQuery(r)}
+                    className="flex flex-1 items-center gap-2.5 px-3 py-2 text-left text-sm text-text-primary min-w-0"
+                  >
+                    <Clock className="w-3.5 h-3.5 shrink-0 text-text-secondary" />
+                    <span className="truncate">{r}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeRecent(r)}
+                    aria-label={`Удалить «${r}» из недавних`}
+                    className="shrink-0 rounded p-1 text-text-secondary opacity-0 transition-opacity hover:text-text-primary group-hover:opacity-100"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <span className="text-sm text-text-secondary">Не удалось выполнить поиск</span>
+              <button
+                type="button"
+                onClick={retry}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
+              >
+                <RotateCw className="w-3.5 h-3.5" />
+                Повторить
+              </button>
+            </div>
+          ) : results.length === 0 ? (
+            loading ? (
+              <p className="px-4 py-3 text-sm text-text-secondary">Поиск…</p>
+            ) : (
+              <div className="px-4 py-3">
+                <p className="text-sm text-text-primary">Ничего не найдено</p>
+                <p className="mt-1 text-xs text-text-secondary">
+                  Попробуйте изменить запрос или проверить написание.
+                </p>
+              </div>
+            )
           ) : (
             <>
               {results.map((p) => (
-                <ResultRow key={p.id} p={p} onNavigate={() => setOpen(false)} />
+                <ResultRow key={p.id} p={p} onNavigate={close} />
               ))}
               <button
-                onClick={submit}
-                className="w-full px-4 py-2.5 text-xs font-medium text-accent hover:bg-accent/10 transition-colors text-left border-t border-border"
+                type="button"
+                onClick={handleSubmit}
+                className="w-full border-t border-border px-4 py-2.5 text-left text-xs font-medium text-accent transition-colors hover:bg-accent/10"
               >
-                Все результаты →
+                Показать все результаты →
               </button>
             </>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Мобильный поиск: иконка в шапке → панель под шапкой с живыми результатами. */
-export function MobileSearch() {
-  const { q, results, open, loading, setOpen, handleChange, submit } = useLiveSearch();
-  const [panelOpen, setPanelOpen] = useState(false);
-  const pathname = usePathname();
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setPanelOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (panelOpen) inputRef.current?.focus();
-  }, [panelOpen]);
-
-  return (
-    <div className="md:hidden">
-      <button
-        onClick={() => setPanelOpen(!panelOpen)}
-        aria-label={panelOpen ? 'Закрыть поиск' : 'Поиск игр'}
-        className="w-8 h-8 flex items-center justify-center rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-card transition-colors"
-      >
-        {panelOpen ? <X className="w-4 h-4" /> : <Search className="w-4 h-4" />}
-      </button>
-
-      {panelOpen && (
-        <div className="fixed left-0 right-0 top-14 z-50 glass border-b border-border p-3">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              submit();
-            }}
-          >
-            <div className="relative">
-              {loading ? (
-                <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary animate-spin" />
-              ) : (
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
-              )}
-              <input
-                ref={inputRef}
-                type="search"
-                value={q}
-                onChange={(e) => handleChange(e.target.value)}
-                placeholder="Поиск игр…"
-                aria-label="Поиск игр"
-                className="w-full bg-bg-page border border-border rounded-md pl-9 pr-3 py-2.5 text-sm text-text-primary placeholder:text-text-secondary/60 outline-none focus:border-accent transition-colors"
-              />
-            </div>
-          </form>
-
-          {open && (
-            <div className="mt-2 bg-bg-card border border-border rounded-lg overflow-hidden max-h-[60vh] overflow-y-auto">
-              {results.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-text-secondary">Ничего не найдено</p>
-              ) : (
-                <>
-                  {results.map((p) => (
-                    <ResultRow key={p.id} p={p} onNavigate={() => setPanelOpen(false)} />
-                  ))}
-                  <button
-                    onClick={submit}
-                    className="w-full px-4 py-2.5 text-xs font-medium text-accent hover:bg-accent/10 transition-colors text-left border-t border-border"
-                  >
-                    Все результаты →
-                  </button>
-                </>
-              )}
-            </div>
           )}
         </div>
       )}

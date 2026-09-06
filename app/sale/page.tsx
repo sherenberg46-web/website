@@ -105,7 +105,13 @@ export default async function SalePage({ searchParams }: Props) {
 
       {/* Filters */}
       <Suspense>
-        <CatalogFilters basePath="/sale" hideSearch sortOptions={SALE_SORT} genres={genres} />
+        <CatalogFilters
+          basePath="/sale"
+          hideSearch
+          sortOptions={SALE_SORT}
+          genres={genres}
+          baseCountParams={{ task_type: 'sales' }}
+        />
       </Suspense>
 
       <p className="text-text-secondary text-sm mb-4">

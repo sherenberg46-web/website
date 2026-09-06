@@ -121,7 +121,11 @@ async function FiltersSection() {
   ]);
   return (
     <Suspense>
-      <CatalogFilters categories={categories} genres={genres} />
+      <CatalogFilters
+      categories={categories}
+      genres={genres}
+      baseCountParams={{ product_type: 'game' }}
+    />
     </Suspense>
   );
 }

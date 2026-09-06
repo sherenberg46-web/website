@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { ShoppingCart, Check, Heart, ExternalLink, ShieldCheck, Clock, CreditCard, Globe } from 'lucide-react';
 import clsx from 'clsx';
 import { useCartStore } from '@/store/cartStore';
 import { useFavouritesStore } from '@/store/favouritesStore';
 import { useEditionStore } from '@/store/editionStore';
-import { normalizeImageUrl, getTelegramLink } from '@/lib/api';
+import { normalizeImageUrl, getTelegramLink, getOriginalPrice } from '@/lib/api';
 import { fbTrack } from '@/lib/fbq';
 import type { Product, CatalogEdition } from '@/lib/types';
 import type { Region } from '@/lib/region';
@@ -59,9 +60,17 @@ export function AddToCart({ product, editions, region }: Props) {
   const [added, setAdded] = useState(false);
 
   const addItem = useCartStore((s) => s.addItem);
+  const cartItems = useCartStore((s) => s.items);
   const { isFavourite, toggleFavourite } = useFavouritesStore();
-  const isFav = isFavourite(product.id);
   const selectEdition = useEditionStore((s) => s.select);
+
+  // Стор избранного и корзина живут в localStorage: на сервере они пусты,
+  // на клиенте регидратируются. Состояние, зависящее от них (иконка ♥,
+  // ярлык «В корзине»), читаем только после монтирования — иначе рассинхрон
+  // гидратации. Тот же приём, что в шапке и ProductCard.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isFav = mounted && isFavourite(product.id);
 
   // Выбор издания меняет и обложку вверху страницы: у Deluxe и Ultimate в
   // PS Store своё оформление, и покупатель должен видеть то, что берёт.
@@ -80,6 +89,14 @@ export function AddToCart({ product, editions, region }: Props) {
     region === 'TR' ? product.price_byn_tr ?? product.price_byn : product.price_byn;
   const price = selected ? editionPrice(selected, region) ?? productPrice : productPrice;
   const discount = selected?.discount_pct ?? product.discount_pct;
+  // Старая цена — существующей формулой (getOriginalPrice), новую логику не вводим.
+  const oldPrice = discount > 0 && price != null ? getOriginalPrice(price, discount) : null;
+  // Уже в корзине — читаем фактическое состояние корзины, а не новый флаг.
+  const inCart =
+    mounted &&
+    cartItems.some(
+      (i) => i.product_id === product.id && i.edition_id === (selected?.id ?? null)
+    );
 
   // Просмотр карточки товара для пикселя Meta.
   //
@@ -96,6 +113,17 @@ export function AddToCart({ product, editions, region }: Props) {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
+
+  // Высота мобильной sticky-панели покупки — чтобы Chat FAB встал над ней
+  // (см. SupportChat). На десктопе панель скрыта; переменная там безвредна,
+  // FAB использует свой фиксированный отступ.
+  useEffect(() => {
+    const el = document.documentElement;
+    el.style.setProperty('--pdp-cta-h', '4.25rem');
+    return () => {
+      el.style.removeProperty('--pdp-cta-h');
+    };
+  }, []);
 
   // Сравнение цен по регионам (обе есть в базе)
   const uaPrice = product.price_byn;
@@ -352,21 +380,23 @@ export function AddToCart({ product, editions, region }: Props) {
       {/* Actions */}
       <div className="flex gap-3">
         <button
+          type="button"
           onClick={handleAdd}
           disabled={!price}
           className={clsx(
-            'flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full font-semibold text-sm transition-all',
-            added
-              ? 'bg-green-500/20 border border-green-500/40 text-green-400'
-              : price
-              ? 'bg-accent hover:bg-accent-hover text-accent-contrast hover:opacity-90'
-              : 'bg-bg-card border border-border text-text-secondary cursor-not-allowed'
+            'btn flex-1',
+            added ? 'btn-secondary !border-green-500/40 !text-green-400' : 'btn-primary'
           )}
         >
           {added ? (
             <>
               <Check className="w-4 h-4" />
               Добавлено в корзину
+            </>
+          ) : inCart ? (
+            <>
+              <Check className="w-4 h-4" />
+              В корзине
             </>
           ) : (
             <>
@@ -377,13 +407,11 @@ export function AddToCart({ product, editions, region }: Props) {
         </button>
 
         <button
+          type="button"
           onClick={() => toggleFavourite(product)}
-          className={clsx(
-            'w-12 flex items-center justify-center rounded-full border transition-colors',
-            isFav
-              ? 'border-accent/50 bg-accent/10 text-accent'
-              : 'border-border bg-bg-card text-text-secondary hover:text-text-primary'
-          )}
+          aria-label={isFav ? 'Убрать из избранного' : 'Добавить в избранное'}
+          aria-pressed={isFav}
+          className={clsx('btn btn-secondary w-12 shrink-0 !px-0', isFav && '!border-accent/50 !text-accent')}
         >
           <Heart className={clsx('w-5 h-5', isFav && 'fill-current')} />
         </button>
@@ -395,7 +423,7 @@ export function AddToCart({ product, editions, region }: Props) {
       {added && (
         <Link
           href="/cart"
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-bg-card border border-accent/40 text-text-primary text-sm font-semibold hover:border-accent transition-colors"
+          className="btn btn-secondary btn-block !border-accent/40 hover:!border-accent"
         >
           Перейти в корзину
         </Link>
@@ -416,6 +444,76 @@ export function AddToCart({ product, editions, region }: Props) {
         Удобнее в Telegram? Напишите менеджеру
         <ExternalLink className="w-3 h-3" />
       </a>
+
+      {/* Мобильная закреплённая панель покупки.
+          Рендерится порталом в body: template.tsx оборачивает контент в
+          motion.div с transform, а из-за transform position:fixed внутри
+          привязывается к этому div, а не к вьюпорту. Портал выносит панель
+          наружу. Стоит над нижней навигацией (MobileTabBar) и над Chat FAB
+          (тот поднимается на --pdp-cta-h). Логику добавления не дублирует —
+          тот же handleAdd, тот же payload; ярлык из фактического состояния
+          корзины (inCart). Только мобильные, только после монтирования. */}
+      {mounted &&
+        createPortal(
+          <div
+            className="md:hidden fixed inset-x-0 z-40 border-t border-border bg-surface-1/95 backdrop-blur-xl"
+            style={{ bottom: 'calc(var(--mobile-nav-h) + env(safe-area-inset-bottom))' }}
+          >
+            <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5">
+        <div className="min-w-0 flex-1">
+          {price == null ? (
+            <span className="text-sm font-semibold text-text-secondary">Цена уточняется</span>
+          ) : (
+            <div className="flex items-baseline gap-2 overflow-hidden">
+              <span
+                className={clsx(
+                  'shrink-0 whitespace-nowrap text-base font-extrabold tracking-tight',
+                  discount > 0 ? 'text-accent' : 'text-text-primary'
+                )}
+              >
+                {price} BYN
+              </span>
+              {oldPrice != null && (
+                <span className="whitespace-nowrap text-xs text-text-muted line-through">
+                  {oldPrice}
+                </span>
+              )}
+              {discount > 0 && (
+                <span className="shrink-0 rounded-pill bg-accent px-1.5 py-0.5 text-2xs font-bold text-accent-contrast">
+                  -{Math.round(discount)}%
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={!price}
+          aria-label={inCart ? 'Уже в корзине — добавить ещё' : 'Добавить в корзину'}
+          className={clsx('btn btn-sm shrink-0 px-5', added || inCart ? 'btn-secondary !text-accent' : 'btn-primary')}
+        >
+              {added ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  Добавлено
+                </>
+              ) : inCart ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  В корзине
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-4 h-4" />
+                  В корзину
+                </>
+              )}
+            </button>
+          </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

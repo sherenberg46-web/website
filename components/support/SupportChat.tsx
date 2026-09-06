@@ -125,7 +125,7 @@ export function SupportChat() {
         <button
           onClick={() => setOpen(true)}
           aria-label="Чат с консультантом"
-          className="fixed right-5 bottom-5 z-40 w-14 h-14 rounded-full bg-accent hover:bg-accent-hover text-accent-contrast shadow-lg shadow-accent/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+          className="fixed right-5 bottom-[calc(var(--mobile-nav-h)_+_env(safe-area-inset-bottom)_+_var(--pdp-cta-h,0px)_+_1rem)] md:bottom-5 z-40 w-14 h-14 rounded-full bg-accent hover:bg-accent-hover text-accent-contrast shadow-lg shadow-accent/30 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
         >
           <MessageCircle className="w-6 h-6" />
           <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-green-400 border-2 border-bg-page" />

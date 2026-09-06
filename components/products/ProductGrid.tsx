@@ -1,6 +1,3 @@
-'use client';
-
-import { motion, useReducedMotion } from 'framer-motion';
 import type { Product } from '@/lib/types';
 import { ProductCard } from './ProductCard';
 
@@ -9,34 +6,28 @@ interface Props {
   priority?: boolean;
 }
 
+/**
+ * Сетка карточек каталога.
+ *
+ * Framer Motion (whileInView + stagger) убран: на мобильном каталоге в 20+
+ * карточек это давало десятки IntersectionObserver и заметный джанк, а
+ * контент проявлялся с задержкой. Карточки рендерятся сразу; лёгкие
+ * hover/active-эффекты — внутри ProductCard на CSS.
+ */
 export function ProductGrid({ products, priority = false }: Props) {
-  const reduceMotion = useReducedMotion();
-
   if (!products.length) {
     return (
-      <div className="text-center py-20 text-text-secondary">
+      <div className="py-20 text-center text-text-secondary">
         <p className="text-lg">Ничего не найдено</p>
-        <p className="text-sm mt-2">Попробуйте изменить фильтры</p>
+        <p className="mt-2 text-sm">Попробуйте изменить фильтры</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+    <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-4 md:grid-cols-4 md:gap-y-8 xl:grid-cols-5">
       {products.map((product, i) => (
-        <motion.div
-          key={product.id}
-          initial={{ opacity: 0, y: reduceMotion ? 0 : 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{
-            duration: 0.45,
-            delay: reduceMotion ? 0 : Math.min(i * 0.05, 0.4),
-            ease: [0.25, 0.46, 0.45, 0.94],
-          }}
-        >
-          <ProductCard product={product} priority={priority && i < 4} />
-        </motion.div>
+        <ProductCard key={product.id} product={product} priority={priority && i < 4} />
       ))}
     </div>
   );

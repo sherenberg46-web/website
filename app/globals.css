@@ -5,16 +5,22 @@
 :root {
   --bg-page: #07080b;
   --bg-card: #101218;
+  --surface-1: #101218;
+  --surface-2: #161920;
+  --surface-3: #1c1f27;
   --accent: #fec72c;
   --accent-hover: #ffd54f;
   --accent-contrast: #0a0a0b;
   --accent-blue: #3b82f6;
   --gradient: linear-gradient(135deg, #fec72c, #f5b301);
   --text-primary: #f4f4f5;
-  --text-secondary: #8b909c;
-  --text-muted: #5c616c;
+  /* Контраст поднят — синхронно с tailwind.config.ts */
+  --text-secondary: #9aa1ad;
+  --text-muted: #787f8b;
   --border: #1e2129;
   --border-strong: #2a2e38;
+  /* Высота нижней навигации (без учёта safe-area) */
+  --mobile-nav-h: 3.5rem;
 }
 
 * {
@@ -25,6 +31,9 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* iOS: не раздувать текст в ландшафте */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -32,6 +41,20 @@ body {
   color: var(--text-primary);
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter',
     'Segoe UI', sans-serif;
+  /* Убираем серую вспышку и 300 мс задержку тапа на мобильных */
+  -webkit-tap-highlight-color: transparent;
+  /* Страховка от горизонтального overflow на узких экранах */
+  overflow-x: hidden;
+}
+
+a,
+button,
+[role='button'],
+input,
+label,
+select,
+summary {
+  touch-action: manipulation;
 }
 
 /* Custom scrollbar */
@@ -80,6 +103,84 @@ body {
 }
 .btn-gradient:active {
   transform: translateY(0);
+}
+
+/* ------------------------------------------------------------------ *
+ * Кнопки — единый примитив мобильного слоя.
+ * Чистый CSS (как .btn-gradient / .glass выше), чтобы не тянуть JS и
+ * не зависеть от порядка Tailwind-слоёв. Минимальная высота 44px —
+ * рекомендуемая зона нажатия.
+ * ------------------------------------------------------------------ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease,
+    opacity 0.18s ease;
+}
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+.btn-secondary {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover {
+  border-color: var(--border-strong);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.btn-ghost:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+.btn-sm {
+  min-height: 44px;
+  padding: 0 0.875rem;
+  font-size: 0.8125rem;
+}
+.btn-lg {
+  min-height: 48px;
+  padding: 0 1.5rem;
+}
+.btn-block {
+  width: 100%;
+}
+
+/* Гарантированная зона нажатия для иконочных элементов */
+.tap-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Отступ под iOS home indicator */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
 }
 
 /* Glass card */

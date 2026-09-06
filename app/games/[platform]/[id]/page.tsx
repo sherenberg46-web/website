@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Star, Calendar, Monitor, Languages } from 'lucide-react';
+import clsx from 'clsx';
+import { Star } from 'lucide-react';
 import {
   getProductById,
   getProductEditions,
@@ -16,10 +17,11 @@ import { getSiteUrl } from '@/lib/site-url';
 import { gamePath, platformSlug, isPlatformSegment } from '@/lib/product-url';
 import { AddToCart } from '@/components/products/AddToCart';
 import { GameDescription } from '@/components/products/GameDescription';
+import { KeyFacts } from '@/components/products/KeyFacts';
 import { ProductFaq } from '@/components/products/ProductFaq';
 import { productFaq } from '@/lib/product-faq';
 import { productSeoDescription, productSeoTitle } from '@/lib/seo';
-import { languageInfo, languageNames } from '@/lib/languages';
+import { languageInfo } from '@/lib/languages';
 import { ReviewForm } from '@/components/products/ReviewForm';
 import { TrackView } from '@/components/products/TrackView';
 import { ProductGrid } from '@/components/products/ProductGrid';
@@ -28,7 +30,6 @@ import { Badge } from '@/components/ui/Badge';
 import { FitImage } from '@/components/ui/FitImage';
 import { GameCover } from '@/components/products/GameCover';
 import { BackButton } from '@/components/ui/BackButton';
-import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
 export const dynamic = 'force-dynamic';
 
@@ -270,7 +271,14 @@ export default async function GamePage({ params }: Props) {
       />
       <TrackView product={product} />
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div
+        className={clsx(
+          'max-w-7xl mx-auto px-4 pt-8',
+          // На мобильном оставляем место под закреплённую панель покупки;
+          // у TR-заблокированных товаров её нет.
+          trGameBlocked ? 'pb-8' : 'pb-[6.5rem] md:pb-8'
+        )}
+      >
         {/* Возврат туда, откуда пришли: с карточки дополнения — обратно к
             изданиям игры, а не в общий каталог, куда ведут крошки. */}
         <div className="mb-4">
@@ -294,16 +302,16 @@ export default async function GamePage({ params }: Props) {
           <div className="relative">
             {/* 3:4 под вертикальные обложки PS Store. В квадрате у постера
                 срезало верх с логотипом и низ с возрастным рейтингом. */}
-            <div className="relative aspect-[3/4] max-w-sm mx-auto lg:mx-0 rounded-xl overflow-hidden shadow-glow-card">
+            <div className="relative aspect-[3/4] max-w-sm mx-auto lg:mx-0 rounded-card overflow-hidden bg-surface-2">
               {/* Обложка меняется вместе с выбранным изданием — см. GameCover. */}
               <GameCover productId={product.id} src={imageUrl} alt={product.title} />
               {product.discount_pct > 0 && (
-                <div className="absolute top-4 left-4">
-                  <Badge variant="accent">-{Math.round(product.discount_pct)}%</Badge>
+                <div className="absolute top-3 left-3">
+                  <Badge variant="new">-{Math.round(product.discount_pct)}%</Badge>
                 </div>
               )}
               {product.is_preorder && (
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-3 right-3">
                   <Badge variant="preorder">Предзаказ</Badge>
                 </div>
               )}
@@ -311,8 +319,8 @@ export default async function GamePage({ params }: Props) {
           </div>
 
           {/* Details */}
-          <div className="space-y-6">
-            {/* Platforms */}
+          <div className="space-y-5">
+            {/* Platforms + genre */}
             <div className="flex flex-wrap gap-2">
               {platforms.map((p) => (
                 <Badge key={p} variant={p === 'PS5' ? 'ps5' : 'ps4'}>{p}</Badge>
@@ -320,93 +328,68 @@ export default async function GamePage({ params }: Props) {
               {mainGenre && <Badge variant="outline">{mainGenre}</Badge>}
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-text-primary">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-text-primary">
               {product.title}
             </h1>
 
-            {/* Meta */}
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-text-secondary">
-              {product.rating > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <Star className="w-4 h-4 text-amber-400 fill-current" />
-                  <span className="text-text-primary font-medium">{product.rating.toFixed(1)}</span>
-                  <span>/ 5.0</span>
-                </div>
-              )}
-              {product.release_date && (
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4" />
-                  <span>{new Date(product.release_date).toLocaleDateString('ru-BY', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-1.5">
-                <Monitor className="w-4 h-4" />
-                <span>Каталог: {region === 'TR' ? 'Турция (TR)' : 'Украина (UA)'}</span>
-              </div>
-              {/* Язык — первый вопрос покупателя, и до сих пор карточка на
-                  него молчала, хотя данные снимаются вместе с изданиями.
-                  Где их нет, не пишем ничего: «языки неизвестны» и «русского
-                  нет» для человека разные вещи, и путать их нельзя. */}
-              {langs.known && (
-                <div className="flex items-center gap-1.5">
-                  <Languages className="w-4 h-4" />
+            {/* Мета — коротко: рейтинг и язык. Остальное — в «Характеристиках»,
+                чтобы не дублировать и не оттеснять цену вниз. */}
+            {(product.rating > 0 || langs.headline) && (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-secondary">
+                {product.rating > 0 && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Star className="w-4 h-4 text-amber-400 fill-current" />
+                    <span className="text-text-primary font-medium">
+                      {product.rating.toFixed(1)}
+                    </span>
+                    <span>/ 5.0</span>
+                  </span>
+                )}
+                {langs.headline && (
                   <span
                     className={
                       langs.hasRussianAudio || langs.hasRussianSubs
                         ? 'text-accent font-medium'
-                        : 'text-text-secondary'
+                        : undefined
                     }
                   >
                     {langs.headline}
                   </span>
-                </div>
-              )}
-            </div>
-
-            {/* Description */}
-            {cleanDescription && <GameDescription text={cleanDescription} />}
-
-            {/* Полный список языков. Озвучка и субтитры отдельно: для
-                покупателя это разные вещи, и «русский есть» без уточнения
-                каждый понимает по-своему. */}
-            {langs.known && (
-              <div className="bg-bg-card border border-border rounded-xl p-4 space-y-1.5">
-                {langs.audio.length > 0 && (
-                  <p className="text-sm">
-                    <span className="text-text-secondary">Озвучка: </span>
-                    <span className="text-text-primary">
-                      {languageNames(langs.audio, 'audio')}
-                    </span>
-                  </p>
                 )}
-                {langs.subs.length > 0 && (
-                  <p className="text-sm">
-                    <span className="text-text-secondary">Субтитры: </span>
-                    <span className="text-text-primary">
-                      {languageNames(langs.subs, 'subs')}
-                    </span>
-                  </p>
-                )}
-                <p className="text-text-secondary/70 text-xs pt-1">
-                  Язык выбирается в настройках игры и не зависит от региона аккаунта.
-                </p>
               </div>
             )}
 
-            {/* Add to cart. TR-игры временно не продаём: вместо покупки —
-                отбивка, как на главной и в каталоге. Подписки и пополнение
-                (другие product_type) не затрагиваем. */}
+            {/* Коммерческий блок: цена + CTA. Стоит сразу под названием —
+                покупатель не должен проматывать описание, чтобы увидеть цену.
+                TR-игры временно не продаём: вместо покупки — отбивка. */}
             {trGameBlocked ? (
               <TrGamesBlocked />
             ) : (
               <AddToCart product={product} editions={editions} region={region} />
             )}
+
+            {/* Ключевые характеристики — компактный accordion (на десктопе
+                раскрыт). Язык, регион, дата, тип — здесь, а не отдельными
+                блоками над ценой. */}
+            <KeyFacts
+              platform={product.platform}
+              genre={product.genre}
+              releaseDate={product.release_date}
+              region={region}
+              productType={product.product_type}
+              langs={langs}
+              hasEditions={editions.length > 1}
+            />
+
+            {/* Описание — после коммерческого блока. Длинное сворачивается
+                внутри GameDescription (текст остаётся в DOM для SEO). */}
+            {cleanDescription && <GameDescription text={cleanDescription} />}
           </div>
         </div>
 
         {/* DLC */}
         {dlc.length > 0 && (
-          <ScrollReveal className="mt-16">
+          <section className="mt-16">
             <h2 className="text-2xl font-bold mb-6">Дополнения (DLC)</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {dlc.slice(0, 12).map((item) => {
@@ -445,7 +428,7 @@ export default async function GamePage({ params }: Props) {
                 );
               })}
             </div>
-          </ScrollReveal>
+          </section>
         )}
 
         {/* Частые вопросы — те же, что задают менеджеру перед первой покупкой.
@@ -454,7 +437,7 @@ export default async function GamePage({ params }: Props) {
             один и тот же набор вопросов на сорока трёх тысячах карточек
             поисковик считает штампованной разметкой, а на главной и на
             «Как купить» она стоит по делу. */}
-        <ScrollReveal className="mt-16">
+        <section className="mt-16">
           <h2 className="text-2xl font-bold mb-6">Частые вопросы</h2>
           <div className="max-w-3xl">
             <ProductFaq
@@ -473,7 +456,7 @@ export default async function GamePage({ params }: Props) {
               })}
             />
           </div>
-        </ScrollReveal>
+        </section>
 
         {/* Отзывы о магазине.
             Стоят выше отзывов об игре и показываются всегда: на карточке
@@ -481,7 +464,7 @@ export default async function GamePage({ params }: Props) {
             и покупатель видел на товаре за три сотни мёртвую строчку «Пока
             нет отзывов». О магазине же отзыв уместен на любой карточке — и
             отвечает он на тот вопрос, который человека и держит. */}
-        <ScrollReveal className="mt-16">
+        <section className="mt-16">
           <div className="flex items-center gap-3 mb-6">
             <h2 className="text-2xl font-bold">Отзывы о магазине</h2>
             {storeReviews.count > 0 && (
@@ -528,13 +511,13 @@ export default async function GamePage({ params }: Props) {
           )}
 
           <ReviewForm />
-        </ScrollReveal>
+        </section>
 
         {/* Отзывы об игре: видимый блок под ту же разметку, что уходит в Google.
             Показываем только когда они есть — пустой блок на каждой из сорока
             трёх тысяч карточек выглядел мёртвым магазином. */}
         {reviews.count > 0 && (
-        <ScrollReveal className="mt-16">
+        <section className="mt-16">
           <div className="flex items-center gap-3 mb-6">
             <h2 className="text-2xl font-bold">Отзывы об игре</h2>
             {reviews.count > 0 && (
@@ -570,12 +553,12 @@ export default async function GamePage({ params }: Props) {
           </div>
 
           <ReviewForm productId={product.id} />
-        </ScrollReveal>
+        </section>
         )}
 
         {/* Similar */}
         {similar.length > 0 && (
-          <ScrollReveal className="mt-16">
+          <section className="mt-16">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">Похожие игры</h2>
               <Link href="/games" className="text-accent text-sm hover:underline">
@@ -583,7 +566,7 @@ export default async function GamePage({ params }: Props) {
               </Link>
             </div>
             <ProductGrid products={similar} />
-          </ScrollReveal>
+          </section>
         )}
       </div>
     </>

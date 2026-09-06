@@ -44,25 +44,36 @@ export function RegionSwitcher() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-sm text-text-secondary hover:text-text-primary hover:bg-bg-card transition-colors"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex items-center gap-1.5 h-11 px-2 rounded-control text-sm text-text-primary hover:bg-white/5 transition-colors"
         title="Регион каталога"
       >
         <RegionBadge code={current.value} />
-        <span className="hidden sm:flex flex-col items-start leading-none">
-          <span className="text-[9px] uppercase tracking-wider text-text-muted">Регион</span>
-          <span className="text-xs font-bold text-text-primary mt-0.5">{current.value}</span>
+        <span className="flex flex-col items-start leading-none">
+          <span className="hidden sm:block text-[10px] uppercase tracking-wider text-text-secondary">
+            Регион
+          </span>
+          <span className="text-xs font-semibold text-text-primary sm:mt-0.5">
+            {current.value === 'UA' ? 'Украина' : 'Турция'}
+          </span>
         </span>
-        <ChevronDown className={clsx('w-3 h-3 transition-transform', open && 'rotate-180')} />
+        <ChevronDown
+          className={clsx(
+            'hidden sm:block w-3.5 h-3.5 text-text-secondary shrink-0 transition-transform',
+            open && 'rotate-180'
+          )}
+        />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-44 bg-bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50">
+        <div className="absolute right-0 top-full mt-2 w-48 bg-surface-3 border border-border rounded-card shadow-elevation-2 overflow-hidden z-50">
           {REGIONS.map((r) => (
             <button
               key={r.value}
               onClick={() => select(r.value)}
               className={clsx(
-                'w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left transition-colors',
+                'w-full flex items-center gap-2.5 px-3 min-h-[44px] text-sm text-left transition-colors',
                 r.value === region
                   ? 'text-accent bg-accent/10'
                   : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
