@@ -45,7 +45,6 @@ export function ProductCard({ product, priority = false }: Props) {
   useEffect(() => () => clearTimeout(addedTimer.current), []);
 
   const imageUrl = normalizeImageUrl(product.image_url);
-  const defaultEdition = product.editions?.find((e) => e.is_default) ?? product.editions?.[0];
 
   const platforms = product.platform ? product.platform.split(',').map((p) => p.trim()) : [];
   const platformLabel =
@@ -73,10 +72,17 @@ export function ProductCard({ product, priority = false }: Props) {
 
   function handleAddToCart() {
     if (price == null) return;
+    // С карточки издание не выбирают — кладём сам товар по каталожной цене.
+    // Вложенный product.editions (GameEdition) нумеруется 0,1,2… внутри товара
+    // и не совпадает с id из /products/{id}/editions (CatalogEdition), по
+    // которому корзина сверяется с сервером. Раньше сюда уходил edition_id: 3,
+    // на странице корзины он не находился в списке изданий и позиция
+    // «пропадала». Выбор конкретного издания остаётся только на PDP (AddToCart),
+    // где id берётся из того же CatalogEdition-списка, что и сверка.
     addItem({
       product_id: product.id,
-      edition_id: defaultEdition?.id ?? null,
-      edition_name: defaultEdition?.name ?? null,
+      edition_id: null,
+      edition_name: null,
       qty: 1,
       title: product.title,
       image_url: imageUrl,
