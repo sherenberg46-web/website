@@ -55,7 +55,7 @@ export function HeroSlider({ banners }: Props) {
           Теперь рамка на каждом экране близка к форме исходника, а остаток
           добирает размытая подложка внутри FitImage. */}
       <div
-        className="relative w-full overflow-hidden rounded-xl bg-bg-card aspect-[4/3] sm:aspect-[2/1] lg:aspect-[12/5]"
+        className="relative w-full overflow-hidden rounded-xl bg-bg-card aspect-[16/9] sm:aspect-[2/1] lg:aspect-[12/5]"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
@@ -174,7 +174,10 @@ function DefaultHero() {
   const reduceMotion = useReducedMotion();
   return (
     <section className="max-w-7xl mx-auto px-4 pt-4">
-      <div className="relative w-full overflow-hidden rounded-xl bg-bg-card aspect-[4/3] sm:aspect-[2/1] lg:aspect-[12/5] flex items-center">
+      {/* Фолбэк-hero, когда баннеров нет. Держим его тонким: смысловую нагрузку
+          (заголовок страницы, обещание, CTA) несёт секция сразу под hero —
+          дублировать её здесь незачем. */}
+      <div className="relative w-full overflow-hidden rounded-xl bg-bg-card aspect-[2/1] lg:aspect-[12/5] flex items-center">
         {/* Фоновый градиент */}
         <div className="absolute inset-0 bg-gradient-to-br from-accent/15 via-bg-card to-bg-page" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(254,199,44,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(254,199,44,0.04)_1px,transparent_1px)] bg-[size:60px_60px]" />
@@ -184,31 +187,36 @@ function DefaultHero() {
             initial={{ opacity: 0, y: reduceMotion ? 0 : 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-accent text-xs sm:text-sm font-bold uppercase tracking-widest mb-4"
+            className="text-accent text-xs sm:text-sm font-bold uppercase tracking-widest mb-2 sm:mb-4"
           >
             Цифровые игры PlayStation · Беларусь
           </motion.p>
-          <motion.h1
+          {/* Не h1: настоящий заголовок страницы — в секции сразу под hero
+              (тот же приём, что для слайда с баннером выше). Два h1 на странице
+              не нужны, тем более рядом. */}
+          <motion.p
             initial={{ opacity: 0, y: reduceMotion ? 0 : 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="font-extrabold leading-none tracking-tight mb-5 text-white"
-            style={{ fontSize: 'clamp(2rem, 5vw, 4rem)' }}
+            className="font-extrabold leading-none tracking-tight mb-4 sm:mb-6 text-white"
+            style={{ fontSize: 'clamp(1.6rem, 5vw, 4rem)' }}
           >
-            Ваш магазин<br />PlayStation
-          </motion.h1>
+            Ваш магазин PlayStation
+          </motion.p>
+          {/* Описание — только с sm: на телефоне его роль играет секция под hero,
+              и дублировать текст, удлиняя hero, незачем. */}
           <motion.p
             initial={{ opacity: 0, y: reduceMotion ? 0 : 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-text-secondary text-base sm:text-lg mb-8 max-w-lg"
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="hidden sm:block text-text-secondary text-lg mb-8 max-w-lg"
           >
             Игры, подписки и DLC по лучшим ценам в BYN. Выдача обычно за 30 минут.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: reduceMotion ? 0 : 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
             className="flex flex-wrap gap-3"
           >
             <Link

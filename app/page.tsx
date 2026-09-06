@@ -86,31 +86,36 @@ export default async function HomePage() {
       {/* Hero */}
       <HeroSlider banners={banners} />
 
-      {/* Заголовок страницы и три обещания.
+      {/* Заголовок страницы, обещание и первичный CTA.
           У главной не было своего h1 вовсе: единственный h1 жил внутри
           баннера и менялся вместе со слайдом — для поисковика страница
           называлась то «GTA VI», то названием следующей акции. А покупатель,
           пришедший из выдачи, за первые секунды должен понять три вещи: что
-          здесь продают, в чём платить и когда получит. Обещания те же, что
-          дальше по странице, — расходиться им нельзя. */}
-      <section className="max-w-7xl mx-auto px-4 pt-8 pb-2">
+          здесь продают, в чём платить и когда получит — и сразу иметь кнопку
+          к товарам. Обещания те же, что дальше по странице, — расходиться им
+          нельзя. */}
+      <section className="max-w-7xl mx-auto px-4 pt-6 pb-2">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
           Цифровые игры PlayStation в Беларуси
         </h1>
         <p className="text-text-secondary mt-2 max-w-2xl">
-          Игры для PS4 и PS5, подписки PS Plus и пополнение кошелька PSN. Оплата в
-          белорусских рублях, выдача в рабочее время обычно около 30 минут, гарантия
-          на каждый заказ.
+          Игры PS4 и PS5, подписки PS Plus и пополнение кошелька PSN. Оплата в
+          белорусских рублях, выдача обычно за 30 минут, гарантия на каждый заказ.
         </p>
+        <div className="mt-4 flex flex-wrap gap-2.5">
+          <Link href="/games" className="btn btn-primary">
+            Смотреть каталог
+          </Link>
+          <Link href="/sale" className="btn btn-secondary">
+            Скидки
+          </Link>
+        </div>
       </section>
 
-      {/* Преимущества — компактной строкой сразу под hero */}
-      <Benefits />
-
-      <div className="max-w-7xl mx-auto px-4 space-y-12 py-10">
-        {/* Визуальная навигация по разделам */}
-        <CategoryTiles />
-
+      {/* Товары идут первыми — до преимуществ и плиток разделов: покупатель
+          должен увидеть, что можно купить сейчас, не проматывая пол-экрана
+          инфоблоков. */}
+      <div className="max-w-7xl mx-auto px-4 space-y-10 py-8">
         {/* TR: игры из турецкого каталога временно недоступны — как в Mini App */}
         {isTR && (
           <ScrollReveal>
@@ -155,6 +160,14 @@ export default async function HomePage() {
         )}
 
         <RecentlyViewed />
+      </div>
+
+      {/* Преимущества — компактной строкой уже после первых товаров */}
+      <Benefits />
+
+      {/* Визуальная навигация по разделам — ниже товаров, чтобы не оттеснять их */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <CategoryTiles />
       </div>
 
       {/* Telegram CTA */}

@@ -1,5 +1,4 @@
 import { Zap, Shield, DollarSign, Headphones } from 'lucide-react';
-import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
 const BENEFITS = [
   // «Мгновенно» здесь стояло полтора года и противоречило собственной
@@ -29,20 +28,30 @@ const BENEFITS = [
   },
 ];
 
+/**
+ * Компактная строка доверия. Стоит уже после первых полок с товарами, поэтому
+ * задача блока — поддержать решение о покупке, а не занять первый экран.
+ * На мобильном — сетка 2×2, без пер-карточной анимации (чистый сервер-компонент).
+ */
 export function Benefits() {
   return (
-    <section className="max-w-7xl mx-auto px-4 pt-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        {BENEFITS.map((b, i) => (
-          <ScrollReveal key={b.title} delay={i * 0.08}>
-            <div className="flex items-start gap-3.5 bg-bg-card border border-border rounded-2xl px-5 py-5 h-full hover:border-border-strong transition-colors">
-              <b.icon className="w-[22px] h-[22px] text-accent shrink-0 mt-0.5" strokeWidth={1.8} />
-              <div>
-                <h3 className="text-text-primary font-semibold text-[13.5px] mb-1">{b.title}</h3>
-                <p className="text-text-muted text-[11.5px] leading-relaxed">{b.desc}</p>
-              </div>
+    <section className="max-w-7xl mx-auto px-4 pt-8">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 lg:grid-cols-4">
+        {BENEFITS.map((b) => (
+          <div
+            key={b.title}
+            className="flex flex-col gap-2 rounded-card border border-border bg-surface-1 p-3.5 transition-colors hover:border-border-strong sm:flex-row sm:items-start sm:gap-3 sm:p-4"
+          >
+            <b.icon
+              className="h-5 w-5 shrink-0 text-accent"
+              strokeWidth={1.8}
+              aria-hidden="true"
+            />
+            <div>
+              <h3 className="text-[13px] font-semibold text-text-primary">{b.title}</h3>
+              <p className="mt-0.5 text-2xs leading-relaxed text-text-muted">{b.desc}</p>
             </div>
-          </ScrollReveal>
+          </div>
         ))}
       </div>
     </section>
