@@ -59,7 +59,12 @@ export function OrderForm({ onOrdered }: Props) {
     status: 'idle' | 'checking' | 'ok' | 'bad';
     percent: number;
     reason: string;
-  }>({ status: 'idle', percent: 0, reason: '' });
+    /** Точная скидка в BYN — её считает сервер по составу корзины.
+     *  Процент оставлен для подписи «−5 %», но итог считаем по этой сумме:
+     *  у кода может быть скоуп (например только EA Play 12 мес), и процент
+     *  от всей корзины дал бы не ту сумму, что спишется при оформлении. */
+    discountByn: number;
+  }>({ status: 'idle', percent: 0, reason: '', discountByn: 0 });
   // PLUS5 — алиас акции: сервер такого кода не знает, поэтому при вводе PLUS5
   // мы просим у сервера настоящий одноразовый код 5 % и держим его здесь.
   // В заказ уходит он, а покупатель видит привычный PLUS5.
@@ -103,15 +108,26 @@ export function OrderForm({ onOrdered }: Props) {
   const level5Eligible = !items.some(
     (i) => i.product_type === 'subscription' || i.product_type === 'topup'
   );
+  /**
+   * Корзина для проверки промокода: сервер по ней считает точную скидку с
+   * учётом скоупа кода. Цены берём из корзины — они уже сверены с сервером
+   * (страница корзины делает syncFromServer при открытии).
+   *
+   * Функцией, а не массивом: массив пересоздавался бы на каждый рендер, а он
+   * нужен в зависимостях эффекта ниже — проверка крутилась бы без остановки.
+   * Сам `items` из zustand стабилен по ссылке, пока корзину не тронули.
+   */
+  const buildPromoItems = () =>
+    items.map((i) => ({ product_id: i.product_id, qty: i.qty, byn: i.price_byn }));
   useEffect(() => {
     // Любая смена ввода обнуляет алиас: код из прошлого ввода в заказ не
     // должен уехать под видом нового.
     setPromoRealCode(null);
     if (!promoCode) {
-      setPromoState({ status: 'idle', percent: 0, reason: '' });
+      setPromoState({ status: 'idle', percent: 0, reason: '', discountByn: 0 });
       return;
     }
-    setPromoState({ status: 'checking', percent: 0, reason: '' });
+    setPromoState({ status: 'checking', percent: 0, reason: '', discountByn: 0 });
     const ctl = new AbortController();
     // issueCartPromo сигнала не принимает — от гонок страхуемся флагом.
     let stale = false;
@@ -123,6 +139,7 @@ export function OrderForm({ onOrdered }: Props) {
             status: 'bad',
             percent: 0,
             reason: 'этот промокод уже использован',
+            discountByn: 0,
           });
           return;
         }
@@ -130,11 +147,19 @@ export function OrderForm({ onOrdered }: Props) {
           .then((p) => {
             if (stale) return;
             setPromoRealCode(p.code);
-            setPromoState({ status: 'ok', percent: p.percent, reason: '' });
+            // Алиас-коды действуют на всю корзину — скоупа у них нет.
+            setPromoState({
+              status: 'ok',
+              percent: p.percent,
+              reason: '',
+              discountByn:
+                Math.ceil(totalPrice) -
+                Math.ceil((totalPrice * (100 - p.percent)) / 100),
+            });
           })
           .catch(() => {
             if (stale) return;
-            setPromoState({ status: 'bad', percent: 0, reason: 'не удалось применить' });
+            setPromoState({ status: 'bad', percent: 0, reason: 'не удалось применить', discountByn: 0 });
           });
         return;
       }
@@ -144,6 +169,7 @@ export function OrderForm({ onOrdered }: Props) {
             status: 'bad',
             percent: 0,
             reason: 'LEVEL5 действует только на игры — уберите из корзины подписки и пополнения',
+            discountByn: 0,
           });
           return;
         }
@@ -151,25 +177,38 @@ export function OrderForm({ onOrdered }: Props) {
           .then((p) => {
             if (stale) return;
             setPromoRealCode(p.code);
-            setPromoState({ status: 'ok', percent: p.percent, reason: '' });
+            // Алиас-коды действуют на всю корзину — скоупа у них нет.
+            setPromoState({
+              status: 'ok',
+              percent: p.percent,
+              reason: '',
+              discountByn:
+                Math.ceil(totalPrice) -
+                Math.ceil((totalPrice * (100 - p.percent)) / 100),
+            });
           })
           .catch(() => {
             if (stale) return;
-            setPromoState({ status: 'bad', percent: 0, reason: 'не удалось применить' });
+            setPromoState({ status: 'bad', percent: 0, reason: 'не удалось применить', discountByn: 0 });
           });
         return;
       }
-      checkPromo(promoCode, ctl.signal)
+      const cartForPromo = items.map((i) => ({
+        product_id: i.product_id,
+        qty: i.qty,
+        byn: i.price_byn,
+      }));
+      checkPromo(promoCode, cartForPromo, ctl.signal)
         .then((r) =>
           setPromoState(
             r.valid
-              ? { status: 'ok', percent: r.percent, reason: '' }
-              : { status: 'bad', percent: 0, reason: r.reason }
+              ? { status: 'ok', percent: r.percent, reason: '', discountByn: r.discount_byn }
+              : { status: 'bad', percent: 0, reason: r.reason, discountByn: 0 }
           )
         )
         .catch((e: unknown) => {
           if ((e as Error)?.name === 'AbortError') return;
-          setPromoState({ status: 'bad', percent: 0, reason: 'не удалось проверить' });
+          setPromoState({ status: 'bad', percent: 0, reason: 'не удалось проверить', discountByn: 0 });
         });
     }, 400);
     return () => {
@@ -177,7 +216,7 @@ export function OrderForm({ onOrdered }: Props) {
       clearTimeout(timer);
       ctl.abort();
     };
-  }, [promoCode, level5Eligible]);
+  }, [promoCode, level5Eligible, items, totalPrice]);
 
   // Страховка на случай устаревшего состояния: LEVEL5 не применяется,
   // если в корзине есть подписки или пополнения, — даже если код успел
@@ -194,7 +233,7 @@ export function OrderForm({ onOrdered }: Props) {
   // дроби иногда даёт 3.0000000000000004 вместо ровной тройки, и округление
   // вверх приписывает покупателю лишний рубль. Сервер считает так же.
   const finalPrice = promoOk
-    ? Math.ceil((totalPrice * (100 - promoState.percent)) / 100)
+    ? Math.max(cartTotal - Math.ceil(promoState.discountByn), 0)
     : cartTotal;
   const discount = cartTotal - finalPrice;
 
@@ -257,7 +296,7 @@ export function OrderForm({ onOrdered }: Props) {
       let codeToSend = promoOk ? promoRealCode : null;
       if (promoRealCode) {
         try {
-          const still = await checkPromo(promoRealCode, ctl.signal);
+          const still = await checkPromo(promoRealCode, buildPromoItems(), ctl.signal);
           if (!still.valid) {
             const fresh = await issueCartPromo();
             codeToSend = fresh.code;

@@ -328,14 +328,34 @@ export async function rateConsultant(dialogId: number, rating: 1 | -1): Promise<
  * «не найден», хотя сервер его принимал и скидку давал, — покупатель видел
  * одну сумму, а в заказ уходила другая.
  */
+export interface PromoCheckResult {
+  valid: boolean;
+  percent: number;
+  reason: string;
+  /** Точная скидка в BYN по составу корзины. Считает сервер тем же кодом,
+   *  что и приёмник заказа, — поэтому форма показывает ровно то, что спишется. */
+  discount_byn: number;
+}
+
+/**
+ * Проверить промокод по текущей корзине.
+ *
+ * Отправляем состав корзины, а не один код. Раньше сервер возвращал только
+ * процент, и форма умножала его на всю сумму. Для кода со скоупом (скажем,
+ * только на EA Play 12 мес) это расходилось с тем, что считает оформление:
+ * покупатель видел одну сумму, списывалась другая.
+ */
 export async function checkPromo(
   code: string,
+  items: Array<{ product_id: number; qty: number; byn: number }> = [],
   signal?: AbortSignal
-): Promise<{ valid: boolean; percent: number; reason: string }> {
-  const res = await fetch(
-    `${API_BASE}/web-orders/check-promo?code=${encodeURIComponent(code)}`,
-    { signal }
-  );
+): Promise<PromoCheckResult> {
+  const res = await fetch(`${API_BASE}/web-orders/check-promo`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, items }),
+    signal,
+  });
   if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status });
   return res.json();
 }
