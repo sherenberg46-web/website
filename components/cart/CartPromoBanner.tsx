@@ -42,14 +42,22 @@ export function CartPromoBanner() {
     if (requesting) return;
     setRequesting(true);
     try {
-      setPromo(savePromo(await issueCartPromo()));
+      // Отдаём состав корзины: код привязывается к этим товарам. Иначе его
+      // можно было применить к любой другой — убрать отложенную игру, набрать
+      // вместо неё десяток других и получить 5 % на всё.
+      const cart = items.map((i) => ({
+        product_id: i.product_id,
+        qty: i.qty,
+        byn: i.price_byn,
+      }));
+      setPromo(savePromo(await issueCartPromo(cart)));
     } catch {
       // Сервер не ответил — просто не показываем предложение.
       // Ошибку не выводим: это не то, ради чего человек пришёл.
     } finally {
       setRequesting(false);
     }
-  }, [requesting]);
+  }, [requesting, items]);
 
   // Корзина пролежала нетронутой достаточно долго — просим код.
   useEffect(() => {

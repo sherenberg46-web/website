@@ -277,8 +277,14 @@ export async function getSimilarProducts(
  * предложение показывает сам сайт, а сервер лишь выдаёт настоящий код, который
  * потом примет форма заказа.
  */
-export async function issueCartPromo(): Promise<CartPromo> {
-  const res = await fetch(`${API_BASE}/web-orders/cart-promo`, { method: 'POST' });
+export async function issueCartPromo(
+  items: Array<{ product_id: number; qty: number; byn: number }> = []
+): Promise<CartPromo> {
+  const res = await fetch(`${API_BASE}/web-orders/cart-promo`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items }),
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
