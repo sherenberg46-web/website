@@ -10,6 +10,7 @@ import { clearPromo, loadPromo } from '@/lib/cart-promo';
 import { PLUS5_CODE, plus5Active, plus5Available, markPlus5Used } from '@/lib/plus5';
 import { LEVEL5_CODE, level5Active } from '@/lib/level5';
 import { checkContact } from '@/lib/contact';
+import { gamePassOfferById } from '@/lib/xbox';
 import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -49,6 +50,8 @@ export function OrderForm({ onOrdered }: Props) {
   // переписке. Значение остаётся пустым; payload при этом байт-в-байт совпадает
   // с прежним сценарием «оставил поле пустым», который бэкенд уже принимает.
   const [psPassword] = useState('');
+  // Email аккаунта Microsoft — для Game Pass «на мой аккаунт».
+  const [msEmail, setMsEmail] = useState('');
   const [promo, setPromo] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
@@ -237,11 +240,25 @@ export function OrderForm({ onOrdered }: Props) {
     : cartTotal;
   const discount = cartTotal - finalPrice;
 
+  // Вопрос про аккаунт PlayStation — только если в корзине есть что-то для
+  // PlayStation. У Game Pass способ выдачи выбран ещё на странице подписки:
+  // «на мой аккаунт» просит email Microsoft, «новый аккаунт» — ничего.
+  const xboxOffers = items.flatMap((i) => {
+    const o = gamePassOfferById(i.product_id);
+    return o ? [o] : [];
+  });
+  const needsPsAccount = items.length > xboxOffers.length;
+  const xboxOwn = xboxOffers.some((o) => o.account === 'own');
+  const xboxNew = xboxOffers.some((o) => o.account === 'new');
+  const psAccountOk =
+    !needsPsAccount || (hasAccount !== null && (hasAccount === false || !!psEmail.trim()));
+  const msAccountOk = !xboxOwn || !!msEmail.trim();
+
   const canSubmit =
     nameOk &&
     contactCheck.ok &&
-    hasAccount !== null &&
-    (hasAccount === false || !!psEmail.trim()) &&
+    psAccountOk &&
+    msAccountOk &&
     // Пока код проверяется, итог на экране ещё не окончательный — не даём
     // отправить заказ с суммой, которая через полсекунды изменится.
     promoState.status !== 'checking';
@@ -252,11 +269,13 @@ export function OrderForm({ onOrdered }: Props) {
     ? 'Укажите имя'
     : !contactCheck.ok
       ? 'Укажите телефон или ник в Telegram'
-      : hasAccount === null
+      : needsPsAccount && hasAccount === null
         ? 'Выберите: есть аккаунт или нужен новый'
-        : hasAccount && !psEmail.trim()
+        : needsPsAccount && hasAccount && !psEmail.trim()
           ? 'Укажите email аккаунта PlayStation'
-          : promoState.status === 'checking'
+          : !msAccountOk
+            ? 'Укажите email аккаунта Microsoft'
+            : promoState.status === 'checking'
             ? 'Проверяем промокод…'
             : '';
 
@@ -322,6 +341,10 @@ export function OrderForm({ onOrdered }: Props) {
         // даже если что-то пойдёт не так на стороне сервера.
         comment:
           [
+            // Данные для Xbox — в комментарий: поля ps_email у заказа одно,
+            // и менеджер должен видеть, к какому аккаунту что относится.
+            xboxOwn ? `Xbox Game Pass: на аккаунт Microsoft ${msEmail.trim()}` : '',
+            xboxNew ? 'Xbox Game Pass: нужен новый аккаунт Microsoft' : '',
             comment.trim(),
             promoOk
               ? `Промокод ${promoCode} (−${promoState.percent}%): итог со скидкой ${finalPrice} BYN вместо ${cartTotal} BYN`
@@ -330,9 +353,9 @@ export function OrderForm({ onOrdered }: Props) {
             .filter(Boolean)
             .join(' | ') || undefined,
         region: getClientRegion(),
-        account_type: hasAccount ? 'my_account' : 'no_account',
-        ps_email: hasAccount ? psEmail.trim() : undefined,
-        ps_password: hasAccount ? psPassword : undefined,
+        account_type: (needsPsAccount ? hasAccount : xboxOwn) ? 'my_account' : 'no_account',
+        ps_email: needsPsAccount && hasAccount ? psEmail.trim() : undefined,
+        ps_password: needsPsAccount && hasAccount ? psPassword : undefined,
         // При алиасе (PLUS5, LEVEL5) уходит настоящий код, выданный
         // сервером, — само слово-алиас серверу неизвестно.
         promo_code: codeToSend ?? (promoCode || undefined),
@@ -509,6 +532,7 @@ export function OrderForm({ onOrdered }: Props) {
         </div>
 
         {/* Аккаунт PlayStation */}
+        {needsPsAccount && (
         <div className="space-y-3 border-t border-border pt-5">
           <p className="text-2xs font-semibold uppercase tracking-wider text-text-secondary">
             Аккаунт PlayStation <span className="text-accent">*</span>
@@ -570,6 +594,47 @@ export function OrderForm({ onOrdered }: Props) {
             </p>
           )}
         </div>
+        )}
+
+        {/* Аккаунт Microsoft — для Game Pass */}
+        {xboxOffers.length > 0 && (
+          <div className="space-y-3 border-t border-border pt-5">
+            <p className="text-2xs font-semibold uppercase tracking-wider text-text-secondary">
+              Аккаунт Microsoft (Xbox){xboxOwn && <span className="text-accent"> *</span>}
+            </p>
+            {xboxOwn && (
+              <div className="space-y-2.5">
+                <div>
+                  <label
+                    htmlFor="of-ms-email"
+                    className="mb-1.5 block text-sm font-medium text-text-secondary"
+                  >
+                    Email аккаунта Microsoft <span className="text-accent">*</span>
+                  </label>
+                  <input
+                    id="of-ms-email"
+                    type="email"
+                    value={msEmail}
+                    onChange={(e) => setMsEmail(e.target.value)}
+                    required
+                    placeholder="you@outlook.com"
+                    className={clsx(inputBase, 'border-border focus:border-accent/50')}
+                  />
+                </div>
+                <p className="rounded-control border border-border bg-surface-2 px-3.5 py-3 text-xs leading-relaxed text-text-secondary">
+                  Пароль вводить здесь не нужно — передадите его менеджеру в переписке.
+                  На аккаунте не должно быть активной подписки Game Pass.
+                </p>
+              </div>
+            )}
+            {xboxNew && (
+              <p className="rounded-control border border-border bg-surface-2 px-3.5 py-3 text-xs leading-relaxed text-text-secondary">
+                Для Game Pass на новый аккаунт создадим аккаунт Microsoft с подпиской и
+                передадим вам данные для входа.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Промокод и комментарий */}
         <div className="space-y-4 border-t border-border pt-5">

@@ -1,16 +1,10 @@
 /**
- * Разделы каталога — общий список для десктопной навигации в шапке
- * (Header) и мобильного меню (MobileTabBar → «Меню»).
+ * Разделы каталога PlayStation.
  *
- * Один источник, чтобы пункты не разъезжались между двумя навигациями.
+ * Навигация теперь своя у каждой витрины и живёт в lib/platforms.ts —
+ * шапка и мобильное меню берут её оттуда. Этот экспорт оставлен для
+ * совместимости.
  */
-export const NAV_LINKS = [
-  { href: '/games', label: 'Каталог' },
-  { href: '/sale', label: 'Распродажа' },
-  { href: '/new', label: 'Новинки' },
-  { href: '/preorders', label: 'Предзаказы' },
-  { href: '/subscriptions', label: 'Подписки' },
-  { href: '/ea-play', label: 'EA Play' },
-  { href: '/topup', label: 'Пополнение' },
-  { href: '/guides', label: 'Гайды' },
-] as const;
+import { getPlatform } from '@/lib/platforms';
+
+export const NAV_LINKS = getPlatform('playstation').nav;

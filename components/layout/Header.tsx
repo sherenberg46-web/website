@@ -10,7 +10,9 @@ import { useFavouritesStore } from '@/store/favouritesStore';
 import { getTelegramLink } from '@/lib/api';
 import { RegionSwitcher } from './RegionSwitcher';
 import { SearchBox } from './SearchBox';
-import { NAV_LINKS } from './nav-links';
+import { PlatformSwitcher } from './PlatformSwitcher';
+import { usePlatform } from './usePlatform';
+import { getPlatform } from '@/lib/platforms';
 import clsx from 'clsx';
 
 /**
@@ -24,6 +26,9 @@ import clsx from 'clsx';
 export function Header() {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+
+  const platform = usePlatform();
+  const { home, nav } = getPlatform(platform);
 
   const cartItems = useCartStore((s) => s.items);
   const favIds = useFavouritesStore((s) => s.ids);
@@ -41,7 +46,7 @@ export function Header() {
         {/* Верхняя строка: лого · поиск (десктоп) · действия */}
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-2 md:gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0 group">
+          <Link href={home} className="flex items-center gap-2 shrink-0 group">
             <Image
               src="/logo.png"
               alt="GAME STORE"
@@ -55,6 +60,9 @@ export function Header() {
             </span>
           </Link>
 
+          {/* Витрина: PlayStation / Xbox — десктоп; на мобильном строкой ниже */}
+          <PlatformSwitcher className="hidden md:flex shrink-0" />
+
           {/* Широкий поиск — только десктоп */}
           <div className="hidden md:flex flex-1 justify-center">
             <SearchBox />
@@ -62,7 +70,8 @@ export function Header() {
 
           {/* Right actions */}
           <div className="flex items-center gap-1 ml-auto md:ml-0 shrink-0">
-            <RegionSwitcher />
+            {/* Регион UA/TR — понятие каталога PlayStation, у Xbox его нет */}
+            {platform === 'playstation' && <RegionSwitcher />}
 
             <Link
               href="/favourites"
@@ -107,7 +116,7 @@ export function Header() {
         {/* Нижняя строка: навигация по разделам — только десктоп */}
         <nav className="hidden md:block border-t border-border/60">
           <div className="max-w-7xl mx-auto px-4 flex items-center gap-1">
-            {NAV_LINKS.map((link) => {
+            {nav.map((link) => {
               const active =
                 pathname === link.href || pathname.startsWith(link.href + '/');
               return (
@@ -130,10 +139,16 @@ export function Header() {
             })}
           </div>
         </nav>
+
+        {/* Переключатель витрин — мобильный, отдельной строкой: в верхней
+            рядом с логотипом, регионом и корзиной ему нет места */}
+        <div className="md:hidden border-t border-border/60 h-11 px-4 flex items-center">
+          <PlatformSwitcher className="w-full" />
+        </div>
       </header>
 
-      {/* Spacer: 56px мобильный / 97px десктоп (верхняя строка + навигация) */}
-      <div className="h-14 md:h-[97px]" />
+      {/* Spacer: 101px мобильный (строка + переключатель витрин) / 97px десктоп */}
+      <div className="h-[101px] md:h-[97px]" />
     </>
   );
 }

@@ -8,7 +8,8 @@ import clsx from 'clsx';
 import { useCartStore } from '@/store/cartStore';
 import { useFavouritesStore } from '@/store/favouritesStore';
 import { getTelegramLink } from '@/lib/api';
-import { NAV_LINKS } from './nav-links';
+import { getPlatform } from '@/lib/platforms';
+import { usePlatform } from './usePlatform';
 import { SearchOverlay } from './SearchOverlay';
 
 /** Разделы, при которых подсвечивается вкладка «Каталог». */
@@ -27,6 +28,9 @@ export function MobileTabBar() {
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  const platform = usePlatform();
+  const { home, nav } = getPlatform(platform);
 
   const cartItems = useCartStore((s) => s.items);
   const favIds = useFavouritesStore((s) => s.ids);
@@ -58,10 +62,13 @@ export function MobileTabBar() {
     return () => window.removeEventListener('keydown', onEsc);
   }, [menuOpen]);
 
-  const isHome = pathname === '/';
-  const isCatalog = CATALOG_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(p + '/')
-  );
+  const isHome = pathname === home;
+  // Каталог есть только у PlayStation; у Xbox вся витрина — одна страница,
+  // и вкладка «Главная» ведёт на неё.
+  const isCatalog =
+    platform === 'playstation' &&
+    CATALOG_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
+  const catalogHref = platform === 'playstation' ? '/games' : home;
   const isFav = pathname === '/favourites';
 
   type Tab = {
@@ -75,8 +82,8 @@ export function MobileTabBar() {
   };
 
   const tabs: Tab[] = [
-    { key: 'home', label: 'Главная', icon: Home, href: '/', active: isHome },
-    { key: 'catalog', label: 'Каталог', icon: LayoutGrid, href: '/games', active: isCatalog },
+    { key: 'home', label: 'Главная', icon: Home, href: home, active: isHome },
+    { key: 'catalog', label: 'Каталог', icon: LayoutGrid, href: catalogHref, active: isCatalog },
     { key: 'search', label: 'Поиск', icon: Search, onClick: () => setSearchOpen(true), active: searchOpen },
     { key: 'fav', label: 'Избранное', icon: Heart, href: '/favourites', active: isFav, badge: favCount },
     { key: 'menu', label: 'Меню', icon: Menu, onClick: () => setMenuOpen(true), active: menuOpen },
@@ -192,7 +199,7 @@ export function MobileTabBar() {
             style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
           >
             <nav className="flex flex-col px-2">
-              {NAV_LINKS.map((link) => {
+              {nav.map((link) => {
                 const active =
                   pathname === link.href || pathname.startsWith(link.href + '/');
                 return (
