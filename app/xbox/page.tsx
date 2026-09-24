@@ -22,7 +22,7 @@ const FEATURES = [
 ];
 
 const STEPS = [
-  { n: 1, title: 'Выберите способ и срок', text: 'На ваш аккаунт Microsoft или на новый — он дешевле.' },
+  { n: 1, title: 'Выберите способ и срок', text: 'На ваш аккаунт Microsoft или на новый — он обычно дешевле.' },
   { n: 2, title: 'Оформите заказ', text: 'Менеджер свяжется в Telegram и подтвердит оплату.' },
   { n: 3, title: 'Активация', text: 'Входим в аккаунт и оформляем подписку — обычно за 10–120 минут.' },
 ];
@@ -78,13 +78,13 @@ export default function XboxPage() {
 
         {/* Что даёт подписка */}
         <ScrollReveal>
-          <div className="mb-12 grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+          <div className="mb-10 grid grid-cols-2 gap-2.5 sm:mb-12 sm:gap-3.5 lg:grid-cols-4">
             {FEATURES.map((f) => (
               <div
                 key={f.title}
-                className="flex h-full items-start gap-3.5 rounded-2xl border border-border bg-bg-card px-5 py-5"
+                className="flex h-full flex-col gap-2.5 rounded-2xl border border-border bg-bg-card p-4 sm:flex-row sm:items-start sm:gap-3.5 sm:px-5 sm:py-5"
               >
-                <f.icon className="mt-0.5 h-[22px] w-[22px] shrink-0 text-[#4CC24A]" strokeWidth={1.8} />
+                <f.icon className="h-[22px] w-[22px] shrink-0 text-[#4CC24A] sm:mt-0.5" strokeWidth={1.8} />
                 <div>
                   <div className="text-[13.5px] font-bold leading-snug text-text-primary">{f.title}</div>
                   <div className="mt-1 text-[11.5px] leading-relaxed text-text-muted">{f.text}</div>
@@ -96,7 +96,7 @@ export default function XboxPage() {
 
         {/* Покупка */}
         <ScrollReveal>
-          <h2 className="mb-8 text-center text-2xl font-bold tracking-tight md:text-3xl">
+          <h2 className="mb-5 text-center text-2xl font-bold tracking-tight sm:mb-8 md:text-3xl">
             Выберите подписку
           </h2>
           <GamePassPurchase />
@@ -104,16 +104,22 @@ export default function XboxPage() {
 
         {/* Как это работает */}
         <ScrollReveal>
-          <div className="mx-auto mt-16 max-w-4xl">
-            <h2 className="mb-6 text-2xl font-bold tracking-tight md:text-3xl">Как это работает</h2>
-            <div className="grid gap-3.5 sm:grid-cols-3">
+          <div className="mx-auto mt-12 max-w-4xl sm:mt-16">
+            <h2 className="mb-4 text-2xl font-bold tracking-tight sm:mb-6 md:text-3xl">Как это работает</h2>
+            {/* Телефон: шаги строками с номером слева; десктоп: три карточки */}
+            <div className="grid gap-2.5 sm:grid-cols-3 sm:gap-3.5">
               {STEPS.map((s) => (
-                <div key={s.n} className="rounded-2xl border border-border bg-bg-card p-5">
-                  <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#107C10] text-sm font-bold text-white">
+                <div
+                  key={s.n}
+                  className="flex gap-3.5 rounded-2xl border border-border bg-bg-card p-4 sm:block sm:p-5"
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#107C10] text-sm font-bold text-white sm:mb-3">
                     {s.n}
                   </div>
-                  <div className="font-bold text-text-primary">{s.title}</div>
-                  <p className="mt-1 text-sm leading-relaxed text-text-secondary">{s.text}</p>
+                  <div>
+                    <div className="font-bold text-text-primary">{s.title}</div>
+                    <p className="mt-1 text-sm leading-relaxed text-text-secondary">{s.text}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -127,7 +133,7 @@ export default function XboxPage() {
                   подписки — данные вы передаёте менеджеру в переписке, не на сайте.
                 </p>
                 <p className="mt-2">
-                  <span className="font-semibold text-text-primary">Новый аккаунт</span> дешевле. Чтобы
+                  <span className="font-semibold text-text-primary">Новый аккаунт</span> обычно дешевле. Чтобы
                   играть с подпиской и на старом профиле, включите «Домашний Xbox» на своей консоли.
                   Регион аккаунта значения не имеет.
                 </p>
