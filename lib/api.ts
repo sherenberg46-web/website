@@ -32,6 +32,20 @@ export function getManagerLink(text?: string): string {
   return text ? `${base}?text=${encodeURIComponent(text)}` : base;
 }
 
+/**
+ * «Написать менеджеру» из чата на сайте — в бота, с ключом чата.
+ *
+ * Раньше кнопка вела в личку @gamestore_by: менеджер получал человека без
+ * контекста, а сводка диалога с Максом приходила анонимной. По ключу бот
+ * найдёт переписку с сайта и передаст её менеджеру вместе с Telegram клиента
+ * (tg-shop: bot/handlers/start.py, deep link web-…). Ключ не того вида —
+ * ведём в личку, как раньше.
+ */
+export function getManagerBotLink(sessionId: string): string {
+  const bot = process.env.NEXT_PUBLIC_TG_BOT || 'https://t.me/GameDigitalShop_bot';
+  return /^web-[a-z0-9]{6,60}$/.test(sessionId) ? `${bot}?start=${sessionId}` : getManagerLink();
+}
+
 export function getTelegramLink(productId?: number): string {
   const bot = process.env.NEXT_PUBLIC_TG_BOT || 'https://t.me/GameDigitalShop_bot';
   if (productId) return `${bot}?startapp=product_${productId}`;
@@ -311,6 +325,23 @@ export async function askConsultant(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message, history, region, session_id: sessionId, source: 'site' }),
+  });
+  if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status });
+  return res.json();
+}
+
+/**
+ * Контакт посетителя без Telegram — сразу менеджеру вместе с перепиской.
+ * Сервер проверяет контакт ещё раз и отвечает ok=false с текстом ошибки.
+ */
+export async function sendManagerContact(
+  sessionId: string,
+  contact: string
+): Promise<{ ok: boolean; contact?: string | null; error?: string | null }> {
+  const res = await fetch(`${API_BASE}/consultant/manager-contact`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: sessionId, contact }),
   });
   if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status });
   return res.json();

@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageCircle, X, Send, Loader2, ThumbsUp, ThumbsDown } from 'lucide-react';
 import clsx from 'clsx';
-import { askConsultant, rateConsultant, getManagerLink } from '@/lib/api';
+import { askConsultant, rateConsultant, getManagerBotLink, sendManagerContact } from '@/lib/api';
+import { checkContact } from '@/lib/contact';
 import { getClientRegion } from '@/lib/region';
 import { gamePath } from '@/lib/product-url';
 
@@ -52,6 +53,11 @@ export function SupportChat() {
   const [needsManager, setNeedsManager] = useState(false);
   const [dialogId, setDialogId] = useState<number | null>(null);
   const [rated, setRated] = useState(false);
+  // Форма «оставьте телефон или ник» — для тех, у кого Telegram не открылся.
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contact, setContact] = useState('');
+  const [contactError, setContactError] = useState<string | null>(null);
+  const [contactSending, setContactSending] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -116,6 +122,38 @@ export function SupportChat() {
       setNeedsManager(true);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function submitContact() {
+    if (contactSending) return;
+    const check = checkContact(contact);
+    if (!check.ok) {
+      setContactError(check.error);
+      return;
+    }
+    setContactError(null);
+    setContactSending(true);
+    try {
+      const res = await sendManagerContact(sessionRef.current, check.normalized);
+      if (!res.ok) {
+        setContactError(res.error || 'Не получилось отправить. Попробуйте ещё раз.');
+        return;
+      }
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          content: `✅ Передал менеджеру ваш контакт ${res.contact || check.normalized}. Он свяжется с вами сам.`,
+        },
+      ]);
+      setNeedsManager(false);
+      setContactOpen(false);
+      setContact('');
+    } catch {
+      setContactError('Не получилось отправить. Проверьте интернет и попробуйте ещё раз.');
+    } finally {
+      setContactSending(false);
     }
   }
 
@@ -234,15 +272,71 @@ export function SupportChat() {
                 <p className="self-start text-xs text-text-secondary">Спасибо, учтём 🙌</p>
               )}
 
+              {/* Связь с менеджером. Первым — Telegram через бота: по ключу
+                  чата менеджер получит всю переписку и контакт человека. Кому
+                  Telegram не подходит, оставляет телефон или ник прямо здесь —
+                  раньше такой посетитель уходил, и написать ему было не по чему. */}
               {needsManager && (
-                <a
-                  href={getManagerLink()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="self-start max-w-[85%] px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-contrast text-sm font-bold transition-colors"
-                >
-                  💬 Написать менеджеру
-                </a>
+                <div className="self-start w-full max-w-[85%] flex flex-col gap-2">
+                  <a
+                    href={getManagerBotLink(sessionRef.current)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-contrast text-sm font-bold text-center transition-colors"
+                  >
+                    💬 Написать менеджеру в Telegram
+                  </a>
+                  {!contactOpen ? (
+                    <button
+                      onClick={() => setContactOpen(true)}
+                      className="px-4 py-2 rounded-xl border border-border text-text-secondary hover:text-text-primary hover:border-accent/50 text-xs font-semibold transition-colors"
+                    >
+                      Нет Telegram? Оставьте телефон или ник
+                    </button>
+                  ) : (
+                    <div className="flex flex-col gap-2 p-3 rounded-xl border border-border bg-bg-page">
+                      <p className="text-xs text-text-secondary">
+                        Оставьте телефон или ник в Telegram — менеджер напишет вам сам.
+                      </p>
+                      <input
+                        value={contact}
+                        onChange={(e) => {
+                          setContact(e.target.value);
+                          setContactError(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            submitContact();
+                          }
+                        }}
+                        placeholder="+375 29 123-45-67 или @nick"
+                        aria-label="Телефон или ник в Telegram"
+                        aria-invalid={!!contactError}
+                        className="px-3 py-2 rounded-lg bg-bg-card border border-border text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
+                      />
+                      {contactError && <p className="text-xs text-red-400">{contactError}</p>}
+                      <button
+                        onClick={submitContact}
+                        disabled={contactSending || !contact.trim()}
+                        className={clsx(
+                          'px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center transition-colors',
+                          contactSending || !contact.trim()
+                            ? 'bg-bg-card text-text-secondary cursor-not-allowed'
+                            : 'bg-accent hover:bg-accent-hover text-accent-contrast'
+                        )}
+                      >
+                        {contactSending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Отправить менеджеру'}
+                      </button>
+                      <p className="text-[11px] leading-snug text-text-secondary">
+                        Отправляя контакт, вы соглашаетесь с{' '}
+                        <a href="/privacy" target="_blank" className="text-accent hover:underline">
+                          политикой конфиденциальности
+                        </a>
+                      </p>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
