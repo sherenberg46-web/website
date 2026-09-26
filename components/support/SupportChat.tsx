@@ -157,6 +157,19 @@ export function SupportChat() {
     }
   }
 
+  // «Позвать менеджера» внизу чата: человек зовёт менеджера сразу, не
+  // уговаривая Макса. Показываем тот же блок связи, что и после передачи
+  // разговора Максом: Telegram с перепиской или телефон/ник в форме.
+  function callManager() {
+    setMessages((m) => [
+      ...m,
+      { role: 'assistant', content: 'Подключаю менеджера 🙌 Выберите, как вам удобнее связаться:' },
+    ]);
+    setContactOpen(false);
+    setContactError(null);
+    setNeedsManager(true);
+  }
+
   return (
     <>
       {!open && (
@@ -339,6 +352,18 @@ export function SupportChat() {
                 </div>
               )}
             </div>
+
+            {/* Плашка «Позвать менеджера» — пока блок связи не открыт */}
+            {!needsManager && (
+              <div className="flex justify-center pb-2 shrink-0">
+                <button
+                  onClick={callManager}
+                  className="px-3 py-1.5 rounded-full border border-border bg-bg-page text-xs font-semibold text-text-secondary hover:text-text-primary hover:border-accent/50 transition-colors"
+                >
+                  👤 Позвать менеджера
+                </button>
+              </div>
+            )}
 
             {/* Ввод */}
             <div className="flex items-end gap-2 p-3 border-t border-border shrink-0">
