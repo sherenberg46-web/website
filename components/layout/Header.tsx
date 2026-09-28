@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
@@ -39,6 +39,46 @@ export function Header() {
 
   const cartCount = mounted ? cartItems.reduce((s, i) => s + i.qty, 0) : 0;
   const favCount = mounted ? favIds.length : 0;
+
+  // Строка с переключателем витрин (PlayStation/Xbox) на мобильном:
+  // прячется при скролле вниз, возвращается при скролле вверх —
+  // освобождает экран для контента на маленьких экранах.
+  const [hideTabs, setHideTabs] = useState(false);
+  const lastScrollY = useRef(0);
+  const ticking = useRef(false);
+
+  useEffect(() => {
+    lastScrollY.current = window.scrollY;
+
+    const TOP_OFFSET = 60; // у самого верха строка всегда видна
+    const THRESHOLD = 8; // минимальное смещение, чтобы не дёргалось от микро-скролла
+
+    const update = () => {
+      const currentY = window.scrollY;
+      const diff = currentY - lastScrollY.current;
+
+      if (currentY <= TOP_OFFSET) {
+        setHideTabs(false);
+      } else if (diff > THRESHOLD) {
+        setHideTabs(true);
+      } else if (diff < -THRESHOLD) {
+        setHideTabs(false);
+      }
+
+      lastScrollY.current = currentY;
+      ticking.current = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking.current) {
+        ticking.current = true;
+        requestAnimationFrame(update);
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
     <>
@@ -141,14 +181,30 @@ export function Header() {
         </nav>
 
         {/* Переключатель витрин — мобильный, отдельной строкой: в верхней
-            рядом с логотипом, регионом и корзиной ему нет места */}
-        <div className="md:hidden border-t border-border/60 h-11 px-4 flex items-center">
-          <PlatformSwitcher className="w-full" />
+            рядом с логотипом, регионом и корзиной ему нет места.
+            Прячется (max-height → 0) при скролле вниз и возвращается
+            при скролле вверх или у самого верха страницы. */}
+        <div
+          className={clsx(
+            'md:hidden overflow-hidden transition-[max-height,opacity] duration-300 ease-out',
+            hideTabs ? 'max-h-0 opacity-0' : 'max-h-[44px] opacity-100'
+          )}
+        >
+          <div className="border-t border-border/60 h-11 px-4 flex items-center">
+            <PlatformSwitcher className="w-full" />
+          </div>
         </div>
       </header>
 
-      {/* Spacer: 101px мобильный (строка + переключатель витрин) / 97px десктоп */}
-      <div className="h-[101px] md:h-[97px]" />
+      {/* Spacer: подстраивается под реальную высоту шапки на мобильном —
+          101px, когда виден переключатель витрин, 57px, когда он спрятан.
+          На десктопе всегда 97px (переключатель там не участвует). */}
+      <div
+        className={clsx(
+          'transition-[height] duration-300 ease-out',
+          hideTabs ? 'h-[57px] md:h-[97px]' : 'h-[101px] md:h-[97px]'
+        )}
+      />
     </>
   );
 }
