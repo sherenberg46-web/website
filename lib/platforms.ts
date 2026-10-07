@@ -6,7 +6,7 @@
  * записью: переключатель в шапке, навигация и мобильное меню читают этот
  * список, а не держат свой.
  */
-export type PlatformId = 'playstation' | 'xbox';
+export type PlatformId = 'playstation' | 'xbox' | 'steam';
 
 export interface Platform {
   id: PlatformId;
@@ -45,6 +45,13 @@ export const PLATFORMS: Platform[] = [
     home: '/xbox',
     prefixes: ['/xbox'],
     nav: [{ href: '/xbox', label: 'Game Pass Ultimate' }],
+  },
+  {
+    id: 'steam',
+    label: 'Steam',
+    home: '/steam',
+    prefixes: ['/steam'],
+    nav: [{ href: '/steam', label: 'Пополнение Steam' }],
   },
 ];
 

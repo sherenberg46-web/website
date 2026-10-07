@@ -43,6 +43,7 @@ const STATIC_PAGES: {
   { path: '/topup', priority: 0.8, changeFrequency: 'weekly' },
   // Витрина Xbox — пока одна страница: Game Pass Ultimate.
   { path: '/xbox', priority: 0.8, changeFrequency: 'weekly' },
+  { path: '/steam', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/how-to-buy', priority: 0.5, changeFrequency: 'weekly' },
   // Гайды — SEO-статьи с покупательским намерением, обновляются редко.
   { path: '/guides', priority: 0.7, changeFrequency: 'weekly' },

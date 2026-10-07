@@ -9,6 +9,7 @@ import { usePlatform } from './usePlatform';
 const ACTIVE_CLASS: Record<string, string> = {
   playstation: 'bg-[#0070D1] text-white',
   xbox: 'bg-[#107C10] text-white',
+  steam: 'bg-[#1B75BB] text-white',
 };
 
 /**

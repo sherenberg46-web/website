@@ -104,6 +104,7 @@ export function Footer() {
                 { href: '/subscriptions', label: 'Подписки' },
                 { href: '/topup', label: 'Пополнение PSN' },
                 { href: '/xbox', label: 'Xbox Game Pass' },
+                { href: '/steam', label: 'Пополнение Steam' },
               ].map((link) => (
                 <li key={link.href}>
                   <Link

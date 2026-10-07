@@ -11,6 +11,7 @@ import { PLUS5_CODE, plus5Active, plus5Available, markPlus5Used } from '@/lib/pl
 import { LEVEL5_CODE, level5Active } from '@/lib/level5';
 import { checkContact } from '@/lib/contact';
 import { gamePassOfferById } from '@/lib/xbox';
+import { steamOfferById } from '@/lib/steam';
 import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -52,6 +53,8 @@ export function OrderForm({ onOrdered }: Props) {
   const [psPassword] = useState('');
   // Email аккаунта Microsoft — для Game Pass «на мой аккаунт».
   const [msEmail, setMsEmail] = useState('');
+  // Логин аккаунта Steam — для пополнения. Пароль не нужен.
+  const [steamLogin, setSteamLogin] = useState('');
   const [promo, setPromo] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
@@ -247,18 +250,22 @@ export function OrderForm({ onOrdered }: Props) {
     const o = gamePassOfferById(i.product_id);
     return o ? [o] : [];
   });
-  const needsPsAccount = items.length > xboxOffers.length;
+  const steamCount = items.filter((i) => steamOfferById(i.product_id)).length;
+  // Steam — не PlayStation: аккаунт PS про него не спрашиваем.
+  const needsPsAccount = items.length > xboxOffers.length + steamCount;
   const xboxOwn = xboxOffers.some((o) => o.account === 'own');
   const xboxNew = xboxOffers.some((o) => o.account === 'new');
   const psAccountOk =
     !needsPsAccount || (hasAccount !== null && (hasAccount === false || !!psEmail.trim()));
   const msAccountOk = !xboxOwn || !!msEmail.trim();
+  const steamOk = steamCount === 0 || steamLogin.trim().length >= 3;
 
   const canSubmit =
     nameOk &&
     contactCheck.ok &&
     psAccountOk &&
     msAccountOk &&
+    steamOk &&
     // Пока код проверяется, итог на экране ещё не окончательный — не даём
     // отправить заказ с суммой, которая через полсекунды изменится.
     promoState.status !== 'checking';
@@ -275,6 +282,8 @@ export function OrderForm({ onOrdered }: Props) {
           ? 'Укажите email аккаунта PlayStation'
           : !msAccountOk
             ? 'Укажите email аккаунта Microsoft'
+            : !steamOk
+              ? 'Укажите логин Steam'
             : promoState.status === 'checking'
             ? 'Проверяем промокод…'
             : '';
@@ -345,6 +354,9 @@ export function OrderForm({ onOrdered }: Props) {
             // и менеджер должен видеть, к какому аккаунту что относится.
             xboxOwn ? `Xbox Game Pass: на аккаунт Microsoft ${msEmail.trim()}` : '',
             xboxNew ? 'Xbox Game Pass: нужен новый аккаунт Microsoft' : '',
+            // Логин Steam — в комментарий, как и данные Xbox: у заказа нет
+            // отдельного поля, а менеджеру он нужен сразу.
+            steamCount > 0 ? `Steam: пополнить логин ${steamLogin.trim()}` : '',
             comment.trim(),
             promoOk
               ? `Промокод ${promoCode} (−${promoState.percent}%): итог со скидкой ${finalPrice} BYN вместо ${cartTotal} BYN`
@@ -353,7 +365,7 @@ export function OrderForm({ onOrdered }: Props) {
             .filter(Boolean)
             .join(' | ') || undefined,
         region: getClientRegion(),
-        account_type: (needsPsAccount ? hasAccount : xboxOwn) ? 'my_account' : 'no_account',
+        account_type: (needsPsAccount ? hasAccount : xboxOwn || steamCount > 0) ? 'my_account' : 'no_account',
         ps_email: needsPsAccount && hasAccount ? psEmail.trim() : undefined,
         ps_password: needsPsAccount && hasAccount ? psPassword : undefined,
         // При алиасе (PLUS5, LEVEL5) уходит настоящий код, выданный
@@ -633,6 +645,41 @@ export function OrderForm({ onOrdered }: Props) {
                 передадим вам данные для входа.
               </p>
             )}
+          </div>
+        )}
+
+        {/* Аккаунт Steam — для пополнения по логину */}
+        {steamCount > 0 && (
+          <div className="space-y-3 border-t border-border pt-5">
+            <p className="text-2xs font-semibold uppercase tracking-wider text-text-secondary">
+              Аккаунт Steam<span className="text-accent"> *</span>
+            </p>
+            <div className="space-y-2.5">
+              <div>
+                <label
+                  htmlFor="of-steam-login"
+                  className="mb-1.5 block text-sm font-medium text-text-secondary"
+                >
+                  Логин Steam <span className="text-accent">*</span>
+                </label>
+                <input
+                  id="of-steam-login"
+                  type="text"
+                  value={steamLogin}
+                  onChange={(e) => setSteamLogin(e.target.value)}
+                  required
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  placeholder="Имя аккаунта, которым вы входите в Steam"
+                  className={clsx(inputBase, 'border-border focus:border-accent/50')}
+                />
+              </div>
+              <p className="rounded-control border border-border bg-surface-2 px-3.5 py-3 text-xs leading-relaxed text-text-secondary">
+                Нужен только логин — это имя аккаунта для входа, а не имя профиля и не email.
+                Пароль и код Steam Guard вводить не нужно, их у вас никто не попросит.
+              </p>
+            </div>
           </div>
         )}
 
