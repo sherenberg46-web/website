@@ -14,6 +14,24 @@ interface Msg {
   content: string;
 }
 
+/** Кто пишет: имя и контакт (телефон или ник в Telegram), уже приведённый к единому виду. */
+interface Visitor {
+  name: string;
+  contact: string;
+}
+
+const VISITOR_KEY = 'gs_chat_visitor';
+
+function loadVisitor(): Visitor | null {
+  try {
+    const raw = window.sessionStorage?.getItem(VISITOR_KEY);
+    const v = raw ? JSON.parse(raw) : null;
+    return v && typeof v.name === 'string' && typeof v.contact === 'string' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
 const GREETING =
   'Привет! 👋 Я Макс, консультант GAME STORE. Помогу подобрать игру или подписку PlayStation по лучшей цене. Что ищете?';
 
@@ -59,7 +77,21 @@ export function SupportChat() {
   const [contactError, setContactError] = useState<string | null>(null);
   const [contactSending, setContactSending] = useState(false);
 
+  // Знакомство: пока клиент не оставил имя и контакт, писать Максу нельзя.
+  // Нужно, чтобы с ним можно было связаться, даже если он закроет вкладку.
+  // Живёт во вкладке, как и ключ разговора: перезагрузил страницу — не спрашиваем снова.
+  const [visitor, setVisitor] = useState<Visitor | null>(null);
+  const [introName, setIntroName] = useState('');
+  const [introContact, setIntroContact] = useState('');
+  const [introError, setIntroError] = useState<{ name?: string; contact?: string }>({});
+
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // sessionStorage есть только в браузере — читаем после монтирования,
+  // иначе разметка на сервере и клиенте разойдётся.
+  useEffect(() => {
+    setVisitor(loadVisitor());
+  }, []);
 
   /**
    * Ключ разговора. Живёт во вкладке: перезагрузил страницу — тот же ключ,
@@ -95,15 +127,33 @@ export function SupportChat() {
     return () => window.removeEventListener('keydown', onEsc);
   }, [open]);
 
+  function submitIntro() {
+    const name = introName.replace(/\s+/g, ' ').trim();
+    const check = checkContact(introContact);
+    const errors: { name?: string; contact?: string } = {};
+    if (name.length < 2) errors.name = 'Как к вам обращаться? Напишите имя';
+    if (!check.ok) errors.contact = check.error ?? 'Укажите телефон или ник в Telegram';
+    setIntroError(errors);
+    if (errors.name || errors.contact) return;
+
+    const v: Visitor = { name, contact: check.normalized };
+    try {
+      window.sessionStorage?.setItem(VISITOR_KEY, JSON.stringify(v));
+    } catch {
+      /* приватный режим — останемся в памяти вкладки */
+    }
+    setVisitor(v);
+  }
+
   async function send() {
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || loading || !visitor) return;
     setMessages((m) => [...m, { role: 'user', content: text }]);
     setInput('');
     setNeedsManager(false);
     setLoading(true);
     try {
-      const data = await askConsultant(text, history, getClientRegion(), sessionRef.current);
+      const data = await askConsultant(text, history, getClientRegion(), sessionRef.current, visitor);
       if (data.dialog_id) setDialogId(data.dialog_id);
       setMessages((m) => [
         ...m,
@@ -301,7 +351,11 @@ export function SupportChat() {
                   </a>
                   {!contactOpen ? (
                     <button
-                      onClick={() => setContactOpen(true)}
+                      onClick={() => {
+                        setContactOpen(true);
+                        // Контакт уже оставлен при знакомстве — не заставляем вводить второй раз
+                        setContact((c) => c || visitor?.contact || '');
+                      }}
                       className="px-4 py-2 rounded-xl border border-border text-text-secondary hover:text-text-primary hover:border-accent/50 text-xs font-semibold transition-colors"
                     >
                       Нет Telegram? Оставьте телефон или ник
@@ -353,8 +407,67 @@ export function SupportChat() {
               )}
             </div>
 
+            {/* Знакомство. Без имени и контакта писать Максу нельзя: если человек
+                закроет вкладку, связаться с ним будет не по чему. */}
+            {!visitor && (
+              <div className="flex flex-col gap-2 p-3 border-t border-border shrink-0">
+                <p className="text-xs text-text-secondary">
+                  Прежде чем написать, представьтесь — так менеджер сможет связаться с вами, если
+                  понадобится.
+                </p>
+                <input
+                  value={introName}
+                  onChange={(e) => {
+                    setIntroName(e.target.value);
+                    setIntroError((er) => ({ ...er, name: undefined }));
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), submitIntro())}
+                  placeholder="Ваше имя"
+                  aria-label="Ваше имя"
+                  aria-invalid={!!introError.name}
+                  autoComplete="given-name"
+                  maxLength={40}
+                  className="px-3 py-2 rounded-lg bg-bg-page border border-border text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
+                />
+                {introError.name && <p className="text-xs text-red-400 -mt-1">{introError.name}</p>}
+                <input
+                  value={introContact}
+                  onChange={(e) => {
+                    setIntroContact(e.target.value);
+                    setIntroError((er) => ({ ...er, contact: undefined }));
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), submitIntro())}
+                  placeholder="Ник в Telegram (@nick) или телефон"
+                  aria-label="Ник в Telegram или телефон"
+                  aria-invalid={!!introError.contact}
+                  className="px-3 py-2 rounded-lg bg-bg-page border border-border text-text-primary placeholder:text-text-secondary text-sm focus:outline-none focus:border-accent/50 transition-colors"
+                />
+                {introError.contact && (
+                  <p className="text-xs text-red-400 -mt-1">{introError.contact}</p>
+                )}
+                <button
+                  onClick={submitIntro}
+                  disabled={!introName.trim() || !introContact.trim()}
+                  className={clsx(
+                    'px-4 py-2.5 rounded-lg text-sm font-bold transition-colors',
+                    !introName.trim() || !introContact.trim()
+                      ? 'bg-bg-page text-text-secondary cursor-not-allowed'
+                      : 'bg-accent hover:bg-accent-hover text-accent-contrast'
+                  )}
+                >
+                  Начать чат
+                </button>
+                <p className="text-[11px] leading-snug text-text-secondary">
+                  Нажимая кнопку, вы соглашаетесь с{' '}
+                  <a href="/privacy" target="_blank" className="text-accent hover:underline">
+                    политикой конфиденциальности
+                  </a>
+                </p>
+              </div>
+            )}
+
             {/* Плашка «Позвать менеджера» — пока блок связи не открыт */}
-            {!needsManager && (
+            {visitor && !needsManager && (
               <div className="flex justify-center pb-2 shrink-0">
                 <button
                   onClick={callManager}
@@ -365,7 +478,8 @@ export function SupportChat() {
               </div>
             )}
 
-            {/* Ввод */}
+            {/* Ввод — только после знакомства */}
+            {visitor && (
             <div className="flex items-end gap-2 p-3 border-t border-border shrink-0">
               <textarea
                 value={input}
@@ -394,6 +508,7 @@ export function SupportChat() {
                 <Send className="w-4 h-4" />
               </button>
             </div>
+            )}
           </div>
         </>
       )}

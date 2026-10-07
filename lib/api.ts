@@ -314,7 +314,8 @@ export async function askConsultant(
   message: string,
   history: { role: 'user' | 'assistant'; content: string }[],
   region: string,
-  sessionId: string
+  sessionId: string,
+  visitor?: { name: string; contact: string }
 ): Promise<{
   reply: string;
   history?: { role: 'user' | 'assistant'; content: string }[];
@@ -324,7 +325,15 @@ export async function askConsultant(
   const res = await fetch(`${API_BASE}/consultant/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, history, region, session_id: sessionId, source: 'site' }),
+    body: JSON.stringify({
+      message,
+      history,
+      region,
+      session_id: sessionId,
+      user_name: visitor?.name,
+      contact: visitor?.contact,
+      source: 'site',
+    }),
   });
   if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status });
   return res.json();
