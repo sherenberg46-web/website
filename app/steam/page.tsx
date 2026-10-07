@@ -5,24 +5,24 @@ import { KeyRound, Wallet, Globe2, MessageCircle, ShieldCheck } from 'lucide-rea
 import { getSiteUrl } from '@/lib/site-url';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { SteamPurchase } from '@/components/steam/SteamPurchase';
-import { STEAM_DAILY_LIMIT_USD, STEAM_IMAGE, STEAM_OFFERS } from '@/lib/steam';
+import { STEAM_IMAGE, STEAM_MIN_PRICE, STEAM_REGIONS, steamMoney } from '@/lib/steam';
 
 export const metadata: Metadata = {
   title: 'Пополнение Steam в Беларуси — по логину, без пароля',
   description:
-    'Пополнение кошелька Steam по логину от $5 до $100 с оплатой в BYN. Пароль, почта и код Steam Guard не нужны — менеджер пополнит баланс после оплаты.',
+    'Пополнение кошелька Steam по логину для регионов СНГ, России, Казахстана и Украины с оплатой в BYN. Пароль, почта и код Steam Guard не нужны — менеджер пополнит баланс после оплаты.',
   alternates: { canonical: '/steam' },
 };
 
 const FEATURES = [
   { icon: KeyRound, title: 'Только логин', text: 'Пароль, почту и код Steam Guard мы не запрашиваем' },
   { icon: Wallet, title: 'Оплата в BYN', text: 'Картой или через ЕРИП, цена на сайте окончательная' },
-  { icon: Globe2, title: 'Игры, DLC и предметы', text: 'Баланс тратится на всё, что продаётся в Steam' },
+  { icon: Globe2, title: 'Четыре региона', text: 'СНГ в долларах, Россия, Казахстан и Украина — в валюте вашего кошелька' },
   { icon: MessageCircle, title: 'Менеджер на связи', text: 'Напишет в Telegram, подтвердит заказ и сообщит, когда баланс пополнен' },
 ];
 
 const STEPS = [
-  { n: 1, title: 'Выберите сумму', text: `От $${STEAM_OFFERS[0].usd} до $${STEAM_OFFERS[STEAM_OFFERS.length - 1].usd} — цена в BYN видна сразу.` },
+  { n: 1, title: 'Выберите регион и сумму', text: 'Регион — как у вашего кошелька Steam. Цена в BYN видна сразу.' },
   { n: 2, title: 'Оформите заказ', text: 'Укажите логин Steam. Менеджер свяжется в Telegram и подтвердит оплату.' },
   { n: 3, title: 'Баланс на аккаунте', text: 'После оплаты пополняем кошелёк и сообщаем, что деньги пришли.' },
 ];
@@ -37,12 +37,12 @@ const FAQ = [
     a: 'Нет. Для пополнения достаточно логина: пароль, почту и коды подтверждения не просим и не принимаем.',
   },
   {
-    q: 'Можно ли пополнить аккаунт любого региона?',
-    a: 'Уточните у менеджера при оформлении: сумма приходит в валюте кошелька вашего аккаунта, и для некоторых регионов применяется пересчёт из долларов.',
+    q: 'Как выбрать регион?',
+    a: 'Регион — это валюта кошелька вашего аккаунта Steam. Посмотреть её можно в Steam: «Настройки» → «Аккаунт» → «Кошелёк» или в самом балансе. Если там доллары — выбирайте СНГ, если рубли — Россия, тенге — Казахстан, гривны — Украина. Сумма придёт в валюте кошелька.',
   },
   {
     q: 'Сколько можно пополнить за раз?',
-    a: `Steam ограничивает пополнение одного логина — не больше $${STEAM_DAILY_LIMIT_USD} за 24 часа. Если нужно больше, напишите нам: подскажем, как разбить сумму.`,
+    a: `Один логин можно пополнить не больше чем на ${STEAM_REGIONS.map((r) => steamMoney(r, r.dailyLimit)).join(', ')} за 24 часа — для СНГ, России, Казахстана и Украины соответственно. Если нужно больше, напишите нам: подскажем, как разбить сумму.`,
   },
   {
     q: 'Как оплатить?',
@@ -52,7 +52,7 @@ const FAQ = [
 
 export default function SteamPage() {
   const siteUrl = getSiteUrl();
-  const minPrice = Math.min(...STEAM_OFFERS.map((o) => o.price));
+  const minPrice = STEAM_MIN_PRICE;
 
   const breadcrumbsLd = {
     '@context': 'https://schema.org',
@@ -128,7 +128,7 @@ export default function SteamPage() {
         {/* Покупка */}
         <ScrollReveal>
           <h2 className="mb-5 text-center text-2xl font-bold tracking-tight sm:mb-8 md:text-3xl">
-            Выберите сумму
+            Выберите регион и сумму
           </h2>
           <SteamPurchase />
         </ScrollReveal>
