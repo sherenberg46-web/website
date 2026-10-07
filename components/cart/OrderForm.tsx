@@ -11,7 +11,7 @@ import { PLUS5_CODE, plus5Active, plus5Available, markPlus5Used } from '@/lib/pl
 import { LEVEL5_CODE, level5Active } from '@/lib/level5';
 import { checkContact } from '@/lib/contact';
 import { gamePassOfferById } from '@/lib/xbox';
-import { getSteamRegion, steamOfferById } from '@/lib/steam';
+import { steamRegionByProductId } from '@/lib/steam';
 import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -250,13 +250,13 @@ export function OrderForm({ onOrdered }: Props) {
     const o = gamePassOfferById(i.product_id);
     return o ? [o] : [];
   });
-  const steamOffers = items.flatMap((i) => {
-    const o = steamOfferById(i.product_id);
-    return o ? [o] : [];
+  const steamItemRegions = items.flatMap((i) => {
+    const r = steamRegionByProductId(i.product_id);
+    return r ? [r.label] : [];
   });
-  const steamCount = steamOffers.length;
+  const steamCount = steamItemRegions.length;
   // Регионы кошельков через запятую: в корзине их может быть несколько
-  const steamRegions = Array.from(new Set(steamOffers.map((o) => getSteamRegion(o.region).label))).join(', ');
+  const steamRegions = Array.from(new Set(steamItemRegions)).join(', ');
   // Steam — не PlayStation: аккаунт PS про него не спрашиваем.
   const needsPsAccount = items.length > xboxOffers.length + steamCount;
   const xboxOwn = xboxOffers.some((o) => o.account === 'own');

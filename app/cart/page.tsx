@@ -17,6 +17,7 @@ import { getClientRegion } from '@/lib/region';
 import type { CartItemFresh } from '@/store/cartStore';
 import type { CatalogEdition, Product } from '@/lib/types';
 import { gamePath } from '@/lib/product-url';
+import { isCustomEdition } from '@/lib/steam';
 import clsx from 'clsx';
 
 export default function CartPage() {
@@ -68,11 +69,15 @@ export default function CartPage() {
 
       // Издания берём тем же списком, что показывает карточка игры: цены в
       // нём уже сверены с каталогом. Один запрос на товар, а не на позицию.
+      // Позиции Steam на произвольную сумму (отрицательный edition_id) в каталоге
+      // изданий не найти: их цену считает сервер при заказе, а не каталог. Без
+      // этого проверка сочла бы такую позицию снятой с продажи и убрала из корзины.
+      const checked = snapshot.filter((i) => !isCustomEdition(i.edition_id));
       const parents = Array.from(
-        new Set(snapshot.filter((i) => i.edition_id != null).map((i) => i.product_id))
+        new Set(checked.filter((i) => i.edition_id != null).map((i) => i.product_id))
       );
       const plain = Array.from(
-        new Set(snapshot.filter((i) => i.edition_id == null).map((i) => i.product_id))
+        new Set(checked.filter((i) => i.edition_id == null).map((i) => i.product_id))
       );
 
       // null = проверить не удалось, 'gone' = сервер ответил «нет такого».
@@ -99,7 +104,7 @@ export default function CartPage() {
       const fresh: CartItemFresh[] = [];
       const msgs: string[] = [];
 
-      for (const item of snapshot) {
+      for (const item of checked) {
         let patch: CartItemFresh | null = null;
 
         if (item.edition_id != null) {

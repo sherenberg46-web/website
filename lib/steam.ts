@@ -37,6 +37,13 @@ export interface SteamRegion {
   dailyLimit: number;
   /** Сумма, выбранная по умолчанию. */
   defaultAmount: number;
+  /** Курс: BYN за единицу валюты кошелька. Тот же, что STEAM_RATES на сервере. */
+  rate: number;
+  /** Границы произвольной суммы (целые числа): STEAM_CUSTOM_RANGE на сервере. */
+  min: number;
+  max: number;
+  /** Товар-заготовка «своя сумма»: позиция ссылается на него, сумма — в edition_id. */
+  customProductId: number;
   offers: SteamOffer[];
 }
 
@@ -52,6 +59,10 @@ export const STEAM_REGIONS: SteamRegion[] = [
     currencyFirst: true,
     dailyLimit: 500,
     defaultAmount: 25,
+    rate: 3.9078,
+    min: 2,
+    max: 500,
+    customProductId: 98172,
     offers: offers('cis', [
       [5, 20, 98152],
       [10, 40, 98153],
@@ -67,6 +78,10 @@ export const STEAM_REGIONS: SteamRegion[] = [
     currencyFirst: false,
     dailyLimit: 35000,
     defaultAmount: 1000,
+    rate: 0.045635,
+    min: 100,
+    max: 35000,
+    customProductId: 98173,
     offers: offers('ru', [
       [300, 14, 98157],
       [500, 23, 98158],
@@ -82,6 +97,10 @@ export const STEAM_REGIONS: SteamRegion[] = [
     currencyFirst: false,
     dailyLimit: 200000,
     defaultAmount: 10000,
+    rate: 0.008649,
+    min: 500,
+    max: 200000,
+    customProductId: 98174,
     offers: offers('kz', [
       [2000, 18, 98162],
       [5000, 44, 98163],
@@ -97,6 +116,10 @@ export const STEAM_REGIONS: SteamRegion[] = [
     currencyFirst: false,
     dailyLimit: 20000,
     defaultAmount: 1000,
+    rate: 0.087068,
+    min: 60,
+    max: 20000,
+    customProductId: 98175,
     offers: offers('ua', [
       [300, 27, 98167],
       [500, 44, 98168],
@@ -122,6 +145,32 @@ export function steamMoney(region: SteamRegion, amount: number): string {
   return region.currencyFirst ? `${region.currency}${n}` : `${n} ${region.currency}`;
 }
 
+/**
+ * Цена в BYN за любую целую сумму; null — сумма вне границ региона.
+ *
+ * Округление вверх, как у всех цен магазина. Math.ceil(сумма × курс) даёт то
+ * же, что math.ceil на сервере (steam_custom_price): те же числа с плавающей
+ * точкой, поэтому цена на экране не расходится с ценой в заказе.
+ */
+export function steamCustomPrice(region: SteamRegion, amount: number): number | null {
+  if (!Number.isInteger(amount) || amount < region.min || amount > region.max) return null;
+  return Math.ceil(amount * region.rate);
+}
+
+/**
+ * Позиция корзины на произвольную сумму кодирует её в edition_id: −1500 — это
+ * 1 500 в валюте кошелька. Настоящие издания всегда с положительным id, так
+ * что путаницы нет; корзина при этом различает суммы без правок в хранилище.
+ */
+export function customEditionId(amount: number): number {
+  return -amount;
+}
+
+/** Позиция на произвольную сумму: такую корзина не сверяет с каталогом по id издания. */
+export function isCustomEdition(editionId: number | null): boolean {
+  return editionId != null && editionId < 0;
+}
+
 /** Название товара — то же, что в базе (_steam_title в backend/database.py). */
 export function steamTitle(offer: Pick<SteamOffer, 'region' | 'amount'>): string {
   const r = getSteamRegion(offer.region);
@@ -133,11 +182,12 @@ export const STEAM_MIN_PRICE = Math.min(
   ...STEAM_REGIONS.flatMap((r) => r.offers.map((o) => o.price))
 );
 
-/** ID товаров Steam в корзине — по ним форма заказа просит логин. */
-export function steamOfferById(productId: number): SteamOffer | undefined {
-  for (const r of STEAM_REGIONS) {
-    const o = r.offers.find((x) => x.productId === productId);
-    if (o) return o;
-  }
-  return undefined;
+/**
+ * Регион кошелька по ID товара в корзине — по нему форма заказа узнаёт Steam
+ * и просит логин. Узнаёт и готовые суммы, и «заготовки» произвольной.
+ */
+export function steamRegionByProductId(productId: number): SteamRegion | undefined {
+  return STEAM_REGIONS.find(
+    (r) => r.customProductId === productId || r.offers.some((o) => o.productId === productId)
+  );
 }
