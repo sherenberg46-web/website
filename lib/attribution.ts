@@ -39,6 +39,8 @@ export interface Attribution {
 
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
 
+const THREADS_HOSTS = ['threads.net', 'threads.com'];
+
 const SEARCH_HOSTS = [
   'google.', 'yandex.', 'ya.ru', 'bing.com', 'duckduckgo.com', 'search.yahoo.', 'go.mail.ru',
 ];
@@ -56,21 +58,27 @@ export function toTag(raw: string | null | undefined): string | undefined {
 }
 
 /**
- * Метка визита. Порядок: utm_source → fbclid → referrer.
- * Instagram → ig_referral, поисковики → search, переход с fbclid → fb_ads.
+ * Метка визита. Порядок: utm_source → Threads → fbclid → referrer.
+ * Threads → threads, Instagram → ig_referral, поисковики → search,
+ * переход с fbclid → fb_ads.
+ * Threads проверяется раньше fbclid: приложения Meta могут дописывать fbclid
+ * к ссылкам, и без этого переход из Threads попал бы в «Рекламу Meta».
  * Остальное — без метки («Неизвестно» в отчёте).
  */
 export function deriveRef(t: Touch): string | undefined {
   const utm = toTag(t.utm_source);
   if (utm) return utm;
-  if (t.fbclid) return 'fb_ads';
+  let host = '';
   if (t.referrer) {
-    let host = '';
     try {
       host = new URL(t.referrer).hostname.toLowerCase();
     } catch {
-      return undefined;
+      host = '';
     }
+  }
+  if (THREADS_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))) return 'threads';
+  if (t.fbclid) return 'fb_ads';
+  if (host) {
     if (host === 'instagram.com' || host.endsWith('.instagram.com')) return 'ig_referral';
     if (SEARCH_HOSTS.some((s) => host === s || host.includes(s))) return 'search';
   }
