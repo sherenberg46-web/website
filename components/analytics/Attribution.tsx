@@ -31,15 +31,20 @@ export function Attribution() {
       if (!(target instanceof Element)) return;
       const link = target.closest<HTMLAnchorElement>('a[href*="t.me"]');
       if (!link) return;
+      // Адрес ссылки ДО нашей правки. Ссылка живёт между кликами (шапка не
+      // перерисовывается), и без исходного адреса второй клик видел уже
+      // дописанный ?start= и оставлял старую метку.
+      const original = link.dataset.botHref ?? link.href;
       let url: URL;
       try {
-        url = new URL(link.href);
+        url = new URL(original);
       } catch {
         return;
       }
       if (url.hostname !== 't.me') return;
       if (url.pathname.replace(/\/+$/, '').toLowerCase() !== BOT_PATH) return;
       if (url.searchParams.has('start') || url.searchParams.has('startapp')) return;
+      link.dataset.botHref = original;
       url.searchParams.set('start', botStartParam());
       link.href = url.toString();
     }
