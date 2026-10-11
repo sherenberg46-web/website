@@ -176,6 +176,8 @@ export interface WebOrderPayload {
   ps_email?: string;
   ps_password?: string;
   promo_code?: string;
+  /** Источник визита (UTM, referrer) — см. lib/attribution.ts */
+  attribution?: import('./attribution').Attribution;
 }
 
 /** Промокод за брошенную корзину, выданный сервером сайту. */

@@ -10,6 +10,7 @@ import { clearPromo, loadPromo } from '@/lib/cart-promo';
 import { PLUS5_CODE, plus5Active, plus5Available, markPlus5Used } from '@/lib/plus5';
 import { LEVEL5_CODE, level5Active } from '@/lib/level5';
 import { checkContact } from '@/lib/contact';
+import { getAttribution } from '@/lib/attribution';
 import { gamePassOfferById } from '@/lib/xbox';
 import { steamRegionByProductId } from '@/lib/steam';
 import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
@@ -379,6 +380,8 @@ export function OrderForm({ onOrdered }: Props) {
         // При алиасе (PLUS5, LEVEL5) уходит настоящий код, выданный
         // сервером, — само слово-алиас серверу неизвестно.
         promo_code: codeToSend ?? (promoCode || undefined),
+        // Источник визита: UTM / referrer, сохранённые при заходе на сайт
+        attribution: getAttribution(),
       }, ctl.signal);
       setOrderId(created.order_id ?? null);
       // Страховка: код ушёл в заказ, а сервер скидку не посчитал

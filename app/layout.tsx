@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { PromoStrip } from '@/components/layout/PromoStrip';
 import { Footer } from '@/components/layout/Footer';
 import { MetaPixel } from '@/components/analytics/MetaPixel';
+import { Attribution } from '@/components/analytics/Attribution';
 import { YandexMetrika } from '@/components/analytics/YandexMetrika';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { getSiteUrl } from '@/lib/site-url';
@@ -158,6 +159,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-bg-page text-text-primary min-h-screen flex flex-col">
         <MetaPixel />
+        <Attribution />
         <YandexMetrika />
         <GoogleAnalytics />
         <Header />
