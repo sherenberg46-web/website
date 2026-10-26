@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { Gift, LogOut, X } from 'lucide-react';
 import { TelegramLoginButton } from '@/components/auth/TelegramLoginButton';
@@ -12,6 +13,7 @@ import { logout, pluralPoints, pointsToByn, useSiteLoyalty } from '@/lib/site-au
  */
 export function LoyaltyChip() {
   const { user, loyalty } = useSiteLoyalty();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -30,7 +32,8 @@ export function LoyaltyChip() {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        // Вошёл — сразу в личный кабинет, гость — окно входа
+        onClick={() => (user ? router.push('/account') : setOpen(true))}
         className="hidden h-11 min-w-11 min-[360px]:flex items-center justify-center gap-1 rounded-control px-1.5 text-text-secondary transition-colors hover:bg-white/5 hover:text-text-primary sm:px-2.5"
         title={user ? 'Мои баллы' : 'Войти через Telegram'}
       >

@@ -8,6 +8,7 @@ import clsx from 'clsx';
 import { useCartStore } from '@/store/cartStore';
 import { useFavouritesStore } from '@/store/favouritesStore';
 import { useEditionStore } from '@/store/editionStore';
+import { PointsBadge } from '@/components/loyalty/PointsBadge';
 import { normalizeImageUrl, getTelegramLink, getOriginalPrice } from '@/lib/api';
 import { fbTrack } from '@/lib/fbq';
 import type { Product, CatalogEdition } from '@/lib/types';
@@ -253,6 +254,9 @@ export function AddToCart({ product, editions, region }: Props) {
 
       {/* Price */}
       <PriceDisplay price={price} discountPct={discount} size="lg" />
+
+      {/* Бонусные баллы за покупку — по цене выбранного издания */}
+      <PointsBadge price={price} variant="full" className="mt-3" />
 
       {/* Region price comparison */}
       {showCompare && (

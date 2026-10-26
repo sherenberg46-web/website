@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/Badge';
 import { useCartStore } from '@/store/cartStore';
 import { useFavouritesStore } from '@/store/favouritesStore';
 import { normalizeImageUrl, getOriginalPrice } from '@/lib/api';
+import { PointsBadge } from '@/components/loyalty/PointsBadge';
 import { gamePath } from '@/lib/product-url';
 
 interface Props {
@@ -126,6 +127,9 @@ export function ProductCard({ product, priority = false }: Props) {
               <Badge variant="accent">Новинка</Badge>
             ) : null}
           </div>
+
+          {/* Сколько бонусных баллов принесёт покупка */}
+          <PointsBadge price={price} variant="card" className="absolute bottom-2 left-2" />
         </div>
 
         {/* Инфоблок */}

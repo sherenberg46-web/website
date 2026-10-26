@@ -221,6 +221,13 @@ export function MobileTabBar() {
 
             <nav className="flex flex-col px-2">
               <Link
+                href="/account"
+                className="flex min-h-[48px] items-center justify-between rounded-control px-3 text-[15px] font-medium text-text-primary transition-colors hover:bg-white/5"
+              >
+                <span>Личный кабинет</span>
+                <span className="text-sm text-accent">🎁 баллы</span>
+              </Link>
+              <Link
                 href="/favourites"
                 className="flex min-h-[48px] items-center justify-between rounded-control px-3 text-[15px] font-medium text-text-primary transition-colors hover:bg-white/5"
               >

@@ -28,6 +28,13 @@ interface Stored {
   user: SiteUser;
 }
 
+export interface LoyaltyEntry {
+  delta: number;
+  reason: string;
+  order_id: number | null;
+  created_at: string;
+}
+
 export interface Loyalty {
   balance: number;
   welcome_left: number;
@@ -35,6 +42,28 @@ export interface Loyalty {
   points_per_byn: number;
   earn_step_byn: number;
   max_spend_share: number;
+  /** Последние движения баллов (сервер отдаёт до 20) */
+  history?: LoyaltyEntry[];
+}
+
+/** Заказ для личного кабинета — без реквизитов аккаунтов. */
+export interface AccountOrder {
+  id: number;
+  status: 'pending' | 'paid' | 'processing' | 'completed' | 'cancelled' | string;
+  total_byn: number;
+  created_at: string;
+  points_spent: number;
+  points_earned: number;
+  source: string;
+  items: Array<{
+    product_id: number;
+    title: string;
+    image_url: string | null;
+    platform: string | null;
+    quantity: number;
+    price_paid: number;
+    region: string;
+  }>;
 }
 
 /** Данные, которые отдаёт Telegram Login Widget в колбэк. */
@@ -126,6 +155,49 @@ export function useSiteLoyalty() {
   }, [refresh]);
 
   return { user: auth?.user ?? null, session: auth?.session ?? null, loyalty, refresh };
+}
+
+/** Заказы клиента (из бота и с сайта). null — не удалось загрузить. */
+export async function fetchAccountOrders(session: string): Promise<AccountOrder[] | null> {
+  try {
+    const res = await fetch(`${API_BASE}/loyalty/orders`, {
+      headers: { 'X-Site-Session': session },
+      cache: 'no-store',
+    });
+    if (res.status === 401) {
+      saveAuth(null);
+      return null;
+    }
+    return res.ok ? ((await res.json()) as AccountOrder[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Подпись строки истории баллов. */
+export function entryLabel(e: LoyaltyEntry): string {
+  const n = e.order_id ? ` #${e.order_id}` : '';
+  switch (e.reason) {
+    case 'welcome':
+      return 'Стартовый бонус';
+    case 'earn':
+      return `Начислено за заказ${n}`;
+    case 'earn_revert':
+      return `Отмена заказа${n}`;
+    case 'spend':
+    case 'spend_welcome':
+      return `Оплата заказа${n}`;
+    case 'spend_revert':
+    case 'spend_welcome_revert':
+      return `Возврат баллов, заказ${n}`;
+    default:
+      return e.delta > 0 ? 'Начисление от магазина' : 'Списание магазином';
+  }
+}
+
+/** Сколько баллов принесёт покупка товара по этой цене (1 балл за каждые 10 BYN). */
+export function pointsForPrice(price: number | null | undefined): number {
+  return price && price > 0 ? earnPoints(price) : 0;
 }
 
 /** Сколько баллов можно списать (копия spend_limit с сервера — только для показа). */
