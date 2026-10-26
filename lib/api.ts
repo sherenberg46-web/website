@@ -429,11 +429,16 @@ export async function trackView(productId: number): Promise<void> {
 
 export async function createWebOrder(
   payload: WebOrderPayload,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  /** Сессия входа через Telegram: заказ уйдёт на Telegram ID, станут доступны баллы. */
+  siteSession?: string | null
 ): Promise<{ order_id?: number; message: string; total_byn?: number; promo_percent?: number }> {
   const res = await fetch(`${API_BASE}/web-orders`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(siteSession ? { 'X-Site-Session': siteSession } : {}),
+    },
     body: JSON.stringify(payload),
     signal,
   });

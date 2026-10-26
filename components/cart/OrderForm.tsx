@@ -13,6 +13,10 @@ import { checkContact } from '@/lib/contact';
 import { getAttribution } from '@/lib/attribution';
 import { gamePassOfferById } from '@/lib/xbox';
 import { steamRegionByProductId } from '@/lib/steam';
+import {
+  earnPoints, formatSum, pluralPoints, pointsToByn, spendLimit, useSiteLoyalty,
+} from '@/lib/site-auth';
+import { TelegramLoginButton } from '@/components/auth/TelegramLoginButton';
 import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -82,6 +86,9 @@ export function OrderForm({ onOrdered }: Props) {
   // Код ушёл в заказ, но сервер скидку не посчитал — предупреждаем на экране
   // успеха, что менеджер пересчитает вручную (сумма есть в комментарии).
   const [promoNotApplied, setPromoNotApplied] = useState(false);
+  // Баллы лояльности: вход через Telegram и галочка «списать»
+  const { user: tgUser, session: tgSession, loyalty } = useSiteLoyalty();
+  const [usePoints, setUsePoints] = useState(false);
 
   // Портал закреплённой кнопки — только на клиенте.
   const [mounted, setMounted] = useState(false);
@@ -228,9 +235,12 @@ export function OrderForm({ onOrdered }: Props) {
   // Страховка на случай устаревшего состояния: LEVEL5 не применяется,
   // если в корзине есть подписки или пополнения, — даже если код успел
   // пройти проверку до изменения корзины.
+  // Баллы и промокод в одном заказе не суммируются: списываем баллы —
+  // промокод не применяется.
   const promoOk =
     promoState.status === 'ok' &&
-    !(promoCode === LEVEL5_CODE && !level5Eligible);
+    !(promoCode === LEVEL5_CODE && !level5Eligible) &&
+    !usePoints;
   // Копеек в магазине нет: цены целые, итог тоже. Считаем ровно так же, как
   // считает сервер (округление вверх от суммы со скидкой), иначе на экране и
   // в заказе будут разные числа. Скидку показываем как разницу — тогда
@@ -243,6 +253,17 @@ export function OrderForm({ onOrdered }: Props) {
     ? Math.max(cartTotal - Math.ceil(promoState.discountByn), 0)
     : cartTotal;
   const discount = cartTotal - finalPrice;
+
+  // Баллы: 10 баллов = 1 BYN, до 25 % заказа. Это расчёт для показа —
+  // сервер считает заново и сам урежет списание до допустимого.
+  const perByn = loyalty?.points_per_byn ?? 10;
+  const pointsLimit = loyalty ? spendLimit(loyalty, cartTotal) : 0;
+  const pointsUsed = usePoints ? pointsLimit : 0;
+  // Итог к оплате — с копейками, если списаны баллы
+  const payTotal = Math.round((finalPrice - pointsUsed / perByn) * 100) / 100;
+  const pointsEarn = earnPoints(payTotal, loyalty?.earn_step_byn ?? 10);
+  const welcomeLocked =
+    !!loyalty && loyalty.welcome_left > 0 && cartTotal < (loyalty.welcome_min_order_byn ?? 0);
 
   // Вопрос про аккаунт PlayStation — только если в корзине есть что-то для
   // PlayStation. У Game Pass способ выдачи выбран ещё на странице подписки:
@@ -275,7 +296,8 @@ export function OrderForm({ onOrdered }: Props) {
     steamOk &&
     // Пока код проверяется, итог на экране ещё не окончательный — не даём
     // отправить заказ с суммой, которая через полсекунды изменится.
-    promoState.status !== 'checking';
+    // Со списанием баллов промокод не участвует — ждать нечего.
+    (usePoints || promoState.status !== 'checking');
 
   // Короткая подсказка «чего не хватает» — для закреплённой кнопки, где полей
   // формы под рукой нет.
@@ -329,7 +351,7 @@ export function OrderForm({ onOrdered }: Props) {
       // скидки. Если скидка не применима (например, LEVEL5 при подписке в
       // корзине) — реальный код не отправляем вовсе.
       let codeToSend = promoOk ? promoRealCode : null;
-      if (promoRealCode) {
+      if (promoRealCode && !usePoints) {
         try {
           const still = await checkPromo(promoRealCode, buildPromoItems(), ctl.signal);
           if (!still.valid) {
@@ -379,10 +401,12 @@ export function OrderForm({ onOrdered }: Props) {
         ps_password: needsPsAccount && hasAccount ? psPassword : undefined,
         // При алиасе (PLUS5, LEVEL5) уходит настоящий код, выданный
         // сервером, — само слово-алиас серверу неизвестно.
-        promo_code: codeToSend ?? (promoCode || undefined),
+        // Баллы и промокод не суммируются: со списанием баллов код не отправляем
+        promo_code: usePoints ? undefined : codeToSend ?? (promoCode || undefined),
+        points_to_spend: pointsUsed || undefined,
         // Источник визита: UTM / referrer, сохранённые при заходе на сайт
         attribution: getAttribution(),
-      }, ctl.signal);
+      }, ctl.signal, tgSession);
       setOrderId(created.order_id ?? null);
       // Страховка: код ушёл в заказ, а сервер скидку не посчитал
       // (promo_percent в ответе нулевой) — не притворяемся, что всё хорошо.
@@ -395,7 +419,7 @@ export function OrderForm({ onOrdered }: Props) {
       clearPromo();
       // PLUS5 — одна покупка: после успешного заказа алиас для этого
       // браузера больше не срабатывает. LEVEL5 многоразовый, не помечаем.
-      if (promoRealCode && promoCode === PLUS5_CODE) markPlus5Used();
+      if (promoRealCode && promoCode === PLUS5_CODE && !usePoints) markPlus5Used();
       setStatus('success');
     } catch (err: unknown) {
       const status = (err as { status?: number }).status;
@@ -405,6 +429,14 @@ export function OrderForm({ onOrdered }: Props) {
         setError(
           'Сервер не ответил. Напишите менеджеру в Telegram — он проверит, дошёл ли заказ.'
         );
+        setStatus('error');
+      } else if (
+        (status === 401 || status === 409 || (status === 400 && pointsUsed > 0)) &&
+        (err as Error).message
+      ) {
+        // Баллы: вход истёк, баланс изменился, промокод вместе с баллами —
+        // сервер сам объясняет, что не так.
+        setError((err as Error).message);
         setStatus('error');
       } else if (status === 404 || status === 405) {
         // Endpoint not deployed yet — show Telegram fallback
@@ -694,6 +726,63 @@ export function OrderForm({ onOrdered }: Props) {
           </div>
         )}
 
+        {/* Баллы лояльности */}
+        <div className="space-y-3 border-t border-border pt-5">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-text-secondary">
+            Баллы
+          </p>
+          {!tgUser ? (
+            <div className="rounded-card border border-accent/30 bg-surface-2 p-4">
+              <p className="mb-3 text-sm leading-relaxed text-text-primary">
+                Войдите через Telegram —{' '}
+                {pointsEarn > 0
+                  ? `получите +${pointsEarn} ${pluralPoints(pointsEarn)} за этот заказ`
+                  : 'копите баллы за покупки'}
+                . Новым клиентам — 50 стартовых баллов. Баланс общий с нашим ботом.
+              </p>
+              <TelegramLoginButton />
+            </div>
+          ) : loyalty ? (
+            <div className="rounded-card border border-border bg-surface-2 p-4 text-sm">
+              <p>
+                У вас <b>{loyalty.balance} {pluralPoints(loyalty.balance)}</b>
+                <span className="text-text-secondary"> = {pointsToByn(loyalty.balance, perByn)} BYN</span>
+              </p>
+              {pointsLimit > 0 && (
+                <label className="mt-3 flex cursor-pointer items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    checked={usePoints}
+                    onChange={(e) => setUsePoints(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+                  />
+                  <span>
+                    Списать {pointsLimit} {pluralPoints(pointsLimit)} (−{pointsToByn(pointsLimit, perByn)} BYN)
+                  </span>
+                </label>
+              )}
+              {usePoints && promoCode && (
+                <p className="mt-2 text-xs text-text-secondary">
+                  Промокод не применяется вместе с баллами
+                </p>
+              )}
+              {welcomeLocked && (
+                <p className="mt-2 text-xs text-text-secondary">
+                  Стартовые {loyalty.welcome_left} {pluralPoints(loyalty.welcome_left)} можно потратить в
+                  заказе от {loyalty.welcome_min_order_byn} BYN
+                </p>
+              )}
+              {pointsEarn > 0 && (
+                <p className="mt-2 text-xs text-accent">
+                  За этот заказ начислим +{pointsEarn} {pluralPoints(pointsEarn)} после оплаты
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-text-secondary">Загружаем баланс…</p>
+          )}
+        </div>
+
         {/* Промокод и комментарий */}
         <div className="space-y-4 border-t border-border pt-5">
           <p className="text-2xs font-semibold uppercase tracking-wider text-text-secondary">
@@ -712,7 +801,8 @@ export function OrderForm({ onOrdered }: Props) {
               type="text"
               value={promo}
               onChange={(e) => setPromo(e.target.value.toUpperCase())}
-              placeholder="Если есть"
+              disabled={usePoints}
+              placeholder={usePoints ? 'Недоступен: вы списываете баллы' : 'Если есть'}
               aria-describedby="of-promo-hint"
               className={clsx(inputBase, 'border-border focus:border-accent/50')}
             />
@@ -786,10 +876,16 @@ export function OrderForm({ onOrdered }: Props) {
               <span className="font-medium text-accent">−{discount} BYN</span>
             </div>
           )}
+          {pointsUsed > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-text-secondary">Оплата баллами</span>
+              <span className="font-medium text-accent">−{formatSum(pointsUsed / perByn)} BYN</span>
+            </div>
+          )}
           <div className="flex items-baseline justify-between">
             <span className="text-sm text-text-secondary">Итого к оплате</span>
             <span className="text-xl font-extrabold tracking-tight text-text-primary" aria-live="polite">
-              {finalPrice} BYN
+              {formatSum(payTotal)} BYN
             </span>
           </div>
 
@@ -804,7 +900,7 @@ export function OrderForm({ onOrdered }: Props) {
                 Отправляем…
               </>
             ) : (
-              `Оформить заказ · ${finalPrice} BYN`
+              `Оформить заказ · ${formatSum(payTotal)} BYN`
             )}
           </button>
 
@@ -841,9 +937,9 @@ export function OrderForm({ onOrdered }: Props) {
                   className="text-base font-extrabold tracking-tight text-text-primary"
                   aria-live="polite"
                 >
-                  {finalPrice} BYN
+                  {formatSum(payTotal)} BYN
                 </span>
-                {discount > 0 && (
+                {(discount > 0 || pointsUsed > 0) && (
                   <span className="ml-2 text-xs text-text-muted line-through">{cartTotal} BYN</span>
                 )}
                 {!canSubmit && status !== 'loading' && submitHint && (

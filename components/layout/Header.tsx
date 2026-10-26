@@ -11,6 +11,7 @@ import { getTelegramLink } from '@/lib/api';
 import { RegionSwitcher } from './RegionSwitcher';
 import { SearchBox } from './SearchBox';
 import { PlatformSwitcher } from './PlatformSwitcher';
+import { LoyaltyChip } from './LoyaltyChip';
 import { usePlatform } from './usePlatform';
 import { getPlatform } from '@/lib/platforms';
 import clsx from 'clsx';
@@ -125,6 +126,9 @@ export function Header() {
                 </span>
               )}
             </Link>
+
+            {/* Баллы лояльности: «Войти» или баланс */}
+            <LoyaltyChip />
 
             <Link
               href="/cart"

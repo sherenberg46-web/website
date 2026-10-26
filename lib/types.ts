@@ -178,6 +178,8 @@ export interface WebOrderPayload {
   promo_code?: string;
   /** Источник визита (UTM, referrer) — см. lib/attribution.ts */
   attribution?: import('./attribution').Attribution;
+  /** Баллы лояльности к списанию — только для вошедших через Telegram. */
+  points_to_spend?: number;
 }
 
 /** Промокод за брошенную корзину, выданный сервером сайту. */
