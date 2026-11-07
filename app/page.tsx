@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { jsonLd } from '@/lib/json-ld';
 import Link from 'next/link';
 import { getBanners, getProducts, getPopularProducts, getTelegramLink } from '@/lib/api';
 import { faqJsonLd } from '@/lib/faq';
@@ -79,7 +80,7 @@ export default async function HomePage() {
           разворачивать их прямо в выдаче под ссылкой на сайт. */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd()) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(faqJsonLd()) }}
       />
 
       {/* Hero */}

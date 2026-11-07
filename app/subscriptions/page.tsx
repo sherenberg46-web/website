@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { jsonLd } from '@/lib/json-ld';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { PricingTable } from '@/components/subscriptions/PricingTable';
@@ -42,11 +43,11 @@ export default function SubscriptionsPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbsLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(subscriptionsFaqJsonLd()) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(subscriptionsFaqJsonLd()) }}
       />
 
       <div className="max-w-5xl mx-auto px-4 py-8">

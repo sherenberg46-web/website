@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { jsonLd } from '@/lib/json-ld';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/layout/Header';
@@ -150,11 +151,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLd(organizationLd) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(searchLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLd(searchLd) }}
         />
       </head>
       <body className="bg-bg-page text-text-primary min-h-screen flex flex-col">

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { jsonLd } from '@/lib/json-ld';
 import Link from 'next/link';
 import { getProducts, getManagerLink } from '@/lib/api';
 import { getSiteUrl } from '@/lib/site-url';
@@ -83,11 +84,11 @@ export default async function TopupPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbsLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(topupFaqJsonLd()) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(topupFaqJsonLd()) }}
       />
 
       <div className="max-w-5xl mx-auto px-4 py-8">

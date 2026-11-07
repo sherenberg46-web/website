@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { jsonLd } from '@/lib/json-ld';
 import Link from 'next/link';
 import Image from 'next/image';
 import { KeyRound, Wallet, Globe2, MessageCircle, ShieldCheck } from 'lucide-react';
@@ -79,8 +80,8 @@ export default function SteamPage() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbsLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(faqLd) }} />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Hero */}

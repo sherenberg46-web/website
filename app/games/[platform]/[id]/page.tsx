@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { jsonLd as safeJsonLd } from '@/lib/json-ld';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import clsx from 'clsx';
@@ -263,11 +264,11 @@ export default async function GamePage({ params }: Props) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbsLd) }}
       />
       <TrackView product={product} />
 

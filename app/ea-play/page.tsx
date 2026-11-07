@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { jsonLd } from '@/lib/json-ld';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Gamepad2, Clock, Percent, Gift } from 'lucide-react';
@@ -50,7 +51,7 @@ export default async function EaPlayPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbsLd) }}
       />
 
       <div className="max-w-7xl mx-auto px-4 py-8">

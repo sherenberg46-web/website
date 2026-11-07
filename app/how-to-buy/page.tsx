@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { jsonLd } from '@/lib/json-ld';
 import Link from 'next/link';
 import { getManagerLink } from '@/lib/api';
 import { getSiteUrl } from '@/lib/site-url';
@@ -75,15 +76,15 @@ export default function HowToBuyPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(breadcrumbsLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(howToLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToBuyFaqJsonLd()) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(howToBuyFaqJsonLd()) }}
       />
 
       <div className="max-w-4xl mx-auto px-4 py-12">

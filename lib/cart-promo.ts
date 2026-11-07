@@ -65,6 +65,12 @@ export function clearPromo(): void {
 /** Остаток в формате мм:сс. */
 export function formatLeft(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
+  // Код живёт сутки: больше часа показываем «23 ч 05 мин», меньше — «59:30»
+  const h = Math.floor(total / 3600);
+  if (h > 0) {
+    const min = Math.floor((total % 3600) / 60);
+    return `${h} ч ${String(min).padStart(2, '0')} мин`;
+  }
   const m = Math.floor(total / 60);
   const s = total % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
